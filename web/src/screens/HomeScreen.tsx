@@ -1,17 +1,20 @@
-// Hjem (S-005): search across everything on top, Scan and Tilføj, then the places with how much is
-// in each. "Brug snart" comes with the keeping times (slice 3).
+// Hjem (S-005): search across everything on top, Scan and Tilføj, "Brug snart" (what to use soon,
+// across all places, S-010), then the places with how much is in each.
 
 import { Archive, ChevronRight, Plus, Refrigerator, ScanBarcode, Snowflake, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Button, ButtonLink, MessageState, Page, SearchField, SettingsButton, Toast, type ToastMessage } from '../components/ui';
+import { today } from '../i18n/format';
 import type { Lang, Strings } from '../i18n/strings';
 import { AddSheet } from '../inventory/AddSheet';
+import { ItemRow } from '../inventory/ItemRow';
 import { ItemSheet } from '../inventory/ItemSheet';
 import { searchItems } from '../inventory/search';
 import { useInventory, useInventoryLoaded } from '../inventory/store';
-import { itemSummary } from '../inventory/summary';
+import { itemKeeping } from '../keeping/itemKeeping';
 import { usePageTitle } from '../lib/usePageTitle';
-import { placeName, useShownPlaces, type PlaceKind } from '../places';
+import { useShownPlaces } from '../inventory/shownPlaces';
+import { placeName, type PlaceKind } from '../places';
 import { hrefs } from '../router';
 
 export const PLACE_ICON: Record<PlaceKind, LucideIcon> = { fridge: Refrigerator, freezer: Snowflake, pantry: Archive };
@@ -28,6 +31,13 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
 
   const searching = query.trim() !== '';
   const results = searching ? searchItems(items, query, (i) => [placeName(i.placeId, s), s.categories[i.category]]) : [];
+  const day = today();
+  // Use soon: past, today or within the place's window (rules.urgency), the earliest first.
+  const soon = items
+    .map((item) => ({ item, info: itemKeeping(item, day) }))
+    .filter(({ info }) => info.urgency === 'past' || info.urgency === 'today' || info.urgency === 'soon')
+    .sort((a, b) => (a.info.keeping.by ?? '').localeCompare(b.info.keeping.by ?? ''))
+    .map(({ item }) => item);
   const countIn = (placeId: string) => items.filter((i) => i.placeId === placeId).reduce((sum, i) => sum + i.count, 0);
 
   return (
@@ -49,17 +59,7 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
           ) : (
             <ul className="flex flex-col divide-y divide-border rounded-card bg-surface">
               {results.map((item) => (
-                <li key={item.id}>
-                  <button type="button" aria-haspopup="dialog" onClick={() => setOpenId(item.id)} className="flex min-h-14 w-full items-center gap-[12px] px-[20px] py-3 text-left">
-                    <span className="flex-1">
-                      <span className="block font-bold">{item.name}</span>
-                      <span className="block text-sm text-muted">
-                        {placeName(item.placeId, s)} · {itemSummary(item, lang, s)}
-                      </span>
-                    </span>
-                    <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted" />
-                  </button>
-                </li>
+                <ItemRow key={item.id} item={item} prefix={placeName(item.placeId, s)} today={day} onOpen={setOpenId} lang={lang} s={s} />
               ))}
             </ul>
           )}
@@ -77,6 +77,19 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
             </Button>
           </div>
           {loaded && items.length === 0 ? <p className="mt-4 px-1 text-center text-muted">{s.emptyHome}</p> : null}
+
+          {soon.length > 0 ? (
+            <section aria-labelledby="use-soon" className="mt-6 flex flex-col gap-3">
+              <h2 id="use-soon" className="px-1 text-lg font-bold">
+                {s.keep.useSoon}
+              </h2>
+              <ul className="flex flex-col divide-y divide-border rounded-card bg-surface">
+                {soon.map((item) => (
+                  <ItemRow key={item.id} item={item} prefix={placeName(item.placeId, s)} today={day} onOpen={setOpenId} lang={lang} s={s} />
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           <section aria-labelledby="places" className="mt-6 flex flex-col gap-3">
             <h2 id="places" className="px-1 text-lg font-bold">

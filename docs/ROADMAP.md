@@ -23,12 +23,15 @@ Each slice builds, is tested, and works on its own.
    **Not yet:** Playwright e2e tests run offline; the camera and "Du har allerede" with a real barcode (on an iPhone).
 
    **Then (S-007):** the fridge is optional and off by default, a choice in Indstillinger.
-3. **Keeping times:**
-   - the food types from FoodKeeper with Danish names (the 101 produce names from stead)
-   - the rules engine with tests (chicken in the freezer, mince in the fridge when the fridge is on, opened jam, milk with a use-by date, out of the freezer)
-   - package dates, opened and frozen
-   - "Brug snart"
+3. **Keeping times** (S-009, S-010), **done 2026-11-07:**
+   - 409 food types from FoodKeeper (101 produce names from stead, 308 drafted)
+   - the rules engine with tests (chicken in the freezer, mince in the fridge, opened jam, milk with a date, out of the freezer, and a use-by sweep over all types)
+   - the type guessed from the name, package dates, "Åbnet i dag", moves restarting the clock
+   - "Brug snart" on Home, the keep-by line in every list
    - a "Sådan regner appen" page
+
+   **Checked in the preview:** adding with the guessed type and a live date, the package date and its kind, "Brug snart", "Åbnet i dag" and undo, the rules page.
+   **Not yet:** the owner's check of the drafted names and keys (`docs/FOOD_TYPES_REVIEW.md`); a Danish check of the most common times (`docs/OPEN_QUESTIONS.md`); Playwright e2e tests.
 4. **Accounts and households:** Supabase migrations in `supabase/`, RLS, email-code sign-in, invites, places per household.
 5. **Sync:** the outbox, pulls, Realtime, count operations, deletion markers; tests with two clients.
 6. **Shared catalogue:** saving typed products, filling in from them, reporting a wrong one, an optional "Tilføj til Open Food Facts".

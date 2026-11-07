@@ -1,0 +1,1112 @@
+{
+ "about": "Produce types from stead's FoodKeeper import (Danish names checked there). Keys are stems set by hand, so 'æble' matches both 'Æble' and 'Æbler'.",
+ "types": [
+  {
+   "fk": 248,
+   "category": "produce",
+   "da": "Æbler",
+   "en": "Apples",
+   "checked": true,
+   "keys": [
+    "æble",
+    "æbler"
+   ]
+  },
+  {
+   "fk": 249,
+   "category": "produce",
+   "da": "Abrikoser",
+   "en": "Apricots",
+   "checked": true,
+   "keys": [
+    "abrikos"
+   ]
+  },
+  {
+   "fk": 250,
+   "category": "produce",
+   "da": "Avocadoer",
+   "en": "Avocados",
+   "checked": true,
+   "keys": [
+    "avocado"
+   ]
+  },
+  {
+   "fk": 251,
+   "category": "produce",
+   "da": "Bananer",
+   "en": "Bananas",
+   "checked": true,
+   "keys": [
+    "banan"
+   ]
+  },
+  {
+   "fk": 252,
+   "category": "produce",
+   "da": "Bær, kirsebær, stikkelsbær, litchi",
+   "en": "Berries, cherries, goose berries, lychee",
+   "checked": true,
+   "keys": [
+    "stikkelsbær",
+    "litchi"
+   ]
+  },
+  {
+   "fk": 253,
+   "category": "produce",
+   "da": "Bær, brombær, boysenbær, ribs",
+   "en": "Berries, blackberries, boysenberries, currant",
+   "checked": true,
+   "keys": [
+    "brombær",
+    "boysenbær",
+    "ribs",
+    "=bær"
+   ]
+  },
+  {
+   "fk": 254,
+   "category": "produce",
+   "da": "Blåbær",
+   "en": "Blueberries",
+   "checked": true,
+   "keys": [
+    "blåbær"
+   ]
+  },
+  {
+   "fk": 255,
+   "category": "produce",
+   "da": "Cherimoya",
+   "en": "Cherimoya",
+   "checked": true,
+   "keys": [
+    "cherimoya"
+   ]
+  },
+  {
+   "fk": 256,
+   "category": "produce",
+   "da": "Citrusfrugter, citron, lime, appelsin, grapefrugt, mandariner, klementiner",
+   "en": "Citrus fruit, lemon, lime, orange, grapefruit, tangerines, clementines",
+   "checked": true,
+   "keys": [
+    "citrusfrugt",
+    "citron",
+    "=lime",
+    "appelsin",
+    "grapefrugt",
+    "mandarin",
+    "klementin",
+    "clementin"
+   ]
+  },
+  {
+   "fk": 257,
+   "category": "produce",
+   "da": "Kokos, revet",
+   "en": "Coconut, shredded",
+   "checked": true,
+   "keys": [
+    "revet kokos",
+    "kokosmel",
+    "kokosflager"
+   ]
+  },
+  {
+   "fk": 258,
+   "category": "produce",
+   "da": "Kokosnødder, friske",
+   "en": "Coconuts, fresh",
+   "checked": true,
+   "keys": [
+    "kokosnød",
+    "kokosnødder"
+   ]
+  },
+  {
+   "fk": 259,
+   "category": "produce",
+   "da": "Tranebær",
+   "en": "Cranberries",
+   "checked": true,
+   "keys": [
+    "tranebær"
+   ]
+  },
+  {
+   "fk": 260,
+   "category": "produce",
+   "da": "Dadler",
+   "en": "Dates",
+   "checked": true,
+   "keys": [
+    "dadler",
+    "=dadel"
+   ]
+  },
+  {
+   "fk": 261,
+   "category": "produce",
+   "da": "Vindruer",
+   "en": "Grapes",
+   "checked": true,
+   "keys": [
+    "vindrue",
+    "druer",
+    "=drue"
+   ]
+  },
+  {
+   "fk": 262,
+   "category": "produce",
+   "da": "Guava",
+   "en": "Guava",
+   "checked": true,
+   "keys": [
+    "guava"
+   ]
+  },
+  {
+   "fk": 263,
+   "category": "produce",
+   "da": "Kiwi",
+   "en": "Kiwi fruit",
+   "checked": true,
+   "keys": [
+    "kiwi"
+   ]
+  },
+  {
+   "fk": 264,
+   "category": "produce",
+   "da": "Meloner",
+   "en": "Melons",
+   "checked": true,
+   "keys": [
+    "melon"
+   ]
+  },
+  {
+   "fk": 265,
+   "category": "produce",
+   "da": "Papaya, mango, feijoa, passionsfrugt, casabamelon",
+   "en": "Papaya, mango, feijoa, passionfruit, casaha melon",
+   "checked": true,
+   "keys": [
+    "papaya",
+    "mango",
+    "feijoa",
+    "passionsfrugt",
+    "casabamelon"
+   ]
+  },
+  {
+   "fk": 266,
+   "category": "produce",
+   "da": "Ferskner, nektariner, blommer, pærer, sapote",
+   "en": "Peaches, nectarines, plums, pears, sapote",
+   "checked": true,
+   "keys": [
+    "fersken",
+    "nektarin",
+    "blomme",
+    "pære",
+    "sapote"
+   ]
+  },
+  {
+   "fk": 267,
+   "category": "produce",
+   "da": "Ananas",
+   "en": "Pineapple",
+   "checked": true,
+   "keys": [
+    "ananas"
+   ]
+  },
+  {
+   "fk": 268,
+   "category": "produce",
+   "da": "Madbananer (plantains)",
+   "en": "Plantains",
+   "checked": true,
+   "keys": [
+    "madbanan",
+    "plantain"
+   ]
+  },
+  {
+   "fk": 269,
+   "category": "produce",
+   "da": "Granatæble",
+   "en": "Pomegranate",
+   "checked": true,
+   "keys": [
+    "granatæble"
+   ]
+  },
+  {
+   "fk": 270,
+   "category": "produce",
+   "da": "Artiskokker, hele",
+   "en": "Artichokes, whole",
+   "checked": true,
+   "keys": [
+    "artiskok"
+   ]
+  },
+  {
+   "fk": 271,
+   "category": "produce",
+   "da": "Asparges",
+   "en": "Asparagus",
+   "checked": true,
+   "keys": [
+    "asparges"
+   ]
+  },
+  {
+   "fk": 272,
+   "category": "produce",
+   "da": "Bambusskud",
+   "en": "Bamboo shoots",
+   "checked": true,
+   "keys": [
+    "bambusskud"
+   ]
+  },
+  {
+   "fk": 273,
+   "category": "produce",
+   "da": "Bønner og ærter, grønne bønner, hestebønner, limabønner, sojabønner, voksbønner, sukkerærter, sugarsnaps",
+   "en": "Beans and peas, green, fava, lima, soybean, wax, snow, sugar snap",
+   "checked": true,
+   "keys": [
+    "grønne bønner",
+    "hestebønner",
+    "limabønner",
+    "sojabønner",
+    "voksbønner",
+    "sukkerærter",
+    "sugarsnaps",
+    "=ærter",
+    "=bønner",
+    "haricots verts",
+    "brækbønner"
+   ]
+  },
+  {
+   "fk": 274,
+   "category": "produce",
+   "da": "Rødbeder",
+   "en": "Beets",
+   "checked": true,
+   "keys": [
+    "rødbede"
+   ]
+  },
+  {
+   "fk": 275,
+   "category": "produce",
+   "da": "Pak choi",
+   "en": "Bok choy",
+   "checked": true,
+   "keys": [
+    "pak choi",
+    "pak choy",
+    "bok choy"
+   ]
+  },
+  {
+   "fk": 276,
+   "category": "produce",
+   "da": "Broccoli og broccoli rabe (rapini)",
+   "en": "Broccoli and broccoli raab (rapini)",
+   "checked": true,
+   "keys": [
+    "broccoli",
+    "broccolini",
+    "rapini"
+   ]
+  },
+  {
+   "fk": 277,
+   "category": "produce",
+   "da": "Rosenkål",
+   "en": "Brussels sprouts",
+   "checked": true,
+   "keys": [
+    "rosenkål"
+   ]
+  },
+  {
+   "fk": 278,
+   "category": "produce",
+   "da": "Kål",
+   "en": "Cabbage",
+   "checked": true,
+   "keys": [
+    "=kål",
+    "hvidkål",
+    "rødkål",
+    "spidskål",
+    "savojkål"
+   ]
+  },
+  {
+   "fk": 279,
+   "category": "produce",
+   "da": "Gulerødder, pastinakker",
+   "en": "Carrots, parsnips",
+   "checked": true,
+   "keys": [
+    "gulerod",
+    "gulerødder",
+    "pastinak"
+   ]
+  },
+  {
+   "fk": 280,
+   "category": "produce",
+   "da": "Blomkål",
+   "en": "Cauliflower",
+   "checked": true,
+   "keys": [
+    "blomkål"
+   ]
+  },
+  {
+   "fk": 281,
+   "category": "produce",
+   "da": "Bladselleri",
+   "en": "Celery",
+   "checked": true,
+   "keys": [
+    "bladselleri",
+    "selleri"
+   ]
+  },
+  {
+   "fk": 282,
+   "category": "produce",
+   "da": "Majskolber",
+   "en": "Corn on the cob",
+   "checked": true,
+   "keys": [
+    "majskolbe"
+   ]
+  },
+  {
+   "fk": 283,
+   "category": "produce",
+   "da": "Agurker",
+   "en": "Cucumbers",
+   "checked": true,
+   "keys": [
+    "agurk"
+   ]
+  },
+  {
+   "fk": 284,
+   "category": "produce",
+   "da": "Aubergine",
+   "en": "Eggplant",
+   "checked": true,
+   "keys": [
+    "aubergine"
+   ]
+  },
+  {
+   "fk": 285,
+   "category": "produce",
+   "da": "Hvidløg",
+   "en": "Garlic",
+   "checked": true,
+   "keys": [
+    "hvidløg"
+   ]
+  },
+  {
+   "fk": 286,
+   "category": "produce",
+   "da": "Ingefær",
+   "en": "Ginger root",
+   "checked": true,
+   "keys": [
+    "ingefær"
+   ]
+  },
+  {
+   "fk": 287,
+   "category": "produce",
+   "da": "Bladgrønt",
+   "en": "Greens",
+   "checked": true,
+   "keys": [
+    "bladgrønt"
+   ]
+  },
+  {
+   "fk": 288,
+   "category": "produce",
+   "da": "Krydderurter",
+   "en": "Herbs",
+   "checked": true,
+   "keys": [
+    "krydderurter",
+    "friske krydderurter",
+    "dild"
+   ]
+  },
+  {
+   "fk": 289,
+   "category": "produce",
+   "da": "Porrer",
+   "en": "Leeks",
+   "checked": true,
+   "keys": [
+    "porre"
+   ]
+  },
+  {
+   "fk": 290,
+   "category": "produce",
+   "da": "Salat, icebergsalat, romainesalat",
+   "en": "Lettuce, iceberg, romaine",
+   "checked": true,
+   "keys": [
+    "icebergsalat",
+    "romainesalat",
+    "=salat",
+    "hjertesalat",
+    "spidssalat"
+   ]
+  },
+  {
+   "fk": 291,
+   "category": "produce",
+   "da": "Salat, bladsalat, spinat",
+   "en": "Lettuce, leaf, spinach",
+   "checked": true,
+   "keys": [
+    "bladsalat",
+    "spinat",
+    "babyspinat"
+   ]
+  },
+  {
+   "fk": 292,
+   "category": "produce",
+   "da": "Svampe",
+   "en": "Mushrooms",
+   "checked": true,
+   "keys": [
+    "svampe",
+    "champignon",
+    "=svamp",
+    "østershatte",
+    "portobello",
+    "shiitake"
+   ]
+  },
+  {
+   "fk": 293,
+   "category": "produce",
+   "da": "Okra",
+   "en": "Okra",
+   "checked": true,
+   "keys": [
+    "okra"
+   ]
+  },
+  {
+   "fk": 294,
+   "category": "produce",
+   "da": "Løg, gule, hvide, røde m.fl.",
+   "en": "Onions, yellow, white, red, etc.",
+   "checked": true,
+   "keys": [
+    "=løg",
+    "gule løg",
+    "rødløg",
+    "skalotteløg",
+    "perleløg",
+    "hvide løg"
+   ]
+  },
+  {
+   "fk": 295,
+   "category": "produce",
+   "da": "Løg, forårsløg",
+   "en": "Onions, spring or green",
+   "checked": true,
+   "keys": [
+    "forårsløg",
+    "salatløg"
+   ]
+  },
+  {
+   "fk": 296,
+   "category": "produce",
+   "da": "Peberfrugter",
+   "en": "Peppers",
+   "checked": true,
+   "keys": [
+    "peberfrugt"
+   ]
+  },
+  {
+   "fk": 297,
+   "category": "produce",
+   "da": "Kartofler",
+   "en": "Potatoes",
+   "checked": true,
+   "keys": [
+    "kartofler",
+    "=kartoffel",
+    "nye kartofler",
+    "bagekartofler"
+   ]
+  },
+  {
+   "fk": 298,
+   "category": "produce",
+   "da": "Græskar",
+   "en": "Pumpkins",
+   "checked": true,
+   "keys": [
+    "græskar"
+   ]
+  },
+  {
+   "fk": 299,
+   "category": "produce",
+   "da": "Radiser",
+   "en": "Radishes",
+   "checked": true,
+   "keys": [
+    "radise"
+   ]
+  },
+  {
+   "fk": 300,
+   "category": "produce",
+   "da": "Rabarber",
+   "en": "Rhubarb",
+   "checked": true,
+   "keys": [
+    "rabarber"
+   ]
+  },
+  {
+   "fk": 301,
+   "category": "produce",
+   "da": "Kålroer",
+   "en": "Rutabagas",
+   "checked": true,
+   "keys": [
+    "kålroe"
+   ]
+  },
+  {
+   "fk": 302,
+   "category": "produce",
+   "da": "Squash, sommersquash og courgette",
+   "en": "Squash, summer and zucchini",
+   "checked": true,
+   "keys": [
+    "=squash",
+    "sommersquash"
+   ]
+  },
+  {
+   "fk": 303,
+   "category": "produce",
+   "da": "Squash, vintersquash",
+   "en": "Squash, winter",
+   "checked": true,
+   "keys": [
+    "vintersquash",
+    "butternut",
+    "hokkaido"
+   ]
+  },
+  {
+   "fk": 304,
+   "category": "produce",
+   "da": "Tamarind",
+   "en": "Tamarind",
+   "checked": true,
+   "keys": [
+    "tamarind"
+   ]
+  },
+  {
+   "fk": 305,
+   "category": "produce",
+   "da": "Taro",
+   "en": "Taro",
+   "checked": true,
+   "keys": [
+    "taro"
+   ]
+  },
+  {
+   "fk": 306,
+   "category": "produce",
+   "da": "Tomater",
+   "en": "Tomatoes",
+   "checked": true,
+   "keys": [
+    "tomat"
+   ]
+  },
+  {
+   "fk": 307,
+   "category": "produce",
+   "da": "Majroer",
+   "en": "Turnips",
+   "checked": true,
+   "keys": [
+    "majroe"
+   ]
+  },
+  {
+   "fk": 308,
+   "category": "produce",
+   "da": "Maniok (yuca/cassava)",
+   "en": "Yuca/cassava",
+   "checked": true,
+   "keys": [
+    "maniok",
+    "yuca",
+    "cassava"
+   ]
+  },
+  {
+   "fk": 414,
+   "category": "produce",
+   "da": "Kumquats",
+   "en": "Kumquats",
+   "checked": true,
+   "keys": [
+    "kumquat"
+   ]
+  },
+  {
+   "fk": 415,
+   "category": "produce",
+   "da": "Salat i pose, bladsalat, spinat, salat m.m.",
+   "en": "Bagged greens, leaf, spinach, lettuce, etc.",
+   "checked": true,
+   "keys": [
+    "salat i pose",
+    "salatblanding",
+    "babyleaf",
+    "salatmix"
+   ]
+  },
+  {
+   "fk": 422,
+   "category": "produce",
+   "da": "Søde kartofler / yams",
+   "en": "Yams/sweet potatoes",
+   "checked": true,
+   "keys": [
+    "søde kartofler",
+    "sød kartoffel",
+    "yams",
+    "batat"
+   ]
+  },
+  {
+   "fk": 423,
+   "category": "produce",
+   "da": "Grønkål",
+   "en": "Kale",
+   "checked": true,
+   "keys": [
+    "grønkål"
+   ]
+  },
+  {
+   "fk": 478,
+   "category": "produce",
+   "da": "Stjernefrugt",
+   "en": "Star fruit",
+   "checked": true,
+   "keys": [
+    "stjernefrugt"
+   ]
+  },
+  {
+   "fk": 479,
+   "category": "produce",
+   "da": "Kaktusfigen",
+   "en": "Prickly pear",
+   "checked": true,
+   "keys": [
+    "kaktusfigen"
+   ]
+  },
+  {
+   "fk": 480,
+   "category": "produce",
+   "da": "Pitaya / dragefrugt",
+   "en": "Pitaya/dragon fruit",
+   "checked": true,
+   "keys": [
+    "pitaya",
+    "dragefrugt"
+   ]
+  },
+  {
+   "fk": 481,
+   "category": "produce",
+   "da": "Jordbær",
+   "en": "Strawberries",
+   "checked": true,
+   "keys": [
+    "jordbær"
+   ]
+  },
+  {
+   "fk": 482,
+   "category": "produce",
+   "da": "Hindbær",
+   "en": "Raspberries",
+   "checked": true,
+   "keys": [
+    "hindbær"
+   ]
+  },
+  {
+   "fk": 483,
+   "category": "produce",
+   "da": "Kirsebær",
+   "en": "Cherries",
+   "checked": true,
+   "keys": [
+    "kirsebær"
+   ]
+  },
+  {
+   "fk": 491,
+   "category": "produce",
+   "da": "Babygulerødder",
+   "en": "Baby carrots",
+   "checked": true,
+   "keys": [
+    "babygulerødder",
+    "babygulerod"
+   ]
+  },
+  {
+   "fk": 492,
+   "category": "produce",
+   "da": "Jicama, frisk",
+   "en": "Jicama, fresh",
+   "checked": true,
+   "keys": [
+    "jicama"
+   ]
+  },
+  {
+   "fk": 493,
+   "category": "produce",
+   "da": "Kimchi",
+   "en": "Kimchi",
+   "checked": true,
+   "keys": [
+    "kimchi"
+   ]
+  },
+  {
+   "fk": 494,
+   "category": "produce",
+   "da": "Kålrabi",
+   "en": "Kohlrabi",
+   "checked": true,
+   "keys": [
+    "kålrabi"
+   ]
+  },
+  {
+   "fk": 495,
+   "category": "produce",
+   "da": "Vandmelon",
+   "en": "Watermelon",
+   "checked": true,
+   "keys": [
+    "vandmelon"
+   ]
+  },
+  {
+   "fk": 496,
+   "category": "produce",
+   "da": "Cantaloupemelon",
+   "en": "Cantaloupe",
+   "checked": true,
+   "keys": [
+    "cantaloupe"
+   ]
+  },
+  {
+   "fk": 497,
+   "category": "produce",
+   "da": "Honningmelon",
+   "en": "Honeydew",
+   "checked": true,
+   "keys": [
+    "honningmelon",
+    "galiamelon"
+   ]
+  },
+  {
+   "fk": 505,
+   "category": "produce",
+   "da": "Citrongræs",
+   "en": "Lemongrass",
+   "checked": true,
+   "keys": [
+    "citrongræs"
+   ]
+  },
+  {
+   "fk": 506,
+   "category": "produce",
+   "da": "Koriander",
+   "en": "Cilantro",
+   "checked": true,
+   "keys": [
+    "koriander"
+   ]
+  },
+  {
+   "fk": 507,
+   "category": "produce",
+   "da": "Mynte",
+   "en": "Mint",
+   "checked": true,
+   "keys": [
+    "mynte"
+   ]
+  },
+  {
+   "fk": 508,
+   "category": "produce",
+   "da": "Basilikum, tørret",
+   "en": "Basil, dried",
+   "checked": true,
+   "keys": [
+    "tørret basilikum"
+   ]
+  },
+  {
+   "fk": 509,
+   "category": "produce",
+   "da": "Basilikum, frisk",
+   "en": "Basil, fresh",
+   "checked": true,
+   "keys": [
+    "basilikum"
+   ]
+  },
+  {
+   "fk": 510,
+   "category": "produce",
+   "da": "Oregano",
+   "en": "Oregano",
+   "checked": true,
+   "keys": [
+    "oregano"
+   ]
+  },
+  {
+   "fk": 511,
+   "category": "produce",
+   "da": "Rosmarin",
+   "en": "Rosemary",
+   "checked": true,
+   "keys": [
+    "rosmarin"
+   ]
+  },
+  {
+   "fk": 512,
+   "category": "produce",
+   "da": "Purløg",
+   "en": "Chives",
+   "checked": true,
+   "keys": [
+    "purløg"
+   ]
+  },
+  {
+   "fk": 513,
+   "category": "produce",
+   "da": "Timian",
+   "en": "Thyme",
+   "checked": true,
+   "keys": [
+    "timian"
+   ]
+  },
+  {
+   "fk": 547,
+   "category": "produce",
+   "da": "Courgette, frisk, hel",
+   "en": "Zucchini, fresh, whole",
+   "checked": true,
+   "keys": [
+    "courgette",
+    "zucchini"
+   ]
+  },
+  {
+   "fk": 548,
+   "category": "produce",
+   "da": "Chilipeber",
+   "en": "Hot peppers",
+   "checked": true,
+   "keys": [
+    "=chili",
+    "chilipeber",
+    "chilier",
+    "jalapeño"
+   ]
+  },
+  {
+   "fk": 549,
+   "category": "produce",
+   "da": "Bønnespirer",
+   "en": "Bean sprouts",
+   "checked": true,
+   "keys": [
+    "bønnespirer",
+    "spirer"
+   ]
+  },
+  {
+   "fk": 550,
+   "category": "produce",
+   "da": "Bladbede",
+   "en": "Swiss chard",
+   "checked": true,
+   "keys": [
+    "bladbede"
+   ]
+  },
+  {
+   "fk": 562,
+   "category": "produce",
+   "da": "Æblemos, hjemmelavet",
+   "en": "Applesauce, homemade",
+   "checked": true,
+   "keys": [
+    "hjemmelavet æblemos",
+    "hjemmelavet æblegrød"
+   ]
+  },
+  {
+   "fk": 570,
+   "category": "produce",
+   "da": "Marinerede grøntsager, i olie",
+   "en": "Marinated vegetables, in oil",
+   "checked": true,
+   "keys": [
+    "marinerede grøntsager",
+    "grøntsager i olie",
+    "antipasti",
+    "artiskokhjerter"
+   ]
+  },
+  {
+   "fk": 596,
+   "category": "produce",
+   "da": "Spaghettisquash, hel",
+   "en": "Spaghetti squash, whole",
+   "checked": true,
+   "keys": [
+    "spaghettisquash"
+   ]
+  },
+  {
+   "fk": 597,
+   "category": "produce",
+   "da": "Spaghettisquash, skåret",
+   "en": "Spaghetti squash, cut",
+   "checked": true,
+   "keys": [
+    "skåret spaghettisquash"
+   ]
+  },
+  {
+   "fk": 600,
+   "category": "produce",
+   "da": "Cherrytomater",
+   "en": "Cherry tomatoes",
+   "checked": true,
+   "keys": [
+    "cherrytomat",
+    "snacktomater"
+   ]
+  },
+  {
+   "fk": 611,
+   "category": "produce",
+   "da": "Persille, frisk",
+   "en": "Parsley, fresh",
+   "checked": true,
+   "keys": [
+    "persille"
+   ]
+  },
+  {
+   "fk": 640,
+   "category": "produce",
+   "da": "Edamamebønner, friske",
+   "en": "Edamame, fresh",
+   "checked": true,
+   "keys": [
+    "friske edamame",
+    "edamamebønner"
+   ]
+  },
+  {
+   "fk": 661,
+   "category": "produce",
+   "da": "Knoldselleri",
+   "en": "Celery root",
+   "checked": true,
+   "keys": [
+    "knoldselleri",
+    "selleriknold"
+   ]
+  },
+  {
+   "fk": 674,
+   "category": "produce",
+   "da": "Radicchio",
+   "en": "Radicchio",
+   "checked": true,
+   "keys": [
+    "radicchio"
+   ]
+  },
+  {
+   "fk": 678,
+   "category": "produce",
+   "da": "Rucola",
+   "en": "Arugula",
+   "checked": true,
+   "keys": [
+    "rucola",
+    "ruccola"
+   ]
+  }
+ ]
+}

@@ -35,9 +35,9 @@ web/src/
   - A deletion marker (`deleted_at`) wins over an edit.
 - **Secrets:** the app holds only the project URL and the anon key. Migrations live in `supabase/`. The database password stays in a local, git-ignored `.env`.
 
-## 3. Keeping times (slice 3; planned)
+## 3. Keeping times (slice 3, S-009, S-010)
 
-- **Food types:** about 200, built from USDA FoodKeeper (CC0, v128) by an import script. Each has Danish names, a category, suitable places, and durations per place and basis (from purchase, after opening, after thawing). Durations are ranges, each traced to its FoodKeeper ID.
+- **Food types:** 409, built from USDA FoodKeeper (CC0, v128) by `web/scripts/build-food-types.ts` from `content/`. Each has Danish and English names, a category, the keys that find it in a name, and times per place and basis (in the place, after opening, after thawing). Times are ranges, each traced to its FoodKeeper ID. Code: `web/src/keeping/` (`foodTypes.ts` matching, `rules.ts` the rules, `itemKeeping.ts` per thing, `KeepInfo.tsx` what is shown).
 - **The estimate:** `keepBy = start + the low end of the range`, where the start is the day added, opened, frozen or thawed.
 - **The package date:**
   - "Sidste anvendelsesdato" is never extended. After opening, the earlier of the two applies.

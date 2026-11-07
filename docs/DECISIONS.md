@@ -22,7 +22,7 @@ Each entry records the decision, why, and what else was considered. Superseded e
 ## S-002: Places, and a household that syncs
 
 - **Date:** 2026-11-07
-- **Decision (owner):** each thing has a **place**: Køleskab, Fryser, Skab, or the household's own. The place decides which keeping times apply. (Køleskab became optional, off by default: S-007.)
+- **Decision (owner):** each thing has a **place**: Køleskab, Fryser, Forråd, or the household's own. The place decides which keeping times apply. (Køleskab became optional, off by default: S-007. Forråd was first called Skab: S-008.)
 - **Household sync from the start.** Members of one household share one inventory.
 - **Supabase, EU region** (the project is in eu-west-1, Ireland).
 - **Offline use is ours to build:** IndexedDB on the phone, an outbox of changes, and pulling changes since the last sync plus Realtime. Counts are sent as operations (+1 / −2), so two people taking things at once are both counted.
@@ -72,10 +72,43 @@ Each entry records the decision, why, and what else was considered. Superseded e
 
 - **Date:** 2026-11-07
 - **Decision (owner):** the app is for the freezer and the cupboards. The fridge is a choice in Indstillinger ("Køleskabet med i appen"), off by default.
-- **Why:** things in the fridge come and go every day and are often half used. Logging each one is too much work, and a fridge list that is not kept up goes wrong within days, which makes people stop trusting the whole app. The freezer (things forgotten for months) and the cupboards (buying what you already have) are where the app helps most.
+- **Why:** things in the fridge come and go every day and are often half used. Logging each one is too much work, and a fridge list that is not kept up goes wrong within days, which makes people stop trusting the whole app. The freezer (things forgotten for months) and the pantry (buying what you already have) are where the app helps most.
 - **What it means:**
-  - Without the fridge, what would go there starts in the freezer (meat, poultry, fish, leftovers) or the cupboard (the rest). The user can always pick another place.
+  - Without the fridge, what would go there starts in the freezer (meat, poultry, fish, leftovers) or the pantry (the rest). The user can always pick another place.
   - The fridge still shows while it holds things, so nothing disappears after turning it off. Search covers everything.
   - The choice is kept on the phone for now; it becomes a household setting with slice 4.
 - **Thawing:** taking something out of the freezer just takes it out. The app does not offer to follow it as it thaws in the fridge (the owner turned that down; it can be revisited).
 - **Alternatives:** the fridge as an equal place (as before); the fridge only for short-lived things (meat, fish, leftovers, opened jars); no fridge at all; a "Tøer op" step that keeps thawed meat in "Brug snart" for a day or two.
+
+## S-008: "Forråd", not "Skab"
+
+- **Date:** 2026-11-07
+- **Decision (owner):** the place for dry and long-keeping things is called **Forråd** (English: "Pantry"). "Skab" (cupboard) did not fit a viktualiekammer, a basement shelf or a larder.
+- **Alternatives:** Skab; Spisekammer (the app's own name); Viktualier (old-fashioned).
+
+## S-009: Food types from FoodKeeper, found from the name
+
+- **Date:** 2026-11-07
+- **Decision:** the app knows 409 food types, each one USDA FoodKeeper record (CC0, v128, 2018): 101 produce types with stead's checked Danish names, and 308 others chosen for Danish homes with drafted Danish names (`docs/FOOD_TYPES_REVIEW.md`).
+- **Where it lives:**
+  - The snapshot: `content/sources/foodkeeper-v128.json` (the same file and checksum as stead's).
+  - Our lists: `content/food-types.json` and `content/food-types-produce.json` (names, category, keys).
+  - The build: `web/scripts/build-food-types.ts` (`npm run build:food-types`) writes `web/src/keeping/food-types.json`, which ships with the app (about 20 kB gzipped).
+  - The build refuses a wrong checksum, an unknown ID, a type without times, an unknown value or a key used by two types.
+- **Times:** per place (pantry, fridge, freezer), after opening and after thawing. When FoodKeeper gives two columns for one place (from purchase and plain), the cautious one is used: "not recommended" first, then the shorter span.
+- **Finding the type from a name:** each word of a key must start a word of the name, in any order ("hakket oksekød" matches "Oksekød, hakket"). A key starting with "=" must be the whole word ("=is"). Small words are skipped. The longest key wins ("kyllingefond" beats "kylling"). The user sees the type and can change it.
+- **Alternatives:** asking the user for the type every time (slow); using Open Food Facts categories only (patchy for Danish products); an AI guess (not traceable, and not offline).
+
+## S-010: The keeping rules in the app
+
+- **Date:** 2026-11-07
+- **Decision:** the rules in `web/src/keeping/rules.ts`, as planned in S-003:
+  - The package date comes first. **Sidste anvendelsesdato** is never extended outside the freezer; after opening or thawing, the earlier of it and the estimate applies. **Bedst før** shows until opened; then the estimate.
+  - The estimate: the day it came into its place, was opened or thawed, plus the **low end** of FoodKeeper's range.
+  - The freezer starts a new clock. Out of the freezer into the fridge, the after-thawing time (or the fridge time) from that day. The use-by date then applies again, even if it passed while frozen: cautious, and simpler than tracking when it was frozen.
+  - No time, or a place advised against: no date, only a note.
+- **Shown as:** "Brug senest ca. 12. nov." with the range; "Sidste anvendelsesdato …"; "Bedst før …". Raw meat, fish, leftovers and use-by dates add "Ved tvivl: smid ud". Never "safe". A "Sådan regner appen" page explains it, linked from every thing's sheet and from Indstillinger.
+- **Brug snart** on Home: past, today, or within 3 days (fridge), 14 days (pantry) or 30 days (freezer).
+- **The thing** gains a food type, the day it came into its place, opened, thawed, and the package date and kind. "Åbnet i dag" sits in its sheet; moving it restarts the place's clock.
+- **Tested:** the fixed examples (chicken in the freezer, mince in the fridge, opened jam, milk with a date, out of the freezer), the date arithmetic, and a sweep over every type, place and state checking that no date is later than the use-by date outside the freezer.
+- **Alternatives:** the middle of the range (less cautious); always the estimate, with the package date as a note (the owner chose the package date first, S-003).

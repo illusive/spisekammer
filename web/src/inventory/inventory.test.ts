@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { categoryFromTags, guessCategory, soundsFrozen } from './categories';
-import { addItem, EMPTY, moveItem, parseItem, parseProduct, rememberProduct, removeItem, setCount, withBarcode, type Inventory, type NewItem } from './model';
+import { addItem, EMPTY, moveItem, parseItem, parseProduct, rememberProduct, removeItem, setCount, setOpened, setPackageDate, setType, withBarcode, type Inventory, type NewItem } from './model';
+import type { PlaceKind } from '../places';
+
+const kindOf = (id: string) => (['fridge', 'freezer', 'pantry'].includes(id) ? (id as PlaceKind) : undefined);
 import { searchItems } from './search';
 import { parseProduct as parseOff } from '../scan/barcode';
 
@@ -11,15 +14,20 @@ describe('Inventory changes', () => {
     let s: Inventory = EMPTY;
     const added = addItem(s, milk, 'a', '2026-11-07', 1);
     s = added.state;
-    expect(added.put?.[0]).toMatchObject({ id: 'a', count: 2, addedOn: '2026-11-07', updatedAt: 1 });
+    expect(added.put?.[0]).toMatchObject({ id: 'a', count: 2, addedOn: '2026-11-07', placedOn: '2026-11-07', updatedAt: 1 });
 
     const taken = setCount(s, 'a', 1, 2);
     expect(taken.state.items[0]?.count).toBe(1);
     expect(taken.put?.[0]?.updatedAt).toBe(2);
 
-    const moved = moveItem(taken.state, 'a', 'freezer', 3);
-    expect(moved.state.items[0]?.placeId).toBe('freezer');
-    expect(moveItem(moved.state, 'a', 'freezer', 4).put).toBeUndefined(); // already there
+    const moved = moveItem(taken.state, 'a', 'freezer', kindOf, '2026-11-08', 3);
+    expect(moved.state.items[0]).toMatchObject({ placeId: 'freezer', placedOn: '2026-11-08' });
+    expect(moved.state.items[0]?.thawedOn).toBeUndefined();
+    expect(moveItem(moved.state, 'a', 'freezer', kindOf, '2026-11-09', 4).put).toBeUndefined(); // already there
+
+    const thawed = moveItem(moved.state, 'a', 'fridge', kindOf, '2026-12-01', 4);
+    expect(thawed.state.items[0]).toMatchObject({ placeId: 'fridge', placedOn: '2026-12-01', thawedOn: '2026-12-01' });
+    expect(moveItem(thawed.state, 'a', 'pantry', kindOf, '2026-12-02', 4).state.items[0]?.thawedOn).toBeUndefined(); // only while in the fridge
 
     const last = setCount(moved.state, 'a', 0, 5); // taking the last one out removes it
     expect(last.state.items).toEqual([]);
@@ -42,6 +50,32 @@ describe('Inventory changes', () => {
     expect(parseItem('bad')).toBeNull();
     expect(parseProduct({ barcode: '123', name: 'X' })).toBeNull();
     expect(parseProduct({ barcode: '5701234567890', name: 'X', category: 'dairy' })).toEqual({ barcode: '5701234567890', name: 'X', category: 'dairy' });
+  });
+});
+
+describe('Dates and food type (S-010)', () => {
+  const s = addItem(EMPTY, milk, 'a', '2026-11-07', 1).state;
+  it('marks opened and undoes it', () => {
+    const opened = setOpened(s, 'a', '2026-11-08', 2);
+    expect(opened.put?.[0]).toMatchObject({ openedOn: '2026-11-08', updatedAt: 2 });
+    expect(setOpened(opened.state, 'a', null, 3).state.items[0]?.openedOn).toBeUndefined();
+  });
+  it('sets and clears the package date', () => {
+    const dated = setPackageDate(s, 'a', { day: '2026-11-12', kind: 'useBy' }, 2);
+    expect(dated.state.items[0]).toMatchObject({ packageDate: '2026-11-12', packageKind: 'useBy' });
+    const cleared = setPackageDate(dated.state, 'a', null, 3).state.items[0];
+    expect(cleared?.packageDate).toBeUndefined();
+    expect(cleared?.packageKind).toBeUndefined();
+  });
+  it('sets the food type with its category, or only a category', () => {
+    expect(setType(s, 'a', 'fk-27', 'dairy', 2).state.items[0]).toMatchObject({ typeId: 'fk-27', category: 'dairy' });
+    expect(setType(s, 'a', null, 'other', 2).state.items[0]?.typeId).toBeUndefined();
+  });
+  it('reads the dates back, and starts the clock on the day added for older records', () => {
+    const base = { id: 'a', name: 'Mælk', placeId: 'fridge', category: 'dairy', count: 1, addedOn: '2026-11-07', updatedAt: 9 };
+    expect(parseItem(base)).toMatchObject({ placedOn: '2026-11-07' });
+    expect(parseItem({ ...base, placedOn: '2026-11-09', openedOn: '2026-11-10', typeId: 'fk-27', packageDate: '2026-11-12', packageKind: 'useBy' })).toMatchObject({ placedOn: '2026-11-09', openedOn: '2026-11-10', typeId: 'fk-27', packageDate: '2026-11-12', packageKind: 'useBy' });
+    expect(parseItem({ ...base, packageDate: '2026-11-12', packageKind: 'soon', typeId: 'x' })).not.toHaveProperty('packageDate');
   });
 });
 
@@ -69,9 +103,9 @@ describe('Categories', () => {
 
 describe('Search across everything', () => {
   const items = [
-    { ...milk, id: 'a', addedOn: '2026-11-07', updatedAt: 1 },
-    { name: 'Kyllingebryst', category: 'poultry' as const, placeId: 'freezer', count: 1, id: 'b', addedOn: '2026-11-07', updatedAt: 1 },
-    { name: 'Mælkechokolade', category: 'other' as const, placeId: 'pantry', count: 1, id: 'c', addedOn: '2026-11-07', updatedAt: 1 },
+    { ...milk, id: 'a', addedOn: '2026-11-07', placedOn: '2026-11-07', updatedAt: 1 },
+    { name: 'Kyllingebryst', category: 'poultry' as const, placeId: 'freezer', count: 1, id: 'b', addedOn: '2026-11-07', placedOn: '2026-11-07', updatedAt: 1 },
+    { name: 'Mælkechokolade', category: 'other' as const, placeId: 'pantry', count: 1, id: 'c', addedOn: '2026-11-07', placedOn: '2026-11-07', updatedAt: 1 },
   ];
   const labels = (i: (typeof items)[number]) => [i.placeId === 'freezer' ? 'Fryser' : i.placeId === 'fridge' ? 'Køleskab' : 'Skab'];
 

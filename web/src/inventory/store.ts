@@ -5,6 +5,9 @@
 import { openDB, type IDBPDatabase } from 'idb';
 import { useSyncExternalStore } from 'react';
 import { today } from '../i18n/format';
+import type { PackageKind } from '../keeping/rules';
+import { placeOf } from '../places';
+import type { Category } from './categories';
 import * as m from './model';
 
 const DB_NAME = 'spisekammer';
@@ -73,7 +76,10 @@ export const inventory = {
     return id;
   },
   setCount: (id: string, count: number) => apply(m.setCount(state, id, count, Date.now())),
-  move: (id: string, placeId: string) => apply(m.moveItem(state, id, placeId, Date.now())),
+  move: (id: string, placeId: string) => apply(m.moveItem(state, id, placeId, (p) => placeOf(p)?.kind, today(), Date.now())),
+  setOpened: (id: string, opened: boolean) => apply(m.setOpened(state, id, opened ? today() : null, Date.now())),
+  setPackageDate: (id: string, date: { day: string; kind: PackageKind } | null) => apply(m.setPackageDate(state, id, date, Date.now())),
+  setType: (id: string, typeId: string | null, category: Category) => apply(m.setType(state, id, typeId, category, Date.now())),
   remove: (id: string) => apply(m.removeItem(state, id)),
   rememberProduct: (product: m.Product) => apply(m.rememberProduct(state, product)),
 };

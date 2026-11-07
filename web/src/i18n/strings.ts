@@ -78,6 +78,50 @@ export interface Strings {
     fridgeHelp: string;
     version: (date: string, commit: string) => string;
   };
+  keep: {
+    estimate: (date: string) => string;
+    useBy: (date: string) => string;
+    bestBefore: (date: string) => string;
+    range: (from: string, to: string) => string;
+    pastEstimate: string;
+    pastUseBy: string;
+    pastBestBefore: string;
+    today: string;
+    inDays: (n: number) => string;
+    daysAgo: (n: number) => string;
+    noType: string;
+    noTime: (place: string) => string;
+    notRecommended: (place: string) => string;
+    indefinitely: string;
+    whenRipe: string;
+    fridgeAfterOpening: string;
+    packageOnly: string;
+    roomHours: (n: number) => string;
+    inDoubt: string;
+    howWeCount: string;
+    useSoon: string;
+    whatIsIt: string;
+    noTypeOption: (category: string) => string;
+    opened: string;
+    openedOn: (date: string) => string;
+    openedToday: string;
+    notOpened: string;
+    packageDate: string;
+    packageKind: string;
+    packageKinds: { useBy: string; bestBefore: string };
+    packageHelp: string;
+    removeDate: string;
+    unchecked: string;
+  };
+  rules: {
+    title: string;
+    intro: string;
+    sections: { title: string; points: string[] }[];
+    source: string;
+    sourceLink: string;
+    danishLink: string;
+    typesCount: (n: number) => string;
+  };
   offlineReady: string;
   updateReady: string;
   updateAction: string;
@@ -98,7 +142,7 @@ export const strings: Record<Lang, Strings> = {
     clearSearch: 'Ryd søgning',
     noMatches: (q) => `Intet matcher ”${q}”`,
     places: 'Steder',
-    placeKinds: { fridge: 'Køleskab', freezer: 'Fryser', pantry: 'Skab' },
+    placeKinds: { fridge: 'Køleskab', freezer: 'Fryser', pantry: 'Forråd' },
     itemCount: (n) => (n === 1 ? '1 ting' : `${n} ting`),
     emptyPlace: 'Intet her endnu.',
     emptyHome: 'Scan en vare, eller tilføj den med navn. Så kan du altid se, hvad du har.',
@@ -167,8 +211,85 @@ export const strings: Record<Lang, Strings> = {
       themes: { system: 'Følg telefonen', light: 'Lyst', dark: 'Mørkt' },
       fridge: 'Køleskabet med i appen',
       fridgeOptions: { off: 'Nej', on: 'Ja' },
-      fridgeHelp: 'Det i køleskabet skifter hver dag, så listen bliver hurtigt forkert. Fryseren og skabene er nemmere at holde styr på.',
+      fridgeHelp: 'Det i køleskabet skifter hver dag, så listen bliver hurtigt forkert. Fryseren og forrådet er nemmere at holde styr på.',
       version: (date, commit) => `Version fra ${date} (${commit})`,
+    },
+    keep: {
+      estimate: (date) => `Brug senest ca. ${date}`,
+      useBy: (date) => `Sidste anvendelsesdato ${date}`,
+      bestBefore: (date) => `Bedst før ${date}`,
+      range: (from, to) => `Vejledende: ${from}–${to}`,
+      pastEstimate: 'Over den vejledende tid.',
+      pastUseBy: 'Sidste anvendelsesdato er overskredet. Spis det ikke.',
+      pastBestBefore: 'Bedst før-datoen er passeret. Se, lugt og smag, før du bruger det.',
+      today: 'i dag',
+      inDays: (n) => (n === 1 ? 'i morgen' : `om ${n} dage`),
+      daysAgo: (n) => (n === 1 ? 'i går' : `for ${n} dage siden`),
+      noType: 'Vælg, hvad det er, for at få en vejledende dato.',
+      noTime: (place) => `Der er ingen vejledende tid for det i ${place.toLowerCase()}.`,
+      notRecommended: (place) => `Det frarådes at opbevare det i ${place.toLowerCase()}.`,
+      indefinitely: 'Holder sig meget længe.',
+      whenRipe: 'Holder sig, til det er modent.',
+      fridgeAfterOpening: 'Bør stå på køl, når det er åbnet.',
+      packageOnly: 'Brug datoen på pakken. Skriv den ind, så holder appen øje med den.',
+      roomHours: (n) => `Bør ikke stå uden for køl i mere end ${n} timer.`,
+      inDoubt: 'Ved tvivl: smid ud.',
+      howWeCount: 'Sådan regner appen',
+      useSoon: 'Brug snart',
+      whatIsIt: 'Slags',
+      noTypeOption: (category) => `${category}, andet`,
+      opened: 'Åbnet',
+      openedOn: (date) => `Åbnet ${date}`,
+      openedToday: 'Åbnet i dag',
+      notOpened: 'Ikke åbnet',
+      packageDate: 'Dato på pakken',
+      packageKind: 'Hvilken dato?',
+      packageKinds: { useBy: 'Sidste anvendelsesdato', bestBefore: 'Bedst før' },
+      packageHelp: 'Står der "mindst holdbar til", er det bedst før.',
+      removeDate: 'Fjern dato',
+      unchecked: 'Navnet er ikke gennemset endnu.',
+    },
+    rules: {
+      title: 'Sådan regner appen',
+      intro: 'Datoerne i appen er vejledende. De kommer fra faste regler, ikke fra nogen, der har set din mad. Brug altid også dine sanser.',
+      sections: [
+        {
+          title: 'Datoen på pakken kommer først',
+          points: [
+            'Har du skrevet datoen fra pakken, viser appen den.',
+            'Sidste anvendelsesdato: appen giver aldrig en senere dato. Er varen åbnet eller tøet op, gælder den tidligste af datoen og appens vurdering.',
+            'Bedst før (eller "mindst holdbar til"): vises, til varen er åbnet. Derefter bruger appen sin vurdering. Efter datoen kan maden ofte stadig bruges, hvis den ser, lugter og smager, som den skal.',
+          ],
+        },
+        {
+          title: 'Uden dato: en vurdering',
+          points: [
+            'Appen finder ud fra navnet, hvad det er, fx hakket oksekød. Du kan altid vælge noget andet.',
+            'For hver slags har appen tider for forråd, køleskab og fryser, og for når den er åbnet eller tøet op.',
+            'Appen tæller fra den dag, varen kom på sin plads, blev åbnet eller tøet op, og bruger den korteste tid. Hakket oksekød holder 1–2 dage i køleskabet, så appen siger 1 dag.',
+          ],
+        },
+        {
+          title: 'Når du flytter den',
+          points: [
+            'I fryseren starter tiden forfra: fryserens tid fra den dag, varen kom i.',
+            'Fra fryseren til køleskabet: tiden efter optøning, eller køleskabets tid, fra den dag varen blev taget op.',
+            'Frarådes et sted, eller findes der ingen tid for det, viser appen ingen dato, kun en besked.',
+          ],
+        },
+        {
+          title: 'Ved tvivl: smid ud',
+          points: [
+            'Ved råt kød, fisk, rester og varer med sidste anvendelsesdato skriver appen "Ved tvivl: smid ud".',
+            'Appen kan ikke se, hvordan maden er blevet behandlet. Har den stået varmt for længe, eller ser, lugter eller smager den forkert, så smid den ud.',
+            'Hold køleskabet på højst 5 °C.',
+          ],
+        },
+      ],
+      source: 'Tiderne kommer fra USDA FoodKeeper, version 128 (september 2018), udgivet af det amerikanske landbrugsministeriums fødevaresikkerhedstjeneste (FSIS) som CC0. Tiderne er amerikanske og regner med et køleskab på 4 °C. De danske navne er vores egne, og nogle er endnu ikke gennemset.',
+      sourceLink: 'FoodKeeper-data (data.gov)',
+      danishLink: 'Fødevarestyrelsen (foedevarestyrelsen.dk)',
+      typesCount: (n) => `Appen kender ${n} slags mad.`,
     },
     offlineReady: 'Appen virker nu også uden internet.',
     updateReady: 'Der er en ny version af appen.',
@@ -188,7 +309,7 @@ export const strings: Record<Lang, Strings> = {
     clearSearch: 'Clear search',
     noMatches: (q) => `Nothing matches “${q}”`,
     places: 'Places',
-    placeKinds: { fridge: 'Fridge', freezer: 'Freezer', pantry: 'Cupboard' },
+    placeKinds: { fridge: 'Fridge', freezer: 'Freezer', pantry: 'Pantry' },
     itemCount: (n) => (n === 1 ? '1 item' : `${n} items`),
     emptyPlace: 'Nothing here yet.',
     emptyHome: 'Scan a product, or add it by name. Then you can always see what you have.',
@@ -257,8 +378,85 @@ export const strings: Record<Lang, Strings> = {
       themes: { system: 'Follow the phone', light: 'Light', dark: 'Dark' },
       fridge: 'Include the fridge',
       fridgeOptions: { off: 'No', on: 'Yes' },
-      fridgeHelp: 'What is in the fridge changes every day, so the list soon goes wrong. The freezer and cupboards are easier to keep track of.',
+      fridgeHelp: 'What is in the fridge changes every day, so the list soon goes wrong. The freezer and the pantry are easier to keep track of.',
       version: (date, commit) => `Version from ${date} (${commit})`,
+    },
+    keep: {
+      estimate: (date) => `Use by about ${date}`,
+      useBy: (date) => `Use by ${date}`,
+      bestBefore: (date) => `Best before ${date}`,
+      range: (from, to) => `For guidance: ${from}–${to}`,
+      pastEstimate: 'Past the guidance time.',
+      pastUseBy: 'The use-by date has passed. Do not eat it.',
+      pastBestBefore: 'The best-before date has passed. Look, smell and taste before you use it.',
+      today: 'today',
+      inDays: (n) => (n === 1 ? 'tomorrow' : `in ${n} days`),
+      daysAgo: (n) => (n === 1 ? 'yesterday' : `${n} days ago`),
+      noType: 'Choose what it is to get a date for guidance.',
+      noTime: (place) => `There is no guidance time for it in the ${place.toLowerCase()}.`,
+      notRecommended: (place) => `Keeping it in the ${place.toLowerCase()} is not advised.`,
+      indefinitely: 'Keeps for a very long time.',
+      whenRipe: 'Keeps until ripe.',
+      fridgeAfterOpening: 'Should go in the fridge once opened.',
+      packageOnly: 'Go by the date on the package. Enter it, and the app keeps track of it.',
+      roomHours: (n) => `Should not stay out of the fridge for more than ${n} hours.`,
+      inDoubt: 'If in doubt, throw it out.',
+      howWeCount: 'How the app counts',
+      useSoon: 'Use soon',
+      whatIsIt: 'Kind',
+      noTypeOption: (category) => `${category}, other`,
+      opened: 'Opened',
+      openedOn: (date) => `Opened ${date}`,
+      openedToday: 'Opened today',
+      notOpened: 'Not opened',
+      packageDate: 'Date on the package',
+      packageKind: 'Which date?',
+      packageKinds: { useBy: 'Use by', bestBefore: 'Best before' },
+      packageHelp: 'Danish packages: "sidste anvendelsesdato" is use by; "bedst før" and "mindst holdbar til" are best before.',
+      removeDate: 'Remove date',
+      unchecked: 'The name has not been checked yet.',
+    },
+    rules: {
+      title: 'How the app counts',
+      intro: 'The dates in the app are for guidance. They come from fixed rules, not from anyone who has seen your food. Always use your senses too.',
+      sections: [
+        {
+          title: 'The date on the package comes first',
+          points: [
+            'If you entered the date from the package, the app shows it.',
+            'Use by: the app never gives a later date. Once it is opened or thawed, the earlier of the date and the app\u2019s estimate applies.',
+            'Best before: shown until it is opened. Then the app uses its estimate. After the date, food can often still be used if it looks, smells and tastes as it should.',
+          ],
+        },
+        {
+          title: 'Without a date: an estimate',
+          points: [
+            'The app works out from the name what it is, for example minced beef. You can always choose something else.',
+            'For each kind, the app has times for the pantry, the fridge and the freezer, and for after opening or thawing.',
+            'The app counts from the day it came into its place, was opened or thawed, and uses the shortest time. Minced beef keeps 1–2 days in the fridge, so the app says 1 day.',
+          ],
+        },
+        {
+          title: 'When you move it',
+          points: [
+            'In the freezer the time starts again: the freezer time from the day it went in.',
+            'From the freezer to the fridge: the time after thawing, or the fridge time, from the day it came out.',
+            'Where a place is advised against, or there is no time for it, the app shows no date, only a note.',
+          ],
+        },
+        {
+          title: 'If in doubt, throw it out',
+          points: [
+            'For raw meat, fish, leftovers and anything with a use-by date, the app says "If in doubt, throw it out".',
+            'The app cannot see how the food has been handled. If it has been warm for too long, or looks, smells or tastes wrong, throw it out.',
+            'Keep the fridge at 5 °C or colder.',
+          ],
+        },
+      ],
+      source: 'The times come from USDA FoodKeeper, version 128 (September 2018), published by the US Department of Agriculture\u2019s Food Safety and Inspection Service (FSIS) as CC0. They are US times and assume a fridge at 4 °C. The Danish names are our own, and some have not been checked yet.',
+      sourceLink: 'FoodKeeper data (data.gov)',
+      danishLink: 'The Danish Veterinary and Food Administration (foedevarestyrelsen.dk, in Danish)',
+      typesCount: (n) => `The app knows ${n} kinds of food.`,
     },
     offlineReady: 'The app now works without internet too.',
     updateReady: 'There is a new version of the app.',

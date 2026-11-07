@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultPlaceKind } from './inventory/categories';
-import { shownPlaces } from './places';
+import { shownPlaces } from './inventory/shownPlaces';
 
 const ids = (withFridge: boolean, inUse: string[] = [], current?: string) => shownPlaces(withFridge, (id) => inUse.includes(id), current).map((p) => p.id);
 
@@ -15,7 +15,7 @@ describe('the optional fridge (S-007)', () => {
     expect(ids(false, [], 'fridge')).toEqual(['fridge', 'freezer', 'pantry']);
   });
 
-  it('sends fridge things to the freezer or the cupboard when it is off', () => {
+  it('sends fridge things to the freezer or the pantry when it is off', () => {
     expect(defaultPlaceKind('poultry', true)).toBe('fridge');
     expect(defaultPlaceKind('poultry', false)).toBe('freezer');
     expect(defaultPlaceKind('leftovers', false)).toBe('freezer');

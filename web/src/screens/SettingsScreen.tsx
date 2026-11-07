@@ -1,7 +1,7 @@
 // Indstillinger: whether the fridge is included (S-007), language and appearance; household,
 // places, export and the keeping rules come in later slices.
 
-import { Card, Choice, Page, SubPageHeader } from '../components/ui';
+import { Card, Choice, LinkRow, Page, RowList, SubPageHeader } from '../components/ui';
 import type { Lang, Strings } from '../i18n/strings';
 import { usePageTitle } from '../lib/usePageTitle';
 import { hrefs } from '../router';
@@ -35,6 +35,9 @@ export function SettingsScreen({ lang, s }: { lang: Lang; s: Strings }) {
           />
           <Choice<ThemePref> name="theme" legend={t.theme} value={prefs.theme} onChange={(v) => setPreference('theme', v)} options={(['system', 'light', 'dark'] as const).map((v) => ({ value: v, label: t.themes[v] }))} />
         </Card>
+        <RowList>
+          <LinkRow href={hrefs.rules} title={s.keep.howWeCount} />
+        </RowList>
         <p className="px-1 text-sm text-muted">{t.version(__APP_BUILD__.date, __APP_BUILD__.commit)}</p>
       </div>
     </Page>

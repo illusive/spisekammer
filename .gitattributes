@@ -1,0 +1,4 @@
+# Source snapshots are checked by checksum: never convert their line endings (S-009).
+content/sources/** -text
+# Built from content/ and compared in CI: always LF.
+web/src/keeping/food-types.json text eol=lf

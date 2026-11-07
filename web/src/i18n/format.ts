@@ -22,6 +22,13 @@ export function formatShortDate(date: Date, lang: Lang): string {
   return date.toLocaleDateString(localeOf(lang), { day: 'numeric', month: 'short' });
 }
 
+// A yyyy-mm-dd day as "12. nov.", with the year when it is not this year: "7. aug. 2027".
+export function formatDay(day: string, lang: Lang, thisYear = today().slice(0, 4)): string {
+  const [y = 1970, m = 1, d = 1] = day.split('-').map(Number);
+  const options: Intl.DateTimeFormatOptions = String(y) === thisYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' };
+  return new Date(y, m - 1, d).toLocaleDateString(localeOf(lang), options);
+}
+
 // The name of a month, 0 = January.
 export function monthName(index: number, lang: Lang): string {
   return new Intl.DateTimeFormat(localeOf(lang), { month: 'long' }).format(new Date(2000, index, 1));
