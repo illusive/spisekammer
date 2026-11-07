@@ -1,4 +1,4 @@
-// The browser and app-switcher title of each page: "Page – stead", or just "stead" for Home ('').
+// The browser and app-switcher title of each page: "Page – Spisekammer", or just "Spisekammer" for Home ('').
 // With a heading, focus moves to it once the page has its title, so screen readers announce the new
 // page (used where a page loads its content). Null: not loaded yet, nothing changes.
 

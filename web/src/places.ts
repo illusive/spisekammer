@@ -1,5 +1,7 @@
 // The places things are kept (S-002). A new household starts with these three; its own places
-// come in slice 2. The kind decides which keeping times apply (slice 3).
+// come with households (slice 4). The kind decides which keeping times apply (slice 3).
+
+import type { Strings } from './i18n/strings';
 
 export type PlaceKind = 'fridge' | 'freezer' | 'pantry';
 
@@ -13,3 +15,13 @@ export const DEFAULT_PLACES: Place[] = [
   { id: 'freezer', kind: 'freezer' },
   { id: 'pantry', kind: 'pantry' },
 ];
+
+export const placeOf = (id: string): Place | undefined => DEFAULT_PLACES.find((p) => p.id === id);
+
+export function placeName(id: string, s: Strings): string {
+  const place = placeOf(id);
+  return place ? s.placeKinds[place.kind] : id;
+}
+
+// The place of that kind (the defaults use the kind as their id).
+export const placeIdOf = (kind: PlaceKind): string => DEFAULT_PLACES.find((p) => p.kind === kind)?.id ?? kind;

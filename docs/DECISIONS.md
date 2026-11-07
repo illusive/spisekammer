@@ -53,3 +53,17 @@ Each entry records the decision, why, and what else was considered. Superseded e
   - Home has search across everything on top, then "Brug snart" across all places, then the places.
   - A place shows its things grouped by food category.
 - **Alternatives:** one list by category, with the place as a label.
+
+## S-006: The local inventory
+
+- **Date:** 2026-11-07
+- **Storage:** IndexedDB through `idb` (8.0.4, ISC, about 1 kB). The database `spisekammer` has two stores: `items` (by id) and `products` (by barcode, what this phone has learnt). The state is kept in memory and read with `useSyncExternalStore`. Changes are pure functions that return the new state and the rows to write, so slice 5 can put the same rows in an outbox.
+  - **Alternative:** Dexie (larger, and its sync add-on is not ours to use with Supabase).
+- **An item:** a name, an optional brand, a category, a place, a count, an optional size (a number and a unit, or the text), an optional barcode, the day it was added and when it last changed. Dates for keeping times come in slice 3.
+- **Taking the last one out** leaves the count at 0 in the sheet, with a note. The thing is deleted when the sheet closes, so a slip of the thumb can be undone with +. Delete asks first.
+- **Categories:** 12 (meat, poultry, fish, dairy, produce, bread, dry, canned, drinks, leftovers, frozen, other). Each has a default place.
+  - **The guess:** from Open Food Facts' `categories_tags` when a barcode is found, otherwise from words in the name. Phrases ("hakkede tomater") are checked before single words ("tomat"). A word matches at the start of a word in the name, so "Kyllingebryst" is poultry.
+  - **Frozen things:** words like "frosne" or "frost" start a thing in the freezer, whatever its category ("Frosne kyllingebryst" is poultry, in the freezer).
+  - The user can always change the category and the place before adding.
+- **Search** covers the name, the brand, the place and the category. Each word of the query must be found inside some word (Danish compounds: "mælk" finds "Letmælk"), ignoring case and accents. Name matches come first.
+- **Scanning** reuses stead's continuous scanner (zxing-wasm, works offline). A barcode already in the household opens "Du har allerede …" with + and "Tag 1 ud". A new barcode is filled from this phone's memory first, then Open Food Facts (online only), then typed.

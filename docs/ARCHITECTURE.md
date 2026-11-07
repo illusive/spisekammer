@@ -14,14 +14,17 @@ web/src/
   components/ui.tsx      Primitives (Card, Button, Sheet, SheetHeader, useConfirm, Stepper, Choice, SearchField, Toast …)
   i18n/                  strings (da, en; a test keeps them in step), format
   lib/                   localStore (for preferences), usePageTitle
+  inventory/             model (pure changes), store (IndexedDB, idb), categories (the guess), search, ItemSheet, AddSheet, ItemForm, size
   pwa/                   update banner, update check, offline state
-  screens/               Home, Place, Settings
+  scan/                  BarcodeScanner (zxing-wasm, from stead), barcode (Open Food Facts lookup)
+  screens/               Home, Place, Scan, Settings
   settings/preferences.ts
 ```
 
-## 2. Data and sync (slices 2, 4 and 5; planned)
+## 2. Data and sync (slice 2 done; 4 and 5 planned)
 
-- **On the phone:** IndexedDB holds the household's places and items, plus an **outbox** of changes. Every change applies locally at once.
+- **On the phone (now, S-006):** IndexedDB (`spisekammer`: `items` by id, `products` by barcode) through `web/src/inventory/store.ts`. The state lives in memory; each change is a pure function in `model.ts` returning the new state and the rows to write.
+- **With sync (planned):** the household's places too, plus an **outbox** of changes. Every change applies locally at once.
 - **On the server:** Supabase (Postgres, EU), with row-level security on `household_id`.
   - Tables: `households`, `household_members`, `invites`, `places`, `items`, and `products` (the shared catalogue).
 - **Sync:**

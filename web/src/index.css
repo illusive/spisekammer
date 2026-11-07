@@ -122,3 +122,25 @@ body {
     animation: backdrop-out 220ms ease-in forwards;
   }
 }
+
+/* The barcode scanner (from stead, D-055): a line moves up and down in the frame while the camera looks. With
+   reduced motion the line is hidden and the frame's border slowly brightens and dims instead. */
+@keyframes scan-line {
+  from { top: 10%; }
+  to { top: 90%; }
+}
+@keyframes scan-pulse {
+  from { opacity: 1; }
+  to { opacity: 0.45; }
+}
+.scan-line {
+  animation: scan-line 1.6s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scan-line {
+    display: none;
+  }
+  .scan-frame:not([data-state="paused"]) {
+    animation: scan-pulse 1.2s ease-in-out infinite alternate;
+  }
+}

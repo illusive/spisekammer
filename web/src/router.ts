@@ -1,17 +1,20 @@
 // Hash-based routes: work offline and on any static host without server rewrites (from stead).
 import { useEffect, useState } from 'react';
 
-export type Route = { name: 'home' } | { name: 'place'; id: string } | { name: 'settings' };
+export type Route = { name: 'home' } | { name: 'place'; id: string } | { name: 'scan'; placeId: string | null } | { name: 'settings' };
 
 export const hrefs = {
   home: '#/',
   place: (id: string) => `#/place/${encodeURIComponent(id)}`,
+  scan: (placeId?: string) => (placeId ? `#/scan/${encodeURIComponent(placeId)}` : '#/scan'),
   settings: '#/settings',
 };
 
 export function parseRoute(hash: string): Route {
   const place = /^#\/place\/([^/]+)$/.exec(hash);
   if (place?.[1]) return { name: 'place', id: decodeURIComponent(place[1]) };
+  const scan = /^#\/scan(?:\/([^/]+))?$/.exec(hash);
+  if (scan) return { name: 'scan', placeId: scan[1] ? decodeURIComponent(scan[1]) : null };
   if (hash === '#/settings') return { name: 'settings' };
   return { name: 'home' };
 }
