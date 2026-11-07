@@ -36,6 +36,7 @@ export function SettingsScreen({ lang, s }: { lang: Lang; s: Strings }) {
           <Choice<ThemePref> name="theme" legend={t.theme} value={prefs.theme} onChange={(v) => setPreference('theme', v)} options={(['system', 'light', 'dark'] as const).map((v) => ({ value: v, label: t.themes[v] }))} />
         </Card>
         <RowList>
+          <LinkRow href={hrefs.household} title={s.household.settingsRow} subtitle={<span className="block text-sm text-muted">{s.household.settingsHint}</span>} />
           <LinkRow href={hrefs.rules} title={s.keep.howWeCount} />
         </RowList>
         <p className="px-1 text-sm text-muted">{t.version(__APP_BUILD__.date, __APP_BUILD__.commit)}</p>

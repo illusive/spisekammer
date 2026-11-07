@@ -122,6 +122,53 @@ export interface Strings {
     danishLink: string;
     typesCount: (n: number) => string;
   };
+  household: {
+    title: string;
+    settingsRow: string;
+    settingsHint: string;
+    notConfigured: string;
+    offline: string;
+    signInTitle: string;
+    signInIntro: string;
+    email: string;
+    emailPlaceholder: string;
+    sendCode: string;
+    sending: string;
+    codeSent: (email: string) => string;
+    code: string;
+    signIn: string;
+    otherEmail: string;
+    privacy: string;
+    createTitle: string;
+    createIntro: string;
+    householdName: string;
+    defaultName: string;
+    create: string;
+    joinTitle: string;
+    joinIntro: string;
+    inviteCode: string;
+    join: string;
+    members: string;
+    owner: string;
+    you: string;
+    invite: string;
+    inviteTitle: string;
+    inviteIntro: string;
+    inviteExpires: string;
+    share: string;
+    copy: string;
+    copied: string;
+    shareText: (code: string, link: string) => string;
+    syncLater: string;
+    leave: string;
+    leaveConfirm: (name: string) => string;
+    leaveBody: string;
+    leaveLast: string;
+    left: string;
+    signOut: string;
+    signedInAs: (email: string) => string;
+    errors: { offline: string; invalidCode: string; rateLimit: string; inviteNotFound: string; alreadyInHousehold: string; invalidEmail: string; unknown: string };
+  };
   offlineReady: string;
   updateReady: string;
   updateAction: string;
@@ -291,6 +338,61 @@ export const strings: Record<Lang, Strings> = {
       danishLink: 'Fødevarestyrelsen (foedevarestyrelsen.dk)',
       typesCount: (n) => `Appen kender ${n} slags mad.`,
     },
+    household: {
+      title: 'Husstand',
+      settingsRow: 'Husstand',
+      settingsHint: 'Del det, I har, med dem, du bor med',
+      notConfigured: 'Deling er ikke sat op i denne version endnu.',
+      offline: 'Du skal have internet for at logge ind og dele. Alt andet virker uden.',
+      signInTitle: 'Del med husstanden',
+      signInIntro: 'Log ind med din e-mail. Du får en kode på 6 cifre, ingen adgangskode.',
+      email: 'E-mail',
+      emailPlaceholder: 'dig@eksempel.dk',
+      sendCode: 'Send kode',
+      sending: 'Sender …',
+      codeSent: (email) => `Vi har sendt en kode til ${email}. Den virker i en time.`,
+      code: 'Kode fra e-mailen',
+      signIn: 'Log ind',
+      otherEmail: 'Brug en anden e-mail',
+      privacy: 'Din e-mail bruges kun til at logge dig ind og vises for dem i din husstand. Data ligger i EU.',
+      createTitle: 'Opret en husstand',
+      createIntro: 'Så kan du invitere dem, du bor med.',
+      householdName: 'Navn',
+      defaultName: 'Hjem',
+      create: 'Opret',
+      joinTitle: 'Har du fået en kode?',
+      joinIntro: 'Skriv koden fra den, der inviterede dig.',
+      inviteCode: 'Kode',
+      join: 'Bliv medlem',
+      members: 'Medlemmer',
+      owner: 'ejer',
+      you: 'dig',
+      invite: 'Inviter',
+      inviteTitle: 'Invitation',
+      inviteIntro: 'Send linket, eller læs koden op. Den, du inviterer, logger ind og skriver koden.',
+      inviteExpires: 'Koden virker i 7 dage.',
+      share: 'Del',
+      copy: 'Kopiér link',
+      copied: 'Linket er kopieret.',
+      shareText: (code, link) => `Bliv en del af vores husstand i Spisekammer: ${link} (kode ${code})`,
+      syncLater: 'Snart kan I se og ændre de samme ting. Indtil da ligger dine ting stadig kun på denne telefon.',
+      leave: 'Forlad husstanden',
+      leaveConfirm: (name) => `Forlad ${name}?`,
+      leaveBody: 'Du kan blive medlem igen med en ny kode.',
+      leaveLast: 'Du er den sidste. Husstanden og alt i den bliver slettet.',
+      left: 'Du har forladt husstanden.',
+      signOut: 'Log ud',
+      signedInAs: (email) => `Logget ind som ${email}`,
+      errors: {
+        offline: 'Ingen forbindelse. Prøv igen, når du har internet.',
+        invalidCode: 'Koden passer ikke, eller den er for gammel. Prøv igen, eller få en ny.',
+        rateLimit: 'For mange forsøg. Vent lidt, og prøv igen.',
+        inviteNotFound: 'Koden findes ikke, eller den er udløbet. Bed om en ny.',
+        alreadyInHousehold: 'Du er allerede med i en husstand. Forlad den først.',
+        invalidEmail: 'Skriv en gyldig e-mail.',
+        unknown: 'Noget gik galt. Prøv igen.',
+      },
+    },
     offlineReady: 'Appen virker nu også uden internet.',
     updateReady: 'Der er en ny version af appen.',
     updateAction: 'Opdater',
@@ -457,6 +559,61 @@ export const strings: Record<Lang, Strings> = {
       sourceLink: 'FoodKeeper data (data.gov)',
       danishLink: 'The Danish Veterinary and Food Administration (foedevarestyrelsen.dk, in Danish)',
       typesCount: (n) => `The app knows ${n} kinds of food.`,
+    },
+    household: {
+      title: 'Household',
+      settingsRow: 'Household',
+      settingsHint: 'Share what you have with the people you live with',
+      notConfigured: 'Sharing is not set up in this version yet.',
+      offline: 'You need internet to sign in and share. Everything else works without.',
+      signInTitle: 'Share with your household',
+      signInIntro: 'Sign in with your email. You get a 6-digit code, no password.',
+      email: 'Email',
+      emailPlaceholder: 'you@example.com',
+      sendCode: 'Send code',
+      sending: 'Sending …',
+      codeSent: (email) => `We sent a code to ${email}. It works for an hour.`,
+      code: 'Code from the email',
+      signIn: 'Sign in',
+      otherEmail: 'Use another email',
+      privacy: 'Your email is only used to sign you in and is shown to the people in your household. Data is kept in the EU.',
+      createTitle: 'Create a household',
+      createIntro: 'Then you can invite the people you live with.',
+      householdName: 'Name',
+      defaultName: 'Home',
+      create: 'Create',
+      joinTitle: 'Got a code?',
+      joinIntro: 'Enter the code from the person who invited you.',
+      inviteCode: 'Code',
+      join: 'Join',
+      members: 'Members',
+      owner: 'owner',
+      you: 'you',
+      invite: 'Invite',
+      inviteTitle: 'Invitation',
+      inviteIntro: 'Send the link, or read the code out. The person you invite signs in and enters the code.',
+      inviteExpires: 'The code works for 7 days.',
+      share: 'Share',
+      copy: 'Copy link',
+      copied: 'The link is copied.',
+      shareText: (code, link) => `Join our household in Spisekammer: ${link} (code ${code})`,
+      syncLater: 'Soon you will see and change the same things. Until then, your things stay on this phone only.',
+      leave: 'Leave the household',
+      leaveConfirm: (name) => `Leave ${name}?`,
+      leaveBody: 'You can join again with a new code.',
+      leaveLast: 'You are the last one. The household and everything in it will be deleted.',
+      left: 'You have left the household.',
+      signOut: 'Sign out',
+      signedInAs: (email) => `Signed in as ${email}`,
+      errors: {
+        offline: 'No connection. Try again when you have internet.',
+        invalidCode: 'The code does not match, or it is too old. Try again, or get a new one.',
+        rateLimit: 'Too many tries. Wait a little and try again.',
+        inviteNotFound: 'The code does not exist or has expired. Ask for a new one.',
+        alreadyInHousehold: 'You are already in a household. Leave it first.',
+        invalidEmail: 'Enter a valid email.',
+        unknown: 'Something went wrong. Try again.',
+      },
     },
     offlineReady: 'The app now works without internet too.',
     updateReady: 'There is a new version of the app.',

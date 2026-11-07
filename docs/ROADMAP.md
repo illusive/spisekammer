@@ -32,7 +32,13 @@ Each slice builds, is tested, and works on its own.
 
    **Checked in the preview:** adding with the guessed type and a live date, the package date and its kind, "Brug snart", "Åbnet i dag" and undo, the rules page.
    **Not yet:** the owner's check of the drafted names and keys (`docs/FOOD_TYPES_REVIEW.md`); a Danish check of the most common times (`docs/OPEN_QUESTIONS.md`); Playwright e2e tests.
-4. **Accounts and households:** Supabase migrations in `supabase/`, RLS, email-code sign-in, invites, places per household.
+4. **Accounts and households** (S-011), **built 2026-11-08:**
+   - the schema with row-level security and its functions (`supabase/migrations/`), 12 tests on real Postgres (PGlite)
+   - sign-in with an email code, create or join a household, invite with a link and a code, leave, sign out
+   - "Husstand" in Indstillinger; the Supabase library loads only there
+
+   **Checked in the preview:** the Husstand row, an invite link opening the screen, "not set up" without a key, the sign-in form.
+   **Not yet:** applying the migration to the project, the email template, the anon key and custom SMTP (`supabase/README.md`); sign-in and invites end to end; the fridge setting moving from the phone to the household (slice 5).
 5. **Sync:** the outbox, pulls, Realtime, count operations, deletion markers; tests with two clients.
 6. **Shared catalogue:** saving typed products, filling in from them, reporting a wrong one, an optional "Tilføj til Open Food Facts".
 7. **Ready to share:**

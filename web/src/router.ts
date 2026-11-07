@@ -1,7 +1,7 @@
 // Hash-based routes: work offline and on any static host without server rewrites (from stead).
 import { useEffect, useState } from 'react';
 
-export type Route = { name: 'home' } | { name: 'place'; id: string } | { name: 'scan'; placeId: string | null } | { name: 'settings' } | { name: 'rules' };
+export type Route = { name: 'home' } | { name: 'place'; id: string } | { name: 'scan'; placeId: string | null } | { name: 'settings' } | { name: 'rules' } | { name: 'household'; code: string | null };
 
 export const hrefs = {
   home: '#/',
@@ -9,6 +9,8 @@ export const hrefs = {
   scan: (placeId?: string) => (placeId ? `#/scan/${encodeURIComponent(placeId)}` : '#/scan'),
   settings: '#/settings',
   rules: '#/rules',
+  household: '#/household',
+  join: (code: string) => `#/join/${encodeURIComponent(code)}`,
 };
 
 export function parseRoute(hash: string): Route {
@@ -18,6 +20,9 @@ export function parseRoute(hash: string): Route {
   if (scan) return { name: 'scan', placeId: scan[1] ? decodeURIComponent(scan[1]) : null };
   if (hash === '#/settings') return { name: 'settings' };
   if (hash === '#/rules') return { name: 'rules' };
+  if (hash === '#/household') return { name: 'household', code: null };
+  const join = /^#\/join\/([^/]+)$/.exec(hash);
+  if (join?.[1]) return { name: 'household', code: decodeURIComponent(join[1]) };
   return { name: 'home' };
 }
 

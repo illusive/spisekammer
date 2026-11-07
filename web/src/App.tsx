@@ -1,7 +1,7 @@
 // The app shell: language and appearance, the inventory loaded once, the update banner, and the
 // screen for the route.
 
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { strings } from './i18n/strings';
 import { loadInventory } from './inventory/store';
 import { UpdateBanner } from './pwa/UpdateBanner';
@@ -14,6 +14,9 @@ import { RulesScreen } from './screens/RulesScreen';
 import { ScanScreen } from './screens/ScanScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { useApplyTheme, useLang } from './settings/preferences';
+
+// With the Supabase library, only when someone opens Husstand (S-011).
+const HouseholdScreen = lazy(() => import('./screens/HouseholdScreen'));
 
 export function App() {
   useApplyTheme();
@@ -35,6 +38,10 @@ export function App() {
         <SettingsScreen lang={lang} s={s} />
       ) : route.name === 'rules' ? (
         <RulesScreen s={s} />
+      ) : route.name === 'household' ? (
+        <Suspense fallback={null}>
+          <HouseholdScreen code={route.code} s={s} />
+        </Suspense>
       ) : route.name === 'place' ? (
         <PlaceScreen id={route.id} lang={lang} s={s} />
       ) : route.name === 'scan' ? (

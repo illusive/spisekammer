@@ -112,3 +112,21 @@ Each entry records the decision, why, and what else was considered. Superseded e
 - **The thing** gains a food type, the day it came into its place, opened, thawed, and the package date and kind. "Åbnet i dag" sits in its sheet; moving it restarts the place's clock.
 - **Tested:** the fixed examples (chicken in the freezer, mince in the fridge, opened jam, milk with a date, out of the freezer), the date arithmetic, and a sweep over every type, place and state checking that no date is later than the use-by date outside the freezer.
 - **Alternatives:** the middle of the range (less cautious); always the estimate, with the package date as a note (the owner chose the package date first, S-003).
+
+## S-011: Accounts and households
+
+- **Date:** 2026-11-08
+- **Decisions (owner):**
+  - **The account is optional.** The app works on the phone without one. "Husstand" in Indstillinger signs in with an email code, to share with the household.
+  - **Invites give a link and a code.** A six-letter code (no 0/O, 1/I/L), valid for 7 days, and a link `#/join/CODE` that fills it in. The code helps when the link opens Safari instead of the installed app.
+  - **Bringing your things:** when you join with things on the phone, the app asks whether to bring them, with "bring" as the default. This is asked when sync arrives (slice 5); until then things stay on the phone, and the household screen says so.
+- **Decisions (ours):**
+  - **One household per user** in v1. Joining another means leaving first.
+  - **The schema** (`supabase/migrations/20261108000000_households.sql`): `households` (name, fridge setting), `household_members` (role, email), `invites`, `places`, and `items` (ready for slice 5).
+  - **Row-level security:** a member reads and changes only their own household's rows. Signed-out users get nothing. Items are never hard-deleted (deletion markers), and the server sets `updated_at` and `updated_by`.
+  - **The rules live in database functions:** `create_household`, `create_invite`, `join_household` and `leave_household`. The tables refuse direct inserts and deletes for those. The oldest member becomes owner when the owner leaves; the last one out deletes the household and its things.
+  - **Members see each other's email,** so they know who is in. Nothing else about a user is stored.
+  - **Tested on real Postgres** with PGlite (`@electric-sql/pglite` 0.5.10, Apache-2.0, dev only): Supabase's roles, `auth.uid()` and default grants are stubbed, and the migration runs unchanged. No Docker needed.
+  - **`@supabase/supabase-js` 2.118.0** (MIT), loaded only with the household screen (57 kB gzipped, its own chunk). The main app grew by 2 kB.
+  - **Versions:** both pinned exactly, each at least two weeks old.
+- **Alternatives:** an account required from the start (simpler data, more friction); a link only, or a code only; several households per user (a household switcher; not needed yet).

@@ -21,9 +21,10 @@ web/src/
   settings/preferences.ts
 ```
 
-## 2. Data and sync (slice 2 done; 4 and 5 planned)
+## 2. Data and sync (slices 2 and 4 done; 5 planned)
 
 - **On the phone (now, S-006):** IndexedDB (`spisekammer`: `items` by id, `products` by barcode) through `web/src/inventory/store.ts`. The state lives in memory; each change is a pure function in `model.ts` returning the new state and the rows to write.
+- **Accounts (S-011):** `web/src/account/` (`account.ts` sign-in and the household calls, `config.ts` the project URL and anon key) and `screens/HouseholdScreen.tsx`, loaded lazily with supabase-js. The schema, row-level security and functions are in `supabase/migrations/`, tested by `web/src/account/schema.test.ts` on PGlite.
 - **With sync (planned):** the household's places too, plus an **outbox** of changes. Every change applies locally at once.
 - **On the server:** Supabase (Postgres, EU), with row-level security on `household_id`.
   - Tables: `households`, `household_members`, `invites`, `places`, `items`, and `products` (the shared catalogue).

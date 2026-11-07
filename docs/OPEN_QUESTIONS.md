@@ -10,3 +10,5 @@
 8. **Secret rotation.** The trial database password was shared in chat (2026-11-07). The owner will reset it before real use.
 9. **Thawed things with a use-by date.** The app applies the package's use-by date again after thawing, even if it passed while the thing was frozen (S-010). Fødevarestyrelsen's advice may allow more (use soon after thawing, if frozen before the date). Decide whether to follow it, and how to say it in our own words.
 10. **Drafted food-type names.** 308 Danish names and their keys are drafts (`docs/FOOD_TYPES_REVIEW.md`). A wrong key can give a wrong type, and so a wrong time; the user sees the type and can change it.
+11. **Email for sign-in.** Supabase's built-in email sends only a few emails an hour and may only reach the project's team. Pick an EU SMTP provider before inviting others (`supabase/README.md`).
+12. **Dependency advisories.** `npm audit` reports moderate advisories in dev tooling (Vitest's mocker, and deepmerge via workbox-build); none ships in the app. Update Vitest and vite-plugin-pwa in a separate change.
