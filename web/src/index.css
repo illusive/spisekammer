@@ -1,0 +1,124 @@
+@import "tailwindcss";
+@import "./fonts.css";
+
+/* Design tokens (S-001): warmer and friendlier than stead – cream, sage green and a terracotta
+   accent – with the same token names, so stead's primitives work unchanged. Text pairs are chosen
+   for WCAG AA (4.5:1 for text); check again when colours change. */
+:root {
+  color-scheme: light;
+  --c-background: #f6f1e7;
+  --c-surface: #fffdf8;
+  --c-ink: #2f3d2c;
+  --c-on-ink: #f6f1e7;
+  --c-ink-muted: #c9d2c3;
+  --c-text: #22261f;
+  --c-muted: #5e6359;
+  --c-border: #e4dccb;
+  /* Sage: the hero and the main buttons, with white text (4.9:1). */
+  --c-accent: #55704f;
+  --c-on-accent: #ffffff;
+  /* A light sage behind icons, with dark green on it. */
+  --c-soft: #e3ead9;
+  --c-on-soft: #34472f;
+  /* Terracotta for highlights such as "Brug snart". */
+  --c-warm: #b4552c;
+  --c-note-bg: #fbecd9;
+  --c-note-text: #6b3f00;
+  --c-ok: #2f7a46;
+  --c-danger: #b3261e;
+  --c-on-danger: #ffffff;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --c-background: #1a1915;
+  --c-surface: #25241f;
+  --c-ink: #31302a;
+  --c-on-ink: #f2ede2;
+  --c-ink-muted: #b0aa9c;
+  --c-text: #f2ede2;
+  --c-muted: #b0aa9c;
+  --c-border: #3a3830;
+  --c-accent: #9dbb94;
+  --c-on-accent: #15210f;
+  --c-soft: #2e3a2a;
+  --c-on-soft: #cfe0c6;
+  --c-warm: #f0a27e;
+  --c-note-bg: #3a2c12;
+  --c-note-text: #f4cc94;
+  --c-ok: #6fd093;
+  --c-danger: #ff8a80;
+  --c-on-danger: #1b0000;
+}
+
+@theme inline {
+  --color-background: var(--c-background);
+  --color-surface: var(--c-surface);
+  --color-ink: var(--c-ink);
+  --color-on-ink: var(--c-on-ink);
+  --color-ink-muted: var(--c-ink-muted);
+  --color-text: var(--c-text);
+  --color-muted: var(--c-muted);
+  --color-border: var(--c-border);
+  --color-accent: var(--c-accent);
+  --color-on-accent: var(--c-on-accent);
+  --color-soft: var(--c-soft);
+  --color-on-soft: var(--c-on-soft);
+  --color-warm: var(--c-warm);
+  --color-note-bg: var(--c-note-bg);
+  --color-note-text: var(--c-note-text);
+  --color-ok: var(--c-ok);
+  --color-danger: var(--c-danger);
+  --color-on-danger: var(--c-on-danger);
+  --radius-card: 24px;
+  --radius-hero: 32px;
+}
+
+html {
+  /* On iOS this follows the system text size (Dynamic Type); other browsers ignore it. */
+  font: -apple-system-body;
+  font-family: "Nunito Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--c-background);
+  color: var(--c-text);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--c-text);
+    outline-offset: 2px;
+  }
+}
+
+/* Sheets slide up from the bottom and back down (from stead, D-054). No movement with reduced motion. */
+@keyframes sheet-in {
+  from { transform: translateY(100%); }
+}
+@keyframes sheet-out {
+  to { transform: translateY(100%); }
+}
+@keyframes backdrop-in {
+  from { opacity: 0; }
+}
+@keyframes backdrop-out {
+  to { opacity: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  dialog.sheet[open] {
+    animation: sheet-in 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  dialog.sheet[open]::backdrop {
+    animation: backdrop-in 280ms ease-out;
+  }
+  dialog.sheet[data-closing] {
+    animation: sheet-out 220ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+  dialog.sheet[data-closing]::backdrop {
+    animation: backdrop-out 220ms ease-in forwards;
+  }
+}

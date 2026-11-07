@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- A jar on the app's sage colour: a placeholder mark until the name and brand are settled. -->
+  <rect width="512" height="512" rx="112" fill="#5f7a5a"/>
+  <rect x="176" y="120" width="160" height="44" rx="14" fill="#f6f1e7"/>
+  <path d="M168 188h176a24 24 0 0 1 24 24v152a48 48 0 0 1-48 48H192a48 48 0 0 1-48-48V212a24 24 0 0 1 24-24z" fill="#f6f1e7"/>
+  <rect x="190" y="258" width="132" height="64" rx="16" fill="#c8693e"/>
+</svg>

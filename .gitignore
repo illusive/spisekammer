@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dev-dist/
+test-results/
+playwright-report/
+# Secrets: database password, service keys (AGENTS.md)
+.env
+.env.*
+!.env.example
+supabase/.temp/
+supabase/.branches/
+.DS_Store
