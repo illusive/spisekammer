@@ -73,6 +73,9 @@ export interface Strings {
     languages: Record<'system' | 'da' | 'en', string>;
     theme: string;
     themes: Record<'system' | 'light' | 'dark', string>;
+    fridge: string;
+    fridgeOptions: Record<'off' | 'on', string>;
+    fridgeHelp: string;
     version: (date: string, commit: string) => string;
   };
   offlineReady: string;
@@ -162,6 +165,9 @@ export const strings: Record<Lang, Strings> = {
       languages: { system: 'Følg telefonen', da: 'Dansk', en: 'English' },
       theme: 'Udseende',
       themes: { system: 'Følg telefonen', light: 'Lyst', dark: 'Mørkt' },
+      fridge: 'Køleskabet med i appen',
+      fridgeOptions: { off: 'Nej', on: 'Ja' },
+      fridgeHelp: 'Det i køleskabet skifter hver dag, så listen bliver hurtigt forkert. Fryseren og skabene er nemmere at holde styr på.',
       version: (date, commit) => `Version fra ${date} (${commit})`,
     },
     offlineReady: 'Appen virker nu også uden internet.',
@@ -249,6 +255,9 @@ export const strings: Record<Lang, Strings> = {
       languages: { system: 'Follow the phone', da: 'Dansk', en: 'English' },
       theme: 'Appearance',
       themes: { system: 'Follow the phone', light: 'Light', dark: 'Dark' },
+      fridge: 'Include the fridge',
+      fridgeOptions: { off: 'No', on: 'Yes' },
+      fridgeHelp: 'What is in the fridge changes every day, so the list soon goes wrong. The freezer and cupboards are easier to keep track of.',
       version: (date, commit) => `Version from ${date} (${commit})`,
     },
     offlineReady: 'The app now works without internet too.',

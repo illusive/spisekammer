@@ -44,6 +44,6 @@ web/src/
   - "Bedst før" is shown. Past it: "brug dine sanser".
 - **Places:**
   - Into the freezer: a new clock.
-  - Out of it: the after-thawing time, or the fridge time from today.
+  - Out of it, into the fridge (only when the fridge is turned on, S-007): the after-thawing time, or the fridge time from today. Taken out without a place, it is simply gone.
   - A place the type is not recommended for: a warning.
 - **Wording:** always guidance, never "safe".

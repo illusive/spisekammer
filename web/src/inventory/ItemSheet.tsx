@@ -5,7 +5,7 @@ import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button, Choice, Sheet, SheetHeader, Stepper, useConfirm } from '../components/ui';
 import type { Lang, Strings } from '../i18n/strings';
-import { DEFAULT_PLACES, placeName } from '../places';
+import { placeName, useShownPlaces } from '../places';
 import { MAX_COUNT } from './model';
 import { inventory, useInventory } from './store';
 import { itemSummary } from './summary';
@@ -16,6 +16,7 @@ export function ItemSheet({ openId, onClose, onMessage, lang, s }: { openId: str
   const item = useInventory().items.find((i) => i.id === openId);
   const [zero, setZero] = useState(false);
   const { confirm, sheet } = useConfirm();
+  const places = useShownPlaces(item?.placeId);
 
   const close = () => {
     if (zero && item) {
@@ -70,7 +71,7 @@ export function ItemSheet({ openId, onClose, onMessage, lang, s }: { openId: str
                   inventory.move(item.id, placeId);
                   onMessage(s.moved(item.name, placeName(placeId, s)));
                 }}
-                options={DEFAULT_PLACES.map((p) => ({ value: p.id, label: s.placeKinds[p.kind] }))}
+                options={places.map((p) => ({ value: p.id, label: s.placeKinds[p.kind] }))}
               />
               <Button variant="danger" onClick={() => void remove()}>
                 <Trash2 aria-hidden="true" className="size-5" />

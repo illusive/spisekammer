@@ -10,9 +10,11 @@ export type ThemePref = 'system' | 'light' | 'dark';
 export interface Preferences {
   lang: LangPref;
   theme: ThemePref;
+  // Whether the fridge is a place in the app (S-007). Off by default. Per household with slice 4.
+  fridge: boolean;
 }
 
-const DEFAULTS: Preferences = { lang: 'system', theme: 'system' };
+const DEFAULTS: Preferences = { lang: 'system', theme: 'system', fridge: false };
 
 const store = createLocalStore<Preferences>({
   key: 'spisekammer.preferences.v1',
@@ -21,6 +23,7 @@ const store = createLocalStore<Preferences>({
     return {
       lang: p.lang === 'da' || p.lang === 'en' ? p.lang : DEFAULTS.lang,
       theme: p.theme === 'light' || p.theme === 'dark' ? p.theme : DEFAULTS.theme,
+      fridge: p.fridge === true,
     };
   },
 });

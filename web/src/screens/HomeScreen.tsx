@@ -11,7 +11,7 @@ import { searchItems } from '../inventory/search';
 import { useInventory, useInventoryLoaded } from '../inventory/store';
 import { itemSummary } from '../inventory/summary';
 import { usePageTitle } from '../lib/usePageTitle';
-import { DEFAULT_PLACES, placeName, type PlaceKind } from '../places';
+import { placeName, useShownPlaces, type PlaceKind } from '../places';
 import { hrefs } from '../router';
 
 export const PLACE_ICON: Record<PlaceKind, LucideIcon> = { fridge: Refrigerator, freezer: Snowflake, pantry: Archive };
@@ -19,6 +19,7 @@ export const PLACE_ICON: Record<PlaceKind, LucideIcon> = { fridge: Refrigerator,
 export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
   const { items } = useInventory();
   const loaded = useInventoryLoaded();
+  const places = useShownPlaces();
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -81,8 +82,8 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
             <h2 id="places" className="px-1 text-lg font-bold">
               {s.places}
             </h2>
-            <ul className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-3">
-              {DEFAULT_PLACES.map((place) => {
+            <ul className={`grid grid-cols-1 gap-3 ${places.length > 2 ? 'min-[420px]:grid-cols-3' : 'min-[420px]:grid-cols-2'}`}>
+              {places.map((place) => {
                 const Icon = PLACE_ICON[place.kind];
                 return (
                   <li key={place.id}>

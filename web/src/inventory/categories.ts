@@ -87,3 +87,12 @@ export function categoryFromTags(tags: string[]): Category | null {
   for (const [category, keys] of OFF_TAGS) if (keys.some((k) => tags.includes(k))) return category;
   return null;
 }
+
+// Without the fridge (S-007), what would go there starts where it is worth keeping track of:
+// meat, fish and leftovers in the freezer, the rest in the cupboard.
+const WITHOUT_FRIDGE: Partial<Record<Category, PlaceKind>> = { meat: 'freezer', poultry: 'freezer', fish: 'freezer', leftovers: 'freezer' };
+
+export function defaultPlaceKind(category: Category, withFridge: boolean): PlaceKind {
+  const kind = DEFAULT_PLACE[category];
+  return kind !== 'fridge' || withFridge ? kind : (WITHOUT_FRIDGE[category] ?? 'pantry');
+}

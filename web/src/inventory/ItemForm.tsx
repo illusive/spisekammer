@@ -5,8 +5,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button, Choice, inputClass, Stepper } from '../components/ui';
 import type { Lang, Strings } from '../i18n/strings';
-import { DEFAULT_PLACES, placeIdOf } from '../places';
-import { CATEGORIES, DEFAULT_PLACE, guessCategory, soundsFrozen, type Category } from './categories';
+import { placeIdOf, useShownPlaces } from '../places';
+import { usePreferences } from '../settings/preferences';
+import { CATEGORIES, defaultPlaceKind, guessCategory, soundsFrozen, type Category } from './categories';
 import { MAX_COUNT, type NewItem } from './model';
 import { parseSize } from './size';
 
@@ -39,7 +40,9 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
   }, [start.name, start.category, start.size]);
 
   const shownCategory: Category = category ?? guessCategory(name) ?? 'other';
-  const shownPlace = placeId ?? placeIdOf(soundsFrozen(name) ? 'freezer' : DEFAULT_PLACE[shownCategory]);
+  const { fridge } = usePreferences();
+  const shownPlace = placeId ?? placeIdOf(soundsFrozen(name) ? 'freezer' : defaultPlaceKind(shownCategory, fridge));
+  const places = useShownPlaces(shownPlace);
 
   const submit = () => {
     const trimmed = name.trim();
@@ -128,7 +131,7 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
           </select>
         ) : null}
       </div>
-      <Choice name={`${idPrefix}-place`} legend={s.place} value={shownPlace} onChange={setPlaceId} options={DEFAULT_PLACES.map((p) => ({ value: p.id, label: s.placeKinds[p.kind] }))} />
+      <Choice name={`${idPrefix}-place`} legend={s.place} value={shownPlace} onChange={setPlaceId} options={places.map((p) => ({ value: p.id, label: s.placeKinds[p.kind] }))} />
       <Stepper label={s.count} value={count} min={1} max={MAX_COUNT} onChange={setCount} />
       <label className="flex flex-col gap-1">
         <span className="font-bold">

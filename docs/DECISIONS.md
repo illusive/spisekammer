@@ -22,7 +22,7 @@ Each entry records the decision, why, and what else was considered. Superseded e
 ## S-002: Places, and a household that syncs
 
 - **Date:** 2026-11-07
-- **Decision (owner):** each thing has a **place**: Køleskab, Fryser, Skab, or the household's own. The place decides which keeping times apply.
+- **Decision (owner):** each thing has a **place**: Køleskab, Fryser, Skab, or the household's own. The place decides which keeping times apply. (Køleskab became optional, off by default: S-007.)
 - **Household sync from the start.** Members of one household share one inventory.
 - **Supabase, EU region** (the project is in eu-west-1, Ireland).
 - **Offline use is ours to build:** IndexedDB on the phone, an outbox of changes, and pulling changes since the last sync plus Realtime. Counts are sent as operations (+1 / −2), so two people taking things at once are both counted.
@@ -67,3 +67,15 @@ Each entry records the decision, why, and what else was considered. Superseded e
   - The user can always change the category and the place before adding.
 - **Search** covers the name, the brand, the place and the category. Each word of the query must be found inside some word (Danish compounds: "mælk" finds "Letmælk"), ignoring case and accents. Name matches come first.
 - **Scanning** reuses stead's continuous scanner (zxing-wasm, works offline). A barcode already in the household opens "Du har allerede …" with + and "Tag 1 ud". A new barcode is filled from this phone's memory first, then Open Food Facts (online only), then typed.
+
+## S-007: The fridge is optional, off by default
+
+- **Date:** 2026-11-07
+- **Decision (owner):** the app is for the freezer and the cupboards. The fridge is a choice in Indstillinger ("Køleskabet med i appen"), off by default.
+- **Why:** things in the fridge come and go every day and are often half used. Logging each one is too much work, and a fridge list that is not kept up goes wrong within days, which makes people stop trusting the whole app. The freezer (things forgotten for months) and the cupboards (buying what you already have) are where the app helps most.
+- **What it means:**
+  - Without the fridge, what would go there starts in the freezer (meat, poultry, fish, leftovers) or the cupboard (the rest). The user can always pick another place.
+  - The fridge still shows while it holds things, so nothing disappears after turning it off. Search covers everything.
+  - The choice is kept on the phone for now; it becomes a household setting with slice 4.
+- **Thawing:** taking something out of the freezer just takes it out. The app does not offer to follow it as it thaws in the fridge (the owner turned that down; it can be revisited).
+- **Alternatives:** the fridge as an equal place (as before); the fridge only for short-lived things (meat, fish, leftovers, opened jars); no fridge at all; a "Tøer op" step that keeps thawed meat in "Brug snart" for a day or two.

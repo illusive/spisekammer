@@ -1,6 +1,6 @@
 # Spisekammer
 
-Spisekammer (working name) is an everyday app for Danish homes. It shows what is in the fridge, the freezer and the cupboards, and when to use it. It grew out of the Forråd part of stead (`../offline-knowledge`), which people asked for on its own.
+Spisekammer (working name) is an everyday app for Danish homes. It shows what is in the freezer and the cupboards (and the fridge, if a household wants it), and when to use it. It grew out of the Forråd part of stead (`../offline-knowledge`), which people asked for on its own.
 
 ## Goal
 
@@ -19,7 +19,7 @@ Danish households. Danish first, with an English interface too.
   - Scan to check whether you already have something.
 - **Overview:**
   - **"Brug snart"**: what to use soon, across all places, on top.
-  - The places (Køleskab, Fryser, Skab, and your own), each grouped by category.
+  - The places (Fryser, Skab, and your own), each grouped by category. Køleskab is optional and off by default (S-007): what is in it changes every day, so a list of it soon goes wrong.
 - **Household:** everyone in the home sees and changes the same inventory.
 
 ## How long things keep

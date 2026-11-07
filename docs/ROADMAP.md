@@ -21,9 +21,11 @@ Each slice builds, is tested, and works on its own.
 
    **Checked in the preview:** adding (the guess, the place), moving, taking the last one out, delete with confirm, search, a reload, typing on the scan screen without a camera, dark mode.
    **Not yet:** Playwright e2e tests run offline; the camera and "Du har allerede" with a real barcode (on an iPhone).
+
+   **Then (S-007):** the fridge is optional and off by default, a choice in Indstillinger.
 3. **Keeping times:**
    - the food types from FoodKeeper with Danish names (the 101 produce names from stead)
-   - the rules engine with tests (chicken in the freezer, mince in the fridge, opened jam, milk with a use-by date, thawing)
+   - the rules engine with tests (chicken in the freezer, mince in the fridge when the fridge is on, opened jam, milk with a use-by date, out of the freezer)
    - package dates, opened and frozen
    - "Brug snart"
    - a "Sådan regner appen" page

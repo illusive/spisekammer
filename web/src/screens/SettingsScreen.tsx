@@ -1,5 +1,5 @@
-// Indstillinger: language and appearance for now; household, places, export and the keeping rules
-// come in later slices.
+// Indstillinger: whether the fridge is included (S-007), language and appearance; household,
+// places, export and the keeping rules come in later slices.
 
 import { Card, Choice, Page, SubPageHeader } from '../components/ui';
 import type { Lang, Strings } from '../i18n/strings';
@@ -15,6 +15,16 @@ export function SettingsScreen({ lang, s }: { lang: Lang; s: Strings }) {
     <Page>
       <SubPageHeader backLabel={s.back} backTo={hrefs.home} title={t.title} />
       <div className="flex flex-col gap-4">
+        <Card className="flex flex-col gap-3">
+          <Choice<'off' | 'on'>
+            name="fridge"
+            legend={t.fridge}
+            value={prefs.fridge ? 'on' : 'off'}
+            onChange={(v) => setPreference('fridge', v === 'on')}
+            options={(['off', 'on'] as const).map((v) => ({ value: v, label: t.fridgeOptions[v] }))}
+          />
+          <p className="text-sm text-muted">{t.fridgeHelp}</p>
+        </Card>
         <Card className="flex flex-col gap-5">
           <Choice<LangPref>
             name="lang"
