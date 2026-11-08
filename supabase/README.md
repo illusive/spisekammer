@@ -34,7 +34,7 @@ The built-in service sends only a few emails an hour and may only reach the proj
 
 5. **Email sending.** Supabase's built-in email service is for trying things out: it sends only a few emails an hour and may only send to the project's team members. Set up custom SMTP (an EU provider) before inviting anyone outside the team (`docs/OPEN_QUESTIONS.md`).
 
-6. **The anon key** (Project Settings → API → the `anon` / publishable key) goes into `web/src/account/config.ts`. It is public by design; row-level security protects the data.
+6. **The publishable key** (Project Settings → API Keys, `sb_publishable_…`, which replaces the older `anon` key) goes into `web/src/account/config.ts`. It is public by design; row-level security protects the data.
 
 ## Changing the schema
 

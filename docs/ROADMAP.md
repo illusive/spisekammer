@@ -39,7 +39,8 @@ Each slice builds, is tested, and works on its own.
 
    **Checked in the preview:** the Husstand row, an invite link opening the screen, "not set up" without a key, the sign-in form.
    **Then (S-012):** the sign-in link in the email works too, for trying it out with Supabase's built-in email.
-   **Not yet:** applying the migration to the project, the email template, the anon key and custom SMTP (`supabase/README.md`); sign-in and invites end to end; the fridge setting moving from the phone to the household (slice 5).
+   **2026-11-08:** the migration is applied (checked: the tables exist and refuse signed-out reads) and the publishable key is in the app.
+   **Not yet:** the email template and custom SMTP (`supabase/README.md`); sign-in and invites end to end; the fridge setting moving from the phone to the household (slice 5).
 5. **Sync:** the outbox, pulls, Realtime, count operations, deletion markers; tests with two clients.
 6. **Shared catalogue:** saving typed products, filling in from them, reporting a wrong one, an optional "Tilføj til Open Food Facts".
 7. **Ready to share:**
