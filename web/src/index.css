@@ -156,3 +156,11 @@ body {
 input[type='date']::-webkit-date-and-time-value {
   text-align: left;
 }
+
+/* While a sheet is open the page behind does not scroll (S-016), so a field's keyboard cannot drag
+   the page, and the sheet with it, out of view. */
+html.sheet-open,
+html.sheet-open body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}

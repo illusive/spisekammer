@@ -178,3 +178,13 @@ Each entry records the decision, why, and what else was considered. Superseded e
   - **Indstillinger:** Steder, Del and "Sådan regner appen" come first. "Husstand" is now **"Del"** ("Share").
   - **A first start,** after bikeplanner's setup wizard: a welcome, the places you have (tick presets, add your own), whether to share, and "Du er klar". Shown once, on Hjem, on a phone with nothing in it; "Spring over" keeps the default places. Choosing to share goes to Del afterwards.
 - **Camera permission:** a web app cannot avoid the phone's question. Safari can remember "Tillad" for the site, but an installed web app may ask again after it restarts. A real app asks once (`docs/OPEN_QUESTIONS.md`); not now.
+
+## S-016: Sheets and the keyboard
+
+- **Date:** 2026-11-08
+- **Problem (owner, on an iPhone):** the whole sheet scrolled as one, so when the keyboard opened the phone pushed the sheet up and the first field went out of view.
+- **Decisions:**
+  - Only a sheet's content scrolls; its header (title and X) stays at the top.
+  - While a sheet is open it is fitted into the part of the screen the keyboard leaves free (the visual viewport), and the page behind does not scroll.
+  - **The keyboard opens by itself only when adding by typing** ("Tilføj", and "Uden stregkode" on the scan screen). Every other sheet starts on its title: a scanned thing, a thing's own sheet, a new or existing place, the place picker. After adding a scanned thing, the form no longer puts the cursor back in the name while the sheet closes.
+- **Not checked yet:** the keyboard itself on an iPhone (the preview has no on-screen keyboard; the layout was checked at a short screen height).

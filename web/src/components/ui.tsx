@@ -279,6 +279,11 @@ export function TabHeader({ title, settingsLabel, children }: { title: string; s
 // It slides up when opened and back down when closed (D-054, index.css). While it slides down it
 // keeps showing what it showed, even if the parent has already let go of it (a deleted thing); the
 // content is dropped once it is closed, so the next opening starts afresh.
+// The keyboard (S-016): only the content scrolls, under a header that stays (SheetHeader), and
+// while the sheet is open it is fitted into the part of the screen the keyboard leaves free, so the
+// phone does not push the whole sheet up and out of view. The page behind does not scroll.
+// Focus starts on [data-autofocus] (the name when adding by typing) or else on the title, so no
+// keyboard opens by itself anywhere else.
 export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, children }: { open: boolean; onClose: () => void; labelledBy: string; dismissOnBackdrop?: boolean; children: ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [, rerender] = useReducer((n: number) => n + 1, 0);
@@ -292,7 +297,7 @@ export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, chi
       delete dialog.dataset.closing;
       if (!dialog.open) {
         dialog.showModal();
-        dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+        (dialog.querySelector<HTMLElement>('[data-autofocus]') ?? dialog.querySelector<HTMLElement>('h2[tabindex]'))?.focus({ preventScroll: true });
       }
       return;
     }
@@ -319,6 +324,31 @@ export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, chi
     };
   }, [open]);
 
+  // Fitted above the keyboard: the visual viewport is what the keyboard leaves visible.
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!open || !dialog) return;
+    const root = document.documentElement;
+    root.classList.add('sheet-open');
+    const vv = window.visualViewport;
+    const fit = () => {
+      if (!vv) return;
+      const below = Math.max(0, window.innerHeight - vv.height - vv.offsetTop); // the keyboard
+      dialog.style.bottom = `${below}px`;
+      dialog.style.maxHeight = `${Math.round(Math.min(window.innerHeight * 0.85, vv.height - 12))}px`;
+    };
+    fit();
+    vv?.addEventListener('resize', fit);
+    vv?.addEventListener('scroll', fit);
+    return () => {
+      vv?.removeEventListener('resize', fit);
+      vv?.removeEventListener('scroll', fit);
+      dialog.style.bottom = '';
+      dialog.style.maxHeight = '';
+      if (!document.querySelector('dialog.sheet[open]:not([data-closing])')) root.classList.remove('sheet-open');
+    };
+  }, [open]);
+
   return (
     <dialog
       ref={ref}
@@ -330,9 +360,9 @@ export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, chi
       onClick={(e) => {
         if (dismissOnBackdrop && e.target === e.currentTarget) onClose(); // the backdrop, not the content
       }}
-      className="sheet inset-x-0 top-auto bottom-0 m-0 mx-auto max-h-[85dvh] w-full max-w-2xl overflow-y-auto rounded-t-[28px] border-t border-border bg-background p-0 text-text shadow-2xl backdrop:bg-black/50"
+      className="sheet inset-x-0 top-auto bottom-0 m-0 mx-auto max-h-[85dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[28px] border-t border-border bg-background p-0 text-text shadow-2xl backdrop:bg-black/50 open:flex"
     >
-      <div className="px-[16px] pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">{open ? children : last.current}</div>
+      <div className="min-h-0 flex-1 scroll-pt-24 overflow-y-auto overscroll-contain px-[16px] pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">{open ? children : last.current}</div>
     </dialog>
   );
 }
@@ -356,7 +386,7 @@ export function WarningNote({ title, children }: { title?: ReactNode; children: 
 // in, D-053), not on a field whose keyboard would cover it.
 export function SheetHeader({ id, title, closeLabel, onClose, autofocus = false, children }: { id: string; title: ReactNode; closeLabel: string; onClose: () => void; autofocus?: boolean; children?: ReactNode }) {
   return (
-    <div className="sticky top-0 z-10 -mx-[16px] -mt-4 flex items-start justify-between gap-[12px] border-b border-border bg-background px-[20px] pt-4 pb-3">
+    <div className="sticky -top-4 z-10 -mx-[16px] -mt-4 flex items-start justify-between gap-[12px] border-b border-border bg-background px-[20px] pt-4 pb-3">
       <div className="min-w-0 pt-1">
         <h2 id={id} tabIndex={-1} data-autofocus={autofocus ? '' : undefined} className="text-xl font-semibold outline-none">
           {title}

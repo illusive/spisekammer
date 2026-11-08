@@ -132,7 +132,6 @@ function PlaceSheet({ placeId, s, onDone }: { placeId: string | null; s: Strings
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={place && !place.name ? shownName(place.id) : t.namePlaceholder}
-                data-autofocus={place ? undefined : ''}
                 autoComplete="off"
                 className={fieldClass}
               />

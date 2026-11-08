@@ -89,7 +89,9 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
     setPackageKind(null);
     setShowTypes(false);
     setMissing(false);
-    nameRef.current?.focus();
+    // Typing things in one after another: back to the name. After a scan the sheet closes, and
+    // focusing a field in it would only flash the keyboard (S-016).
+    if (autofocusName) nameRef.current?.focus();
   };
 
   return (
