@@ -130,3 +130,13 @@ Each entry records the decision, why, and what else was considered. Superseded e
   - **`@supabase/supabase-js` 2.118.0** (MIT), loaded only with the household screen (57 kB gzipped, its own chunk). The main app grew by 2 kB.
   - **Versions:** both pinned exactly, each at least two weeks old.
 - **Alternatives:** an account required from the start (simpler data, more friction); a link only, or a code only; several households per user (a household switcher; not needed yet).
+
+## S-012: A sign-in link as well as the code, for trying it out
+
+- **Date:** 2026-11-08
+- **Context:** the email templates cannot be edited while the project uses Supabase's built-in email, so the email cannot show the 6-digit code (S-011). The owner wants to try it out before setting up an email provider.
+- **Decision (owner):** try it with the built-in email. The app accepts the sign-in link in the email as well as the code.
+  - The link uses PKCE: it comes back to the app with `?code=…`, and `web/src/main.tsx` sends it to the household screen, where supabase-js finishes the sign-in. The address is cleaned afterwards.
+  - The link works only in the browser that asked for it (a computer, or Safari on an iPhone). Opened elsewhere, or expired, the screen says so.
+  - The code stays the main way. With custom SMTP and the code template (`supabase/README.md`), the installed iPhone app signs in without leaving it.
+- **Alternatives:** wait for custom SMTP before trying anything; links only (breaks the installed iPhone app).

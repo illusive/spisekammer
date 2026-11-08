@@ -10,7 +10,7 @@ import { Button, Card, MessageState, Page, SubPageHeader, Toast, inputClass, use
 import type { Strings } from '../i18n/strings';
 import { usePageTitle } from '../lib/usePageTitle';
 import { hrefs } from '../router';
-import { accountError, createHousehold, createInvite, joinHousehold, leaveHousehold, loadAccount, sendCode, signOut, verifyCode, type Account, type AccountError, type Household } from '../account/account';
+import { accountError, createHousehold, createInvite, forgetLinkReturn, joinHousehold, leaveHousehold, linkReturn, loadAccount, sendCode, signOut, verifyCode, type Account, type AccountError, type Household } from '../account/account';
 import { accountsConfigured } from '../account/config';
 
 export default function HouseholdScreen({ code, s }: { code: string | null; s: Strings }) {
@@ -30,13 +30,29 @@ export default function HouseholdScreen({ code, s }: { code: string | null; s: S
   }, []);
 
   useEffect(() => {
-    if (accountsConfigured) void reload();
+    if (!accountsConfigured) return;
+    // Opened from the sign-in link in the email (S-012): supabase-js finishes the sign-in while the
+    // account loads. Still signed out after a link means it was opened in another browser.
+    const fromLink = linkReturn();
+    void reload().then(async () => {
+      if (fromLink) {
+        const after = await loadAccount().catch(() => null);
+        if (after?.status === 'signedOut') setError(fromLink === 'code' ? 'linkElsewhere' : 'invalidCode');
+      }
+      forgetLinkReturn();
+    });
   }, [reload]);
 
   let body;
   if (!accountsConfigured) body = <MessageState title={t.notConfigured} />;
   else if (account === null) body = error ? <ErrorNote error={error} s={s} /> : <MessageState title={s.loading} />;
-  else if (account.status === 'signedOut') body = <SignIn s={s} onSignedIn={reload} />;
+  else if (account.status === 'signedOut')
+    body = (
+      <>
+        {error ? <ErrorNote error={error} s={s} /> : null}
+        <SignIn s={s} onSignedIn={reload} />
+      </>
+    );
   else if (!account.household)
     body = (
       <>

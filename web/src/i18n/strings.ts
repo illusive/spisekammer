@@ -167,7 +167,7 @@ export interface Strings {
     left: string;
     signOut: string;
     signedInAs: (email: string) => string;
-    errors: { offline: string; invalidCode: string; rateLimit: string; inviteNotFound: string; alreadyInHousehold: string; invalidEmail: string; unknown: string };
+    errors: { offline: string; invalidCode: string; rateLimit: string; inviteNotFound: string; alreadyInHousehold: string; invalidEmail: string; linkElsewhere: string; unknown: string };
   };
   offlineReady: string;
   updateReady: string;
@@ -345,12 +345,12 @@ export const strings: Record<Lang, Strings> = {
       notConfigured: 'Deling er ikke sat op i denne version endnu.',
       offline: 'Du skal have internet for at logge ind og dele. Alt andet virker uden.',
       signInTitle: 'Del med husstanden',
-      signInIntro: 'Log ind med din e-mail. Du får en kode på 6 cifre, ingen adgangskode.',
+      signInIntro: 'Log ind med din e-mail. Du får en mail med et link eller en kode, ingen adgangskode.',
       email: 'E-mail',
       emailPlaceholder: 'dig@eksempel.dk',
       sendCode: 'Send kode',
       sending: 'Sender …',
-      codeSent: (email) => `Vi har sendt en kode til ${email}. Den virker i en time.`,
+      codeSent: (email) => `Vi har sendt en mail til ${email}. Tryk på linket i den, i denne browser, eller skriv koden, hvis der er en. Den virker i en time.`,
       code: 'Kode fra e-mailen',
       signIn: 'Log ind',
       otherEmail: 'Brug en anden e-mail',
@@ -385,11 +385,12 @@ export const strings: Record<Lang, Strings> = {
       signedInAs: (email) => `Logget ind som ${email}`,
       errors: {
         offline: 'Ingen forbindelse. Prøv igen, når du har internet.',
-        invalidCode: 'Koden passer ikke, eller den er for gammel. Prøv igen, eller få en ny.',
+        invalidCode: 'Koden eller linket passer ikke, eller det er for gammelt. Prøv igen, eller bed om en ny mail.',
         rateLimit: 'For mange forsøg. Vent lidt, og prøv igen.',
         inviteNotFound: 'Koden findes ikke, eller den er udløbet. Bed om en ny.',
         alreadyInHousehold: 'Du er allerede med i en husstand. Forlad den først.',
         invalidEmail: 'Skriv en gyldig e-mail.',
+        linkElsewhere: 'Linket virker kun i den browser, hvor du bad om det. Bed om en ny mail herfra.',
         unknown: 'Noget gik galt. Prøv igen.',
       },
     },
@@ -567,12 +568,12 @@ export const strings: Record<Lang, Strings> = {
       notConfigured: 'Sharing is not set up in this version yet.',
       offline: 'You need internet to sign in and share. Everything else works without.',
       signInTitle: 'Share with your household',
-      signInIntro: 'Sign in with your email. You get a 6-digit code, no password.',
+      signInIntro: 'Sign in with your email. You get an email with a link or a code, no password.',
       email: 'Email',
       emailPlaceholder: 'you@example.com',
       sendCode: 'Send code',
       sending: 'Sending …',
-      codeSent: (email) => `We sent a code to ${email}. It works for an hour.`,
+      codeSent: (email) => `We sent an email to ${email}. Tap the link in it, in this browser, or enter the code if there is one. It works for an hour.`,
       code: 'Code from the email',
       signIn: 'Sign in',
       otherEmail: 'Use another email',
@@ -607,11 +608,12 @@ export const strings: Record<Lang, Strings> = {
       signedInAs: (email) => `Signed in as ${email}`,
       errors: {
         offline: 'No connection. Try again when you have internet.',
-        invalidCode: 'The code does not match, or it is too old. Try again, or get a new one.',
+        invalidCode: 'The code or link does not match, or it is too old. Try again, or ask for a new email.',
         rateLimit: 'Too many tries. Wait a little and try again.',
         inviteNotFound: 'The code does not exist or has expired. Ask for a new one.',
         alreadyInHousehold: 'You are already in a household. Leave it first.',
         invalidEmail: 'Enter a valid email.',
+        linkElsewhere: 'The link only works in the browser where you asked for it. Ask for a new email from here.',
         unknown: 'Something went wrong. Try again.',
       },
     },

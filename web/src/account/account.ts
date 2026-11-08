@@ -3,7 +3,10 @@
 // (localStorage, 'spisekammer.auth') and refreshed while online.
 //
 // Sign-in is a 6-digit code by email, not a magic link: a link would open Safari instead of the
-// installed app on an iPhone (S-002).
+// installed app on an iPhone (S-002). While the project uses Supabase's built-in email, whose
+// template cannot be changed to show the code, the email carries a link instead (S-012). The link
+// comes back to the app with ?code=… (PKCE), which works in the browser that asked for it; main.tsx
+// sends such a return to this screen, and supabase-js finishes the sign-in when it loads.
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from './config';
@@ -11,9 +14,22 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from './config';
 let client: SupabaseClient | null = null;
 function supabase(): SupabaseClient {
   client ??= createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'spisekammer.auth' },
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce', storageKey: 'spisekammer.auth' },
   });
   return client;
+}
+
+// Where the email's link leads: the app's own address (the household screen picks it up).
+const returnUrl = () => `${location.origin}${location.pathname}`;
+
+// Whether this page was opened from a sign-in link (?code=… or an error), read before supabase-js
+// handles it; and the address cleaned afterwards, so a reload does not try the link again.
+export function linkReturn(): 'code' | 'error' | null {
+  const query = new URLSearchParams(location.search);
+  return query.has('code') ? 'code' : query.has('error_description') || query.has('error') ? 'error' : null;
+}
+export function forgetLinkReturn() {
+  if (location.search) history.replaceState(history.state, '', `${location.pathname}${location.hash}`);
 }
 
 export interface Member {
@@ -61,7 +77,7 @@ async function check<T>(p: PromiseLike<{ data: T; error: unknown }>): Promise<T>
   return data;
 }
 
-export const sendCode = (email: string) => check(supabase().auth.signInWithOtp({ email, options: { shouldCreateUser: true } }));
+export const sendCode = (email: string) => check(supabase().auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: returnUrl() } }));
 export const verifyCode = (email: string, token: string) => check(supabase().auth.verifyOtp({ email, token, type: 'email' }));
 export const signOut = () => supabase().auth.signOut({ scope: 'local' });
 
@@ -70,7 +86,7 @@ export const createInvite = (householdId: string) => check(supabase().rpc('creat
 export const joinHousehold = (code: string) => check(supabase().rpc('join_household', { invite_code: code }));
 export const leaveHousehold = () => check(supabase().rpc('leave_household'));
 
-export type AccountError = 'offline' | 'invalidCode' | 'rateLimit' | 'inviteNotFound' | 'alreadyInHousehold' | 'invalidEmail' | 'unknown';
+export type AccountError = 'offline' | 'invalidCode' | 'rateLimit' | 'inviteNotFound' | 'alreadyInHousehold' | 'invalidEmail' | 'linkElsewhere' | 'unknown';
 
 // What went wrong, in the words the screen has for it. The database functions raise named errors
 // (supabase/migrations); Supabase Auth has its own codes.
