@@ -3,7 +3,7 @@
 
 import { defaultPlaceKind } from '../inventory/categories';
 import type { Item } from '../inventory/model';
-import { placeOf, type PlaceKind } from '../places';
+import { placeOf, type Place, type PlaceKind } from '../places';
 import { foodType } from './foodTypes';
 import { keeping, urgency, type Keeping, type PackageKind, type Urgency } from './rules';
 import type { FoodType, Time } from './types';
@@ -15,9 +15,9 @@ export interface ItemKeeping {
   urgency: Urgency;
 }
 
-export function itemKeeping(item: Item, today: string): ItemKeeping {
+export function itemKeeping(item: Item, today: string, places: Place[]): ItemKeeping {
   const type = foodType(item.typeId);
-  const place = placeOf(item.placeId)?.kind ?? 'pantry';
+  const place = placeOf(places, item.placeId)?.kind ?? 'pantry';
   const k = keeping({ type, place, placedOn: item.placedOn, openedOn: item.openedOn, thawedOn: item.thawedOn, packageDate: item.packageDate, packageKind: item.packageKind });
   return { keeping: k, type, place, urgency: urgency(k, place, today) };
 }

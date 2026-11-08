@@ -10,7 +10,8 @@ export type ThemePref = 'system' | 'light' | 'dark';
 export interface Preferences {
   lang: LangPref;
   theme: ThemePref;
-  // Whether the fridge is a place in the app (S-007). Off by default. Per household with slice 4.
+  // The old fridge switch (S-007). Only read once, to keep a fridge place for phones that had it
+  // on (S-013 replaced it with places of the kind Køl).
   fridge: boolean;
 }
 
@@ -29,6 +30,7 @@ const store = createLocalStore<Preferences>({
 });
 
 export const usePreferences = store.use;
+export const readPreferences = store.get;
 
 export function setPreference<K extends keyof Preferences>(key: K, value: Preferences[K]) {
   store.update((current) => ({ ...current, [key]: value }));

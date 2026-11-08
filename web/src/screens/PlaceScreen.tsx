@@ -17,11 +17,12 @@ import { hrefs } from '../router';
 
 export function PlaceScreen({ id, lang, s }: { id: string; lang: Lang; s: Strings }) {
   const loaded = useInventoryLoaded();
-  const items = useInventory().items.filter((i) => i.placeId === id);
+  const { items: all, places } = useInventory();
+  const items = all.filter((i) => i.placeId === id);
   const [openId, setOpenId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  const title = placeName(id, s);
+  const title = placeName(places, id, s);
   usePageTitle(title, s.appTitle);
   const total = items.reduce((sum, i) => sum + i.count, 0);
   const day = today();

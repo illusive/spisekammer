@@ -11,11 +11,10 @@ import { foodType, foodTypeName, matchFoodType } from '../keeping/foodTypes';
 import { defaultPackageKind, placeKindForType } from '../keeping/itemKeeping';
 import { KeepDetails, PackageDateFields, readTypeValue, TypeSelect, typeValue } from '../keeping/KeepInfo';
 import { keeping, urgency, type PackageKind } from '../keeping/rules';
-import { placeIdOf, placeOf } from '../places';
-import { usePreferences } from '../settings/preferences';
+import { hasFridge, placeIdForKind, placeName, placeOf, sortPlaces } from '../places';
 import { defaultPlaceKind, guessCategory, soundsFrozen, type Category } from './categories';
 import { MAX_COUNT, type NewItem } from './model';
-import { useShownPlaces } from './shownPlaces';
+import { useInventory } from './store';
 import { parseSize } from './size';
 
 export interface FormStart {
@@ -41,7 +40,8 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
   const [showTypes, setShowTypes] = useState(false);
   const [missing, setMissing] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
-  const { fridge } = usePreferences();
+  const allPlaces = useInventory().places;
+  const fridge = hasFridge(allPlaces);
 
   // A scan fills the form after it opened (the lookup is online): take what it found.
   useEffect(() => {
@@ -55,12 +55,12 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
   const shownType = chosen ? foodType(chosen.typeId ?? undefined) : matchFoodType(name);
   const shownCategory: Category = chosen?.category ?? shownType?.category ?? category ?? guessCategory(name) ?? 'other';
   const guessedKind = soundsFrozen(name) ? 'freezer' : shownType ? placeKindForType(shownType, fridge) : defaultPlaceKind(shownCategory, fridge);
-  const shownPlace = placeId ?? placeIdOf(guessedKind);
-  const places = useShownPlaces(shownPlace);
+  const shownPlace = placeId ?? placeIdForKind(allPlaces, guessedKind);
+  const places = sortPlaces(allPlaces);
   const kind = packageKind ?? defaultPackageKind(shownType);
 
   const day = today();
-  const placeKind = placeOf(shownPlace)?.kind ?? 'pantry';
+  const placeKind = placeOf(allPlaces, shownPlace)?.kind ?? 'pantry';
   const preview = keeping({ type: shownType, place: placeKind, placedOn: day, ...(packageDay ? { packageDate: packageDay, packageKind: kind } : {}) });
 
   const submit = () => {
@@ -150,10 +150,10 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
           />
         ) : null}
       </div>
-      <Choice name={`${idPrefix}-place`} legend={s.place} value={shownPlace} onChange={setPlaceId} options={places.map((p) => ({ value: p.id, label: s.placeKinds[p.kind] }))} />
+      <Choice name={`${idPrefix}-place`} legend={s.place} value={shownPlace} onChange={setPlaceId} options={places.map((p) => ({ value: p.id, label: placeName(allPlaces, p.id, s) }))} />
       {name.trim() ? (
         <div className="rounded-2xl bg-background px-[16px] py-3">
-          <KeepDetails k={preview} urgency={urgency(preview, placeKind, day)} type={shownType} place={placeKind} today={day} lang={lang} s={s} showLink={false} />
+          <KeepDetails k={preview} urgency={urgency(preview, placeKind, day)} type={shownType} place={placeKind} placeLabel={placeName(allPlaces, shownPlace, s)} today={day} lang={lang} s={s} showLink={false} />
         </div>
       ) : null}
       <Stepper label={s.count} value={count} min={1} max={MAX_COUNT} onChange={setCount} />

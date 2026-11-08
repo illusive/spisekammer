@@ -4,7 +4,7 @@
 // type feed the keeping rules (keeping/rules.ts, S-010).
 
 import type { PackageKind } from '../keeping/rules';
-import type { PlaceKind } from '../places';
+import { PLACE_KINDS, type Place, type PlaceKind } from '../places';
 import { CATEGORIES, type Category } from './categories';
 import { SIZE_UNITS, type SizeUnit } from './size';
 
@@ -43,9 +43,10 @@ export interface Product {
 export interface Inventory {
   items: Item[];
   products: Record<string, Product>;
+  places: Place[]; // the household's places (S-013)
 }
 
-export const EMPTY: Inventory = { items: [], products: {} };
+export const EMPTY: Inventory = { items: [], products: {}, places: [] };
 
 const str = (x: unknown, max = 120): string | undefined => (typeof x === 'string' && x.trim() ? x.trim().slice(0, max) : undefined);
 const isDay = (x: unknown): x is string => typeof x === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x);
@@ -84,6 +85,18 @@ export function parseItem(x: unknown): Item | null {
   return item;
 }
 
+export function parsePlace(x: unknown): Place | null {
+  if (typeof x !== 'object' || x === null) return null;
+  const r = x as Record<string, unknown>;
+  const id = str(r.id, 64);
+  const kind = PLACE_KINDS.find((k) => k === r.kind);
+  if (!id || !kind) return null;
+  const place: Place = { id, kind, sort: typeof r.sort === 'number' && Number.isFinite(r.sort) ? r.sort : 0, updatedAt: typeof r.updatedAt === 'number' ? r.updatedAt : 0 };
+  const name = str(r.name, 40);
+  if (name) place.name = name;
+  return place;
+}
+
 export function parseProduct(x: unknown): Product | null {
   if (typeof x !== 'object' || x === null) return null;
   const r = x as Record<string, unknown>;
@@ -103,7 +116,7 @@ export function parseProduct(x: unknown): Product | null {
 export type NewItem = Omit<Item, 'id' | 'addedOn' | 'placedOn' | 'updatedAt'>;
 
 // The changes. Each returns the new state and the records to write (put) or delete.
-export type Change = { state: Inventory; put?: Item[]; remove?: string[]; putProducts?: Product[] };
+export type Change = { state: Inventory; put?: Item[]; remove?: string[]; putProducts?: Product[]; putPlaces?: Place[]; removePlaces?: string[] };
 
 export function addItem(state: Inventory, item: NewItem, id: string, today: string, now: number): Change {
   const saved: Item = { ...item, count: clampCount(item.count), id, addedOn: today, placedOn: today, updatedAt: now };
@@ -120,13 +133,48 @@ export function setCount(state: Inventory, id: string, count: number, now: numbe
 }
 
 // A move starts the place's clock again. Out of the freezer into the fridge, it is thawing (S-010).
-export function moveItem(state: Inventory, id: string, placeId: string, kindOf: (placeId: string) => PlaceKind | undefined, today: string, now: number): Change {
+export function moveItem(state: Inventory, id: string, placeId: string, today: string, now: number): Change {
   const item = state.items.find((i) => i.id === id);
   if (!item || item.placeId === placeId) return { state };
+  return replace(state, moved(state.places, item, placeId, today, now));
+}
+
+function moved(places: Place[], item: Item, placeId: string, today: string, now: number): Item {
+  const kindOf = (pid: string): PlaceKind | undefined => places.find((p) => p.id === pid)?.kind;
   const thawing = kindOf(item.placeId) === 'freezer' && kindOf(placeId) === 'fridge';
   const { thawedOn: _, ...rest } = item;
-  const next: Item = { ...rest, placeId, placedOn: today, ...(thawing ? { thawedOn: today } : {}), updatedAt: now };
-  return replace(state, next);
+  return { ...rest, placeId, placedOn: today, ...(thawing ? { thawedOn: today } : {}), updatedAt: now };
+}
+
+// --- Places (S-013)
+
+export const MAX_PLACE_NAME = 40;
+
+export function addPlace(state: Inventory, place: { id: string; name: string; kind: PlaceKind }, now: number): Change {
+  const sort = Math.max(-1, ...state.places.map((p) => p.sort)) + 1;
+  const saved: Place = { id: place.id, kind: place.kind, name: place.name.trim().slice(0, MAX_PLACE_NAME), sort, updatedAt: now };
+  return { state: { ...state, places: [...state.places, saved] }, putPlaces: [saved] };
+}
+
+// A new name (empty: the preset's own name again) or kind. A new kind changes the keeping times
+// of what is in it, from the day each thing came in.
+export function updatePlace(state: Inventory, id: string, change: { name?: string; kind?: PlaceKind }, now: number): Change {
+  const place = state.places.find((p) => p.id === id);
+  if (!place) return { state };
+  const { name: _, ...rest } = place;
+  const name = change.name === undefined ? place.name : change.name.trim().slice(0, MAX_PLACE_NAME) || undefined;
+  const next: Place = { ...rest, ...(name ? { name } : {}), kind: change.kind ?? place.kind, updatedAt: now };
+  return { state: { ...state, places: state.places.map((p) => (p.id === id ? next : p)) }, putPlaces: [next] };
+}
+
+// Deleting a place moves its things to another place first; the last place cannot go.
+export function removePlace(state: Inventory, id: string, moveTo: string | null, today: string, now: number): Change {
+  if (!state.places.some((p) => p.id === id) || state.places.length <= 1) return { state };
+  const inIt = state.items.filter((i) => i.placeId === id);
+  if (inIt.length > 0 && (!moveTo || moveTo === id || !state.places.some((p) => p.id === moveTo))) return { state };
+  const movedItems = inIt.map((i) => moved(state.places, i, moveTo!, today, now));
+  const items = state.items.map((i) => movedItems.find((m) => m.id === i.id) ?? i);
+  return { state: { ...state, items, places: state.places.filter((p) => p.id !== id) }, removePlaces: [id], ...(movedItems.length > 0 ? { put: movedItems } : {}) };
 }
 
 // Opened on a day, or not opened (null: undo).

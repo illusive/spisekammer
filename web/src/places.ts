@@ -1,29 +1,67 @@
-// The places things are kept (S-002). A new household starts with these three; its own places
-// come with households (slice 4). The kind decides which keeping times apply (slice 3).
-// The fridge is optional and off by default (S-007): its things change every day, so a list of
-// them soon goes wrong. The freezer and the pantry (Forråd) are what the app is for.
+// The places things are kept (S-002, S-013). The household makes its own: more freezers, several
+// cupboards, a cellar. Each place has a kind, Frost, Køl or Tørvarer, which decides the keeping
+// times (keeping/rules.ts). New households start with Fryser, Skabe and Viktualiekammer; a fridge
+// is a place of the kind Køl that the user adds (S-007 is replaced: no switch).
+//
+// Pure: the list lives in the inventory (inventory/store.ts) and is passed in.
 
 import type { Strings } from './i18n/strings';
 
 export type PlaceKind = 'fridge' | 'freezer' | 'pantry';
+export const PLACE_KINDS: PlaceKind[] = ['freezer', 'fridge', 'pantry']; // the order in pickers
 
 export interface Place {
   id: string;
   kind: PlaceKind;
+  name?: string; // none: the preset's name in the user's language (Fryser / Freezer)
+  sort: number;
+  updatedAt: number;
 }
+
+// The places a new household starts with. Their ids keep things added before S-013 where they
+// were: 'freezer' and 'pantry' (Forråd, now Skabe).
+export const PRESET_IDS = ['freezer', 'pantry', 'larder', 'fridge'] as const;
+export type PresetId = (typeof PRESET_IDS)[number];
+const isPreset = (id: string): id is PresetId => (PRESET_IDS as readonly string[]).includes(id);
 
 export const DEFAULT_PLACES: Place[] = [
-  { id: 'fridge', kind: 'fridge' },
-  { id: 'freezer', kind: 'freezer' },
-  { id: 'pantry', kind: 'pantry' },
+  { id: 'freezer', kind: 'freezer', sort: 0, updatedAt: 0 },
+  { id: 'pantry', kind: 'pantry', sort: 1, updatedAt: 0 },
+  { id: 'larder', kind: 'pantry', sort: 2, updatedAt: 0 },
 ];
 
-export const placeOf = (id: string): Place | undefined => DEFAULT_PLACES.find((p) => p.id === id);
+export const sortPlaces = (places: Place[]) => [...places].sort((a, b) => a.sort - b.sort || a.id.localeCompare(b.id));
+export const placeOf = (places: Place[], id: string): Place | undefined => places.find((p) => p.id === id);
+export const hasFridge = (places: Place[]) => places.some((p) => p.kind === 'fridge');
 
-export function placeName(id: string, s: Strings): string {
-  const place = placeOf(id);
-  return place ? s.placeKinds[place.kind] : id;
+export function placeName(places: Place[], id: string, s: Strings): string {
+  const place = placeOf(places, id);
+  if (!place) return s.placeGone;
+  return place.name ?? (isPreset(place.id) ? s.placePresets[place.id] : s.placeKinds[place.kind]);
 }
 
-// The place of that kind (the defaults use the kind as their id).
-export const placeIdOf = (kind: PlaceKind): string => DEFAULT_PLACES.find((p) => p.kind === kind)?.id ?? kind;
+// Where a new thing of a kind goes: the first place of that kind; failing that, a Tørvarer place,
+// failing that the first place there is.
+export function placeIdForKind(places: Place[], kind: PlaceKind): string {
+  const sorted = sortPlaces(places);
+  return (sorted.find((p) => p.kind === kind) ?? sorted.find((p) => p.kind === 'pantry') ?? sorted[0])?.id ?? 'pantry';
+}
+
+// The places to keep when the app starts: the stored ones; or, the first time (and for phones from
+// before S-013), the defaults plus a fridge if things are in it or the old fridge switch was on,
+// and a place for any other place a thing points to, so nothing is ever left without one.
+export function startingPlaces(stored: Place[], itemPlaceIds: string[], fridgeWasOn: boolean): { places: Place[]; added: Place[] } {
+  const places = stored.length > 0 ? [...stored] : [...DEFAULT_PLACES];
+  const added = stored.length > 0 ? [] : [...DEFAULT_PLACES];
+  const add = (place: Place) => {
+    places.push(place);
+    added.push(place);
+  };
+  const nextSort = () => Math.max(-1, ...places.map((p) => p.sort)) + 1;
+  if (stored.length === 0 && fridgeWasOn && !itemPlaceIds.includes('fridge')) add({ id: 'fridge', kind: 'fridge', sort: nextSort(), updatedAt: 0 });
+  for (const id of new Set(itemPlaceIds)) {
+    if (placeOf(places, id)) continue;
+    add(id === 'fridge' ? { id, kind: 'fridge', sort: nextSort(), updatedAt: 0 } : { id, kind: 'pantry', name: id, sort: nextSort(), updatedAt: 0 });
+  }
+  return { places, added };
+}

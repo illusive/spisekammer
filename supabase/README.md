@@ -16,7 +16,7 @@ The built-in service sends only a few emails an hour and may only reach the proj
 
 ## Setting up the project (once)
 
-1. **Apply the migration.** Either paste `migrations/20261108000000_households.sql` into the SQL editor and run it, or from the repo root:
+1. **Apply the migrations,** in order. Either paste each file in `migrations/` into the SQL editor and run it (`20261108000000_households.sql`, then `20261108120000_places.sql`), or from the repo root:
 
    ```
    npx supabase db push --db-url "postgresql://postgres.vfenzvvexhwuuxiaexux:<password>@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"

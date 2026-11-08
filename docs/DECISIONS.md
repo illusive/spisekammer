@@ -22,7 +22,7 @@ Each entry records the decision, why, and what else was considered. Superseded e
 ## S-002: Places, and a household that syncs
 
 - **Date:** 2026-11-07
-- **Decision (owner):** each thing has a **place**: Køleskab, Fryser, Forråd, or the household's own. The place decides which keeping times apply. (Køleskab became optional, off by default: S-007. Forråd was first called Skab: S-008.)
+- **Decision (owner):** each thing has a **place**. The place decides which keeping times apply. (The places are now the household's own, each with a kind: S-013.)
 - **Household sync from the start.** Members of one household share one inventory.
 - **Supabase, EU region** (the project is in eu-west-1, Ireland).
 - **Offline use is ours to build:** IndexedDB on the phone, an outbox of changes, and pulling changes since the last sync plus Realtime. Counts are sent as operations (+1 / −2), so two people taking things at once are both counted.
@@ -68,7 +68,7 @@ Each entry records the decision, why, and what else was considered. Superseded e
 - **Search** covers the name, the brand, the place and the category. Each word of the query must be found inside some word (Danish compounds: "mælk" finds "Letmælk"), ignoring case and accents. Name matches come first.
 - **Scanning** reuses stead's continuous scanner (zxing-wasm, works offline). A barcode already in the household opens "Du har allerede …" with + and "Tag 1 ud". A new barcode is filled from this phone's memory first, then Open Food Facts (online only), then typed.
 
-## S-007: The fridge is optional, off by default
+## S-007: The fridge is optional, off by default (replaced by S-013)
 
 - **Date:** 2026-11-07
 - **Decision (owner):** the app is for the freezer and the cupboards. The fridge is a choice in Indstillinger ("Køleskabet med i appen"), off by default.
@@ -80,7 +80,7 @@ Each entry records the decision, why, and what else was considered. Superseded e
 - **Thawing:** taking something out of the freezer just takes it out. The app does not offer to follow it as it thaws in the fridge (the owner turned that down; it can be revisited).
 - **Alternatives:** the fridge as an equal place (as before); the fridge only for short-lived things (meat, fish, leftovers, opened jars); no fridge at all; a "Tøer op" step that keeps thawed meat in "Brug snart" for a day or two.
 
-## S-008: "Forråd", not "Skab"
+## S-008: "Forråd", not "Skab" (replaced by S-013)
 
 - **Date:** 2026-11-07
 - **Decision (owner):** the place for dry and long-keeping things is called **Forråd** (English: "Pantry"). "Skab" (cupboard) did not fit a viktualiekammer, a basement shelf or a larder.
@@ -140,3 +140,19 @@ Each entry records the decision, why, and what else was considered. Superseded e
   - The link works only in the browser that asked for it (a computer, or Safari on an iPhone). Opened elsewhere, or expired, the screen says so.
   - The code stays the main way. With custom SMTP and the code template (`supabase/README.md`), the installed iPhone app signs in without leaving it.
 - **Alternatives:** wait for custom SMTP before trying anything; links only (breaks the installed iPhone app).
+
+## S-013: The household's own places, each with a kind
+
+- **Date:** 2026-11-08
+- **Decision (owner):** the household makes its own places (more freezers, several cupboards, a cellar) and gives each one a kind. Replaces S-007 (the fridge switch) and S-008 (Forråd).
+  - **Three kinds:** **Frost** (freezer), **Køl** (fridge) and **Tørvarer** (cupboard, cellar, viktualiekammer). The kind decides the keeping times; FoodKeeper has times for exactly these three.
+  - **Defaults:** Fryser (Frost), Skabe (Tørvarer) and Viktualiekammer (Tørvarer). No fridge: a fridge is a place of the kind Køl that the user adds. The switch in Indstillinger is gone.
+  - **Deleting a place** with things in it asks where they go first. The last place cannot be deleted.
+- **Details (ours):**
+  - Places are stored with the things (IndexedDB `places`, database version 2) and passed to the screens; `web/src/places.ts` has pure helpers.
+  - Presets keep their ids, so things added before stay put: `freezer` (Fryser), `pantry` (was Forråd, now Skabe), `larder` (Viktualiekammer). A preset without its own name shows the preset's name in the user's language; renaming it to nothing gives that name back.
+  - Moving to another phone version: the first start adds the defaults, plus a fridge if things are in it or the old switch was on, plus a place for any other place a thing points to. Nothing is left without a place.
+  - New things go to the first place of the kind their food type suggests. Without a fridge, chilled things go to the freezer (meat, fish, leftovers) or a Tørvarer place.
+  - Changing a place's kind changes the keeping times of what is in it, counted from the day each thing came in.
+  - **Server:** `supabase/migrations/20261108120000_places.sql` starts new households with the same three places and drops `households.fridge`.
+- **Alternatives:** a fourth kind for a cool cellar (FoodKeeper has no times for it; Tørvarer is the cautious choice); keeping the fridge switch as well (two ways to the same thing); deleting a place with its things, or only empty places.

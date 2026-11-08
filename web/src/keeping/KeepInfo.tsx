@@ -36,8 +36,7 @@ export function KeepShort({ k, urgency, today, lang, s }: { k: Keeping; urgency:
   return <span className={`block text-sm ${urgentClass(urgency)}`}>{when ? `${line} (${when})` : line}</span>;
 }
 
-function noteText(k: Keeping, place: PlaceKind, s: Strings): string | null {
-  const placeName = s.placeKinds[place];
+function noteText(k: Keeping, placeName: string, s: Strings): string | null {
   switch (k.note) {
     case 'noType':
       return s.keep.noType;
@@ -61,12 +60,12 @@ function noteText(k: Keeping, place: PlaceKind, s: Strings): string | null {
 }
 
 // The full story, for the sheet and the add form.
-export function KeepDetails(props: { k: Keeping; urgency: Urgency; type: FoodType | undefined; place: PlaceKind; today: string; lang: Lang; s: Strings; showLink?: boolean }) {
-  const { k, urgency, type, place, today, lang, s, showLink = true } = props;
+export function KeepDetails(props: { k: Keeping; urgency: Urgency; type: FoodType | undefined; place: PlaceKind; placeLabel: string; today: string; lang: Lang; s: Strings; showLink?: boolean }) {
+  const { k, urgency, type, place, placeLabel, today, lang, s, showLink = true } = props;
   const line = dateLine(k, lang, s);
   const when = URGENT.includes(urgency) ? relative(k, today, s) : null; // "in 92 days" is noise
   const past = urgency === 'past' ? (k.source === 'useBy' ? s.keep.pastUseBy : k.source === 'bestBefore' ? s.keep.pastBestBefore : s.keep.pastEstimate) : null;
-  const note = noteText(k, place, s);
+  const note = noteText(k, placeLabel, s);
   const range = k.source === 'estimate' && k.by && k.upTo ? s.keep.range(formatDay(k.by, lang), formatDay(k.upTo, lang)) : null;
   const doubt = k.by !== null && inDoubtThrowOut(k, type, place);
   return (

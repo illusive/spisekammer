@@ -41,7 +41,6 @@ export interface Member {
 export interface Household {
   id: string;
   name: string;
-  fridge: boolean;
   members: Member[];
 }
 
@@ -56,7 +55,7 @@ export async function loadAccount(): Promise<Account> {
   if (members.error) throw members.error;
   const first = members.data[0];
   if (!first) return { status: 'signedIn', userId: user.id, email: user.email ?? '', household: null };
-  const household = await supabase().from('households').select('id, name, fridge').eq('id', first.household_id).single();
+  const household = await supabase().from('households').select('id, name').eq('id', first.household_id).single();
   if (household.error) throw household.error;
   return {
     status: 'signedIn',
@@ -65,7 +64,6 @@ export async function loadAccount(): Promise<Account> {
     household: {
       id: household.data.id as string,
       name: household.data.name as string,
-      fridge: household.data.fridge as boolean,
       members: members.data.map((m) => ({ userId: m.user_id as string, email: m.email as string, role: m.role === 'owner' ? 'owner' : 'member' })),
     },
   };

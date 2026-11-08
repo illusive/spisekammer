@@ -26,6 +26,7 @@ export function ScanScreen({ placeId, lang, s }: { placeId: string | null; lang:
   const [entry, setEntry] = useState<Entry | null>(null);
   const [added, setAdded] = useState(0);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const { places } = useInventory();
   usePageTitle(s.scan, s.appTitle);
 
   const onCode = useCallback((code: string) => setEntry({ key: Date.now(), code }), []);
@@ -41,7 +42,7 @@ export function ScanScreen({ placeId, lang, s }: { placeId: string | null; lang:
     <main className="fixed inset-0 z-30 flex flex-col bg-black text-white">
       <div className="flex items-center justify-between gap-[12px] px-[16px] pt-[max(1rem,env(safe-area-inset-top))] pb-3">
         <div>
-          <h1 className="text-lg font-bold">{placeId ? `${s.scan} · ${placeName(placeId, s)}` : s.scan}</h1>
+          <h1 className="text-lg font-bold">{placeId ? `${s.scan} · ${placeName(places, placeId, s)}` : s.scan}</h1>
           <p className="text-sm text-white/70">{added > 0 ? s.addedCount(added) : ' '}</p>
         </div>
         <Button variant="primary" onClick={() => goBack(back)}>
@@ -80,12 +81,12 @@ function EntrySheet(props: SheetProps) {
 
 // A barcode the household has: where it is, and + / take one out (in this place if scanning there).
 function HaveItSheet({ items, placeId, s, onDone, onCancel }: SheetProps & { items: Item[] }) {
-  const live = useInventory().items;
+  const { items: live, places } = useInventory();
   const current = items.map((i) => live.find((x) => x.id === i.id)).filter((i): i is Item => i !== undefined);
   const target = current.find((i) => i.placeId === placeId) ?? current[0];
   const [n, setN] = useState(1);
   if (!target) return null;
-  const where = current.map((i) => s.inPlace(i.count, placeName(i.placeId, s))).join(', ');
+  const where = current.map((i) => s.inPlace(i.count, placeName(places, i.placeId, s))).join(', ');
   return (
     <form
       onSubmit={(e) => {
@@ -161,7 +162,7 @@ function NewThingSheet({ code, placeId, lang, s, onDone, onCancel }: SheetProps)
             inventory.add(item);
             // The barcode is remembered on this phone with what the user settled on (S-004).
             if (code) inventory.rememberProduct({ barcode: code, name: item.name, ...(item.brand ? { brand: item.brand } : {}), ...(start.size ? { quantity: start.size } : {}), category: item.category });
-            onDone(s.added(item.name, placeName(item.placeId, s)));
+            onDone(s.added(item.name, placeName(inventory.get().places, item.placeId, s)));
           }}
         />
       </div>

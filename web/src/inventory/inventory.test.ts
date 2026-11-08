@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { categoryFromTags, guessCategory, soundsFrozen } from './categories';
 import { addItem, EMPTY, moveItem, parseItem, parseProduct, rememberProduct, removeItem, setCount, setOpened, setPackageDate, setType, withBarcode, type Inventory, type NewItem } from './model';
-import type { PlaceKind } from '../places';
+import type { Place } from '../places';
 
-const kindOf = (id: string) => (['fridge', 'freezer', 'pantry'].includes(id) ? (id as PlaceKind) : undefined);
+// A freezer, a fridge and a cupboard, so moves between them can be tested.
+const PLACES: Place[] = [
+  { id: 'freezer', kind: 'freezer', sort: 0, updatedAt: 0 },
+  { id: 'fridge', kind: 'fridge', sort: 1, updatedAt: 0 },
+  { id: 'pantry', kind: 'pantry', sort: 2, updatedAt: 0 },
+];
 import { searchItems } from './search';
 import { parseProduct as parseOff } from '../scan/barcode';
 
@@ -11,7 +16,7 @@ const milk: NewItem = { name: 'Letmælk', brand: 'Arla', category: 'dairy', plac
 
 describe('Inventory changes', () => {
   it('adds, takes out, moves and removes, and says what to write', () => {
-    let s: Inventory = EMPTY;
+    let s: Inventory = { ...EMPTY, places: PLACES };
     const added = addItem(s, milk, 'a', '2026-11-07', 1);
     s = added.state;
     expect(added.put?.[0]).toMatchObject({ id: 'a', count: 2, addedOn: '2026-11-07', placedOn: '2026-11-07', updatedAt: 1 });
@@ -20,14 +25,14 @@ describe('Inventory changes', () => {
     expect(taken.state.items[0]?.count).toBe(1);
     expect(taken.put?.[0]?.updatedAt).toBe(2);
 
-    const moved = moveItem(taken.state, 'a', 'freezer', kindOf, '2026-11-08', 3);
+    const moved = moveItem(taken.state, 'a', 'freezer', '2026-11-08', 3);
     expect(moved.state.items[0]).toMatchObject({ placeId: 'freezer', placedOn: '2026-11-08' });
     expect(moved.state.items[0]?.thawedOn).toBeUndefined();
-    expect(moveItem(moved.state, 'a', 'freezer', kindOf, '2026-11-09', 4).put).toBeUndefined(); // already there
+    expect(moveItem(moved.state, 'a', 'freezer', '2026-11-09', 4).put).toBeUndefined(); // already there
 
-    const thawed = moveItem(moved.state, 'a', 'fridge', kindOf, '2026-12-01', 4);
+    const thawed = moveItem(moved.state, 'a', 'fridge', '2026-12-01', 4);
     expect(thawed.state.items[0]).toMatchObject({ placeId: 'fridge', placedOn: '2026-12-01', thawedOn: '2026-12-01' });
-    expect(moveItem(thawed.state, 'a', 'pantry', kindOf, '2026-12-02', 4).state.items[0]?.thawedOn).toBeUndefined(); // only while in the fridge
+    expect(moveItem(thawed.state, 'a', 'pantry', '2026-12-02', 4).state.items[0]?.thawedOn).toBeUndefined(); // only while in the fridge
 
     const last = setCount(moved.state, 'a', 0, 5); // taking the last one out removes it
     expect(last.state.items).toEqual([]);

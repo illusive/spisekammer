@@ -6,10 +6,11 @@ import type { Lang, Strings } from '../i18n/strings';
 import { itemKeeping } from '../keeping/itemKeeping';
 import { KeepShort } from '../keeping/KeepInfo';
 import type { Item } from './model';
+import { useInventory } from './store';
 import { itemSummary } from './summary';
 
 export function ItemRow({ item, prefix, today, onOpen, lang, s }: { item: Item; prefix?: string; today: string; onOpen: (id: string) => void; lang: Lang; s: Strings }) {
-  const info = itemKeeping(item, today);
+  const info = itemKeeping(item, today, useInventory().places);
   return (
     <li>
       <button type="button" aria-haspopup="dialog" onClick={() => onOpen(item.id)} className="flex min-h-14 w-full items-center gap-[12px] px-[20px] py-3 text-left">

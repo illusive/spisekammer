@@ -19,7 +19,7 @@ Danish households. Danish first, with an English interface too.
   - Scan to check whether you already have something.
 - **Overview:**
   - **"Brug snart"**: what to use soon, across all places, on top.
-  - The places (Fryser, Forråd, and your own), each grouped by category. Køleskab is optional and off by default (S-007): what is in it changes every day, so a list of it soon goes wrong.
+  - The places, each grouped by category. The household makes its own (more freezers, cupboards, a cellar), each of the kind Frost, Køl or Tørvarer (S-013). New households start with Fryser, Skabe and Viktualiekammer. A fridge is optional: what is in it changes every day, so a list of it soon goes wrong.
 - **Household:** everyone in the home sees and changes the same inventory.
 
 ## How long things keep

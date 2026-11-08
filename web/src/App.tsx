@@ -10,6 +10,7 @@ import { useOfflineReady } from './pwa/useOfflineReady';
 import { useRoute } from './router';
 import { HomeScreen } from './screens/HomeScreen';
 import { PlaceScreen } from './screens/PlaceScreen';
+import { PlacesScreen } from './screens/PlacesScreen';
 import { RulesScreen } from './screens/RulesScreen';
 import { ScanScreen } from './screens/ScanScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -36,6 +37,8 @@ export function App() {
     <UpdatesProvider>
       {route.name === 'settings' ? (
         <SettingsScreen lang={lang} s={s} />
+      ) : route.name === 'places' ? (
+        <PlacesScreen s={s} />
       ) : route.name === 'rules' ? (
         <RulesScreen s={s} />
       ) : route.name === 'household' ? (

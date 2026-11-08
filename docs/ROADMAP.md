@@ -42,6 +42,8 @@ Each slice builds, is tested, and works on its own.
    **2026-11-08:** the migration is applied (checked: the tables exist and refuse signed-out reads) and the publishable key is in the app.
    **Not yet:** the email template and custom SMTP (`supabase/README.md`); sign-in and invites end to end; the fridge setting moving from the phone to the household (slice 5).
 5. **Sync:** the outbox, pulls, Realtime, count operations, deletion markers; tests with two clients.
+**Between slices (S-013, 2026-11-08):** the household's own places, each Frost, Køl or Tørvarer; defaults Fryser, Skabe and Viktualiekammer; the fridge switch is gone. Server migration `20261108120000_places.sql` to apply.
+
 6. **Shared catalogue:** saving typed products, filling in from them, reporting a wrong one, an optional "Tilføj til Open Food Facts".
 7. **Ready to share:**
    - a privacy page

@@ -73,11 +73,15 @@ async function annasHousehold(): Promise<string> {
 }
 
 describe('creating a household', () => {
-  it('makes the user its owner and adds the three default places', async () => {
+  it('makes the user its owner and adds the three default places (S-013)', async () => {
     const hid = await annasHousehold();
     expect(await as(ANNA, 'select role, email from public.household_members')).toEqual([{ role: 'owner', email: 'anna@example.com' }]);
-    expect((await as<{ id: string }>(ANNA, 'select id from public.places order by sort')).map((p) => p.id)).toEqual(['fridge', 'freezer', 'pantry']);
-    expect(await as(ANNA, 'select name, fridge from public.households')).toEqual([{ name: 'Hjemme', fridge: false }]);
+    expect(await as(ANNA, 'select id, kind, name from public.places order by sort')).toEqual([
+      { id: 'freezer', kind: 'freezer', name: null },
+      { id: 'pantry', kind: 'pantry', name: null },
+      { id: 'larder', kind: 'pantry', name: null },
+    ]);
+    expect(await as(ANNA, 'select name from public.households')).toEqual([{ name: 'Hjemme' }]);
     expect(hid).toMatch(/^[0-9a-f-]{36}$/);
   });
 
@@ -129,6 +133,15 @@ describe('invites and joining', () => {
 });
 
 describe('what each user can see and change', () => {
+  it('lets members add, rename and retire their own places', async () => {
+    const hid = await annasHousehold();
+    await as(ANNA, `insert into public.places (household_id, id, kind, name, sort) values ($1, 'garage', 'freezer', 'Fryser i garagen', 3)`, [hid]);
+    expect(await as(ANNA, `update public.places set name = 'Garagen', kind = 'freezer' where id = 'garage' returning name`)).toEqual([{ name: 'Garagen' }]);
+    expect(await as(ANNA, `update public.places set deleted_at = now() where id = 'garage' returning id`)).toHaveLength(1);
+    await fails(as(ANNA, `insert into public.places (household_id, id, kind, sort) values ($1, 'cellar', 'cellar', 4)`, [hid]), /check constraint/);
+    await fails(as(ANNA, `delete from public.places`), /permission denied/);
+  });
+
   it('keeps households apart', async () => {
     const hid = await annasHousehold();
     await as(ANNA, item('10000000-0000-4000-8000-000000000001', hid));
@@ -160,9 +173,9 @@ describe('what each user can see and change', () => {
     expect(await as(BO, `update public.items set deleted_at = now() returning id`)).toHaveLength(1); // a deletion marker
   });
 
-  it('lets members rename the household and turn on the fridge, but nothing else', async () => {
+  it('lets members rename the household, but nothing else about it', async () => {
     const hid = await annasHousehold();
-    expect(await as(ANNA, `update public.households set name = 'Sommerhus', fridge = true returning name, fridge`)).toEqual([{ name: 'Sommerhus', fridge: true }]);
+    expect(await as(ANNA, `update public.households set name = 'Sommerhus' returning name`)).toEqual([{ name: 'Sommerhus' }]);
     await fails(as(ANNA, `update public.households set id = gen_random_uuid()`), /permission denied/);
     expect(await as(BO, `update public.households set name = 'Mit' where id = '${hid}' returning id`)).toEqual([]);
   });

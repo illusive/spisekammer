@@ -1,5 +1,5 @@
-// Indstillinger: whether the fridge is included (S-007), language and appearance; household,
-// places, export and the keeping rules come in later slices.
+// Indstillinger: language and appearance, then the places (S-013), the household (S-011) and how
+// the app counts (S-010).
 
 import { Card, Choice, LinkRow, Page, RowList, SubPageHeader } from '../components/ui';
 import type { Lang, Strings } from '../i18n/strings';
@@ -15,16 +15,6 @@ export function SettingsScreen({ lang, s }: { lang: Lang; s: Strings }) {
     <Page>
       <SubPageHeader backLabel={s.back} backTo={hrefs.home} title={t.title} />
       <div className="flex flex-col gap-4">
-        <Card className="flex flex-col gap-3">
-          <Choice<'off' | 'on'>
-            name="fridge"
-            legend={t.fridge}
-            value={prefs.fridge ? 'on' : 'off'}
-            onChange={(v) => setPreference('fridge', v === 'on')}
-            options={(['off', 'on'] as const).map((v) => ({ value: v, label: t.fridgeOptions[v] }))}
-          />
-          <p className="text-sm text-muted">{t.fridgeHelp}</p>
-        </Card>
         <Card className="flex flex-col gap-5">
           <Choice<LangPref>
             name="lang"
@@ -36,6 +26,7 @@ export function SettingsScreen({ lang, s }: { lang: Lang; s: Strings }) {
           <Choice<ThemePref> name="theme" legend={t.theme} value={prefs.theme} onChange={(v) => setPreference('theme', v)} options={(['system', 'light', 'dark'] as const).map((v) => ({ value: v, label: t.themes[v] }))} />
         </Card>
         <RowList>
+          <LinkRow href={hrefs.places} title={s.placesScreen.settingsRow} subtitle={<span className="block text-sm text-muted">{s.placesScreen.settingsHint}</span>} />
           <LinkRow href={hrefs.household} title={s.household.settingsRow} subtitle={<span className="block text-sm text-muted">{s.household.settingsHint}</span>} />
           <LinkRow href={hrefs.rules} title={s.keep.howWeCount} />
         </RowList>

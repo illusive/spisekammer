@@ -10,19 +10,18 @@ import { formatDay, today } from '../i18n/format';
 import type { Lang, Strings } from '../i18n/strings';
 import { defaultPackageKind, itemKeeping } from '../keeping/itemKeeping';
 import { KeepDetails, PackageDateFields, readTypeValue, TypeSelect, typeValue } from '../keeping/KeepInfo';
-import { placeName } from '../places';
+import { placeName, sortPlaces } from '../places';
 import { MAX_COUNT } from './model';
-import { useShownPlaces } from './shownPlaces';
 import { inventory, useInventory } from './store';
 import { itemSummary } from './summary';
 
 const TITLE_ID = 'item-sheet-title';
 
 export function ItemSheet({ openId, onClose, onMessage, lang, s }: { openId: string | null; onClose: () => void; onMessage: (text: string) => void; lang: Lang; s: Strings }) {
-  const item = useInventory().items.find((i) => i.id === openId);
+  const { items, places } = useInventory();
+  const item = items.find((i) => i.id === openId);
   const [zero, setZero] = useState(false);
   const { confirm, sheet } = useConfirm();
-  const places = useShownPlaces(item?.placeId);
 
   const close = () => {
     if (zero && item) {
@@ -43,7 +42,7 @@ export function ItemSheet({ openId, onClose, onMessage, lang, s }: { openId: str
   };
 
   const day = today();
-  const info = item ? itemKeeping(item, day) : null;
+  const info = item ? itemKeeping(item, day, places) : null;
 
   return (
     <>
@@ -54,7 +53,7 @@ export function ItemSheet({ openId, onClose, onMessage, lang, s }: { openId: str
               <p className="text-sm text-muted">{itemSummary({ ...item, count: zero ? 0 : item.count }, lang, s)}</p>
             </SheetHeader>
             <div className="mt-4 flex flex-col gap-5 rounded-card bg-surface px-[20px] py-5">
-              <KeepDetails k={info.keeping} urgency={info.urgency} type={info.type} place={info.place} today={day} lang={lang} s={s} />
+              <KeepDetails k={info.keeping} urgency={info.urgency} type={info.type} place={info.place} placeLabel={placeName(places, item.placeId, s)} today={day} lang={lang} s={s} />
               <Stepper
                 label={s.count}
                 value={zero ? 0 : item.count}
@@ -92,9 +91,9 @@ export function ItemSheet({ openId, onClose, onMessage, lang, s }: { openId: str
                 value={item.placeId}
                 onChange={(placeId) => {
                   inventory.move(item.id, placeId);
-                  onMessage(s.moved(item.name, placeName(placeId, s)));
+                  onMessage(s.moved(item.name, placeName(places, placeId, s)));
                 }}
-                options={places.map((p) => ({ value: p.id, label: s.placeKinds[p.kind] }))}
+                options={sortPlaces(places).map((p) => ({ value: p.id, label: placeName(places, p.id, s) }))}
               />
               <label className="flex flex-col gap-1">
                 <span className="font-bold">{s.keep.whatIsIt}</span>

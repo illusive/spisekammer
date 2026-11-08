@@ -18,6 +18,31 @@ export interface Strings {
   noMatches: (q: string) => string;
   places: string;
   placeKinds: Record<'fridge' | 'freezer' | 'pantry', string>;
+  placeKindHints: Record<'fridge' | 'freezer' | 'pantry', string>;
+  placePresets: Record<'freezer' | 'pantry' | 'larder' | 'fridge', string>;
+  placeGone: string;
+  placesScreen: {
+    title: string;
+    settingsRow: string;
+    settingsHint: string;
+    intro: string;
+    add: string;
+    addTitle: string;
+    editTitle: string;
+    name: string;
+    namePlaceholder: string;
+    kind: string;
+    save: string;
+    added: (name: string) => string;
+    saved: (name: string) => string;
+    remove: string;
+    removeConfirm: (name: string) => string;
+    hasThings: (n: number) => string;
+    moveTo: string;
+    moveAndRemove: string;
+    removed: (name: string) => string;
+    lastPlace: string;
+  };
   itemCount: (n: number) => string;
   emptyPlace: string;
   emptyHome: string;
@@ -73,9 +98,6 @@ export interface Strings {
     languages: Record<'system' | 'da' | 'en', string>;
     theme: string;
     themes: Record<'system' | 'light' | 'dark', string>;
-    fridge: string;
-    fridgeOptions: Record<'off' | 'on', string>;
-    fridgeHelp: string;
     version: (date: string, commit: string) => string;
   };
   keep: {
@@ -189,7 +211,32 @@ export const strings: Record<Lang, Strings> = {
     clearSearch: 'Ryd søgning',
     noMatches: (q) => `Intet matcher ”${q}”`,
     places: 'Steder',
-    placeKinds: { fridge: 'Køleskab', freezer: 'Fryser', pantry: 'Forråd' },
+    placeKinds: { freezer: 'Frost', fridge: 'Køl', pantry: 'Tørvarer' },
+    placeKindHints: { freezer: 'Fx en fryser eller et fryseskab.', fridge: 'Fx et køleskab.', pantry: 'Fx et skab, en kælder eller et viktualiekammer.' },
+    placePresets: { freezer: 'Fryser', pantry: 'Skabe', larder: 'Viktualiekammer', fridge: 'Køleskab' },
+    placeGone: 'Slettet sted',
+    placesScreen: {
+      title: 'Steder',
+      settingsRow: 'Steder',
+      settingsHint: 'Frysere, skabe og andre steder, du har ting',
+      intro: 'Lav et sted for hver fryser, hvert skab eller rum, du vil holde styr på. Slagsen afgør, hvor længe tingene holder.',
+      add: 'Tilføj sted',
+      addTitle: 'Nyt sted',
+      editTitle: 'Ret sted',
+      name: 'Navn',
+      namePlaceholder: 'Fx Fryser i garagen',
+      kind: 'Slags',
+      save: 'Gem',
+      added: (name) => `${name} er tilføjet`,
+      saved: (name) => `${name} er gemt`,
+      remove: 'Slet sted',
+      removeConfirm: (name) => `Slet ${name}?`,
+      hasThings: (n) => (n === 1 ? 'Der er 1 ting i. Hvor skal den hen?' : `Der er ${n} ting i. Hvor skal de hen?`),
+      moveTo: 'Flyt til',
+      moveAndRemove: 'Flyt og slet',
+      removed: (name) => `${name} er slettet`,
+      lastPlace: 'Du skal have mindst ét sted.',
+    },
     itemCount: (n) => (n === 1 ? '1 ting' : `${n} ting`),
     emptyPlace: 'Intet her endnu.',
     emptyHome: 'Scan en vare, eller tilføj den med navn. Så kan du altid se, hvad du har.',
@@ -256,9 +303,6 @@ export const strings: Record<Lang, Strings> = {
       languages: { system: 'Følg telefonen', da: 'Dansk', en: 'English' },
       theme: 'Udseende',
       themes: { system: 'Følg telefonen', light: 'Lyst', dark: 'Mørkt' },
-      fridge: 'Køleskabet med i appen',
-      fridgeOptions: { off: 'Nej', on: 'Ja' },
-      fridgeHelp: 'Det i køleskabet skifter hver dag, så listen bliver hurtigt forkert. Fryseren og forrådet er nemmere at holde styr på.',
       version: (date, commit) => `Version fra ${date} (${commit})`,
     },
     keep: {
@@ -312,7 +356,7 @@ export const strings: Record<Lang, Strings> = {
           title: 'Uden dato: en vurdering',
           points: [
             'Appen finder ud fra navnet, hvad det er, fx hakket oksekød. Du kan altid vælge noget andet.',
-            'For hver slags har appen tider for forråd, køleskab og fryser, og for når den er åbnet eller tøet op.',
+            'For hver slags mad har appen tider for frost, køl og tørvarer, og for når den er åbnet eller tøet op. Hvert af dine steder er en af de tre slags.',
             'Appen tæller fra den dag, varen kom på sin plads, blev åbnet eller tøet op, og bruger den korteste tid. Hakket oksekød holder 1–2 dage i køleskabet, så appen siger 1 dag.',
           ],
         },
@@ -412,7 +456,32 @@ export const strings: Record<Lang, Strings> = {
     clearSearch: 'Clear search',
     noMatches: (q) => `Nothing matches “${q}”`,
     places: 'Places',
-    placeKinds: { fridge: 'Fridge', freezer: 'Freezer', pantry: 'Pantry' },
+    placeKinds: { freezer: 'Frozen', fridge: 'Chilled', pantry: 'Dry goods' },
+    placeKindHints: { freezer: 'E.g. a freezer or a freezer cabinet.', fridge: 'E.g. a fridge.', pantry: 'E.g. a cupboard, a cellar or a larder.' },
+    placePresets: { freezer: 'Freezer', pantry: 'Cupboards', larder: 'Larder', fridge: 'Fridge' },
+    placeGone: 'Deleted place',
+    placesScreen: {
+      title: 'Places',
+      settingsRow: 'Places',
+      settingsHint: 'Freezers, cupboards and other places you keep things',
+      intro: 'Make a place for each freezer, cupboard or room you want to keep track of. Its kind decides how long things keep.',
+      add: 'Add place',
+      addTitle: 'New place',
+      editTitle: 'Edit place',
+      name: 'Name',
+      namePlaceholder: 'E.g. Garage freezer',
+      kind: 'Kind',
+      save: 'Save',
+      added: (name) => `${name} added`,
+      saved: (name) => `${name} saved`,
+      remove: 'Delete place',
+      removeConfirm: (name) => `Delete ${name}?`,
+      hasThings: (n) => (n === 1 ? 'There is 1 thing in it. Where should it go?' : `There are ${n} things in it. Where should they go?`),
+      moveTo: 'Move to',
+      moveAndRemove: 'Move and delete',
+      removed: (name) => `${name} deleted`,
+      lastPlace: 'You need at least one place.',
+    },
     itemCount: (n) => (n === 1 ? '1 item' : `${n} items`),
     emptyPlace: 'Nothing here yet.',
     emptyHome: 'Scan a product, or add it by name. Then you can always see what you have.',
@@ -479,9 +548,6 @@ export const strings: Record<Lang, Strings> = {
       languages: { system: 'Follow the phone', da: 'Dansk', en: 'English' },
       theme: 'Appearance',
       themes: { system: 'Follow the phone', light: 'Light', dark: 'Dark' },
-      fridge: 'Include the fridge',
-      fridgeOptions: { off: 'No', on: 'Yes' },
-      fridgeHelp: 'What is in the fridge changes every day, so the list soon goes wrong. The freezer and the pantry are easier to keep track of.',
       version: (date, commit) => `Version from ${date} (${commit})`,
     },
     keep: {
@@ -535,7 +601,7 @@ export const strings: Record<Lang, Strings> = {
           title: 'Without a date: an estimate',
           points: [
             'The app works out from the name what it is, for example minced beef. You can always choose something else.',
-            'For each kind, the app has times for the pantry, the fridge and the freezer, and for after opening or thawing.',
+            'For each kind of food, the app has times for frozen, chilled and dry goods, and for after opening or thawing. Each of your places is one of the three kinds.',
             'The app counts from the day it came into its place, was opened or thawed, and uses the shortest time. Minced beef keeps 1–2 days in the fridge, so the app says 1 day.',
           ],
         },

@@ -1,7 +1,7 @@
 // Hjem (S-005): search across everything on top, Scan and Tilføj, "Brug snart" (what to use soon,
 // across all places, S-010), then the places with how much is in each.
 
-import { Archive, ChevronRight, Plus, Refrigerator, ScanBarcode, Snowflake, type LucideIcon } from 'lucide-react';
+import { ChevronRight, Plus, ScanBarcode } from 'lucide-react';
 import { useState } from 'react';
 import { Button, ButtonLink, MessageState, Page, SearchField, SettingsButton, Toast, type ToastMessage } from '../components/ui';
 import { today } from '../i18n/format';
@@ -13,16 +13,15 @@ import { searchItems } from '../inventory/search';
 import { useInventory, useInventoryLoaded } from '../inventory/store';
 import { itemKeeping } from '../keeping/itemKeeping';
 import { usePageTitle } from '../lib/usePageTitle';
-import { useShownPlaces } from '../inventory/shownPlaces';
-import { placeName, type PlaceKind } from '../places';
+import { PLACE_ICON } from '../inventory/placeIcons';
+import { placeName, sortPlaces } from '../places';
 import { hrefs } from '../router';
 
-export const PLACE_ICON: Record<PlaceKind, LucideIcon> = { fridge: Refrigerator, freezer: Snowflake, pantry: Archive };
 
 export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
-  const { items } = useInventory();
+  const { items, places: allPlaces } = useInventory();
   const loaded = useInventoryLoaded();
-  const places = useShownPlaces();
+  const places = sortPlaces(allPlaces);
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -30,11 +29,11 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
   usePageTitle('', s.appTitle);
 
   const searching = query.trim() !== '';
-  const results = searching ? searchItems(items, query, (i) => [placeName(i.placeId, s), s.categories[i.category]]) : [];
+  const results = searching ? searchItems(items, query, (i) => [placeName(allPlaces, i.placeId, s), s.categories[i.category]]) : [];
   const day = today();
   // Use soon: past, today or within the place's window (rules.urgency), the earliest first.
   const soon = items
-    .map((item) => ({ item, info: itemKeeping(item, day) }))
+    .map((item) => ({ item, info: itemKeeping(item, day, allPlaces) }))
     .filter(({ info }) => info.urgency === 'past' || info.urgency === 'today' || info.urgency === 'soon')
     .sort((a, b) => (a.info.keeping.by ?? '').localeCompare(b.info.keeping.by ?? ''))
     .map(({ item }) => item);
@@ -59,7 +58,7 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
           ) : (
             <ul className="flex flex-col divide-y divide-border rounded-card bg-surface">
               {results.map((item) => (
-                <ItemRow key={item.id} item={item} prefix={placeName(item.placeId, s)} today={day} onOpen={setOpenId} lang={lang} s={s} />
+                <ItemRow key={item.id} item={item} prefix={placeName(allPlaces, item.placeId, s)} today={day} onOpen={setOpenId} lang={lang} s={s} />
               ))}
             </ul>
           )}
@@ -85,7 +84,7 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
               </h2>
               <ul className="flex flex-col divide-y divide-border rounded-card bg-surface">
                 {soon.map((item) => (
-                  <ItemRow key={item.id} item={item} prefix={placeName(item.placeId, s)} today={day} onOpen={setOpenId} lang={lang} s={s} />
+                  <ItemRow key={item.id} item={item} prefix={placeName(allPlaces, item.placeId, s)} today={day} onOpen={setOpenId} lang={lang} s={s} />
                 ))}
               </ul>
             </section>
@@ -105,7 +104,7 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
                         <Icon className="size-6" strokeWidth={1.75} />
                       </span>
                       <span className="flex-1">
-                        <span className="block font-bold">{s.placeKinds[place.kind]}</span>
+                        <span className="block font-bold">{placeName(allPlaces, place.id, s)}</span>
                         <span className="block text-sm text-muted">{loaded ? s.itemCount(countIn(place.id)) : s.loading}</span>
                       </span>
                       <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted min-[420px]:hidden" />

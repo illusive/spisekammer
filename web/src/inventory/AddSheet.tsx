@@ -6,15 +6,16 @@ import { Sheet, SheetHeader, Toast, type ToastMessage } from '../components/ui';
 import type { Lang, Strings } from '../i18n/strings';
 import { placeName } from '../places';
 import { ItemForm } from './ItemForm';
-import { inventory } from './store';
+import { inventory, useInventory } from './store';
 
 const TITLE_ID = 'add-sheet-title';
 
 export function AddSheet({ open, placeId, onClose, lang, s }: { open: boolean; placeId: string | null; onClose: () => void; lang: Lang; s: Strings }) {
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const { places } = useInventory();
   return (
     <Sheet open={open} onClose={onClose} labelledBy={TITLE_ID} dismissOnBackdrop={false}>
-      <SheetHeader id={TITLE_ID} title={placeId ? s.addHere(placeName(placeId, s)) : s.addTitle} closeLabel={s.close} onClose={onClose} />
+      <SheetHeader id={TITLE_ID} title={placeId ? s.addHere(placeName(places, placeId, s)) : s.addTitle} closeLabel={s.close} onClose={onClose} />
       <div className="mt-4 rounded-card bg-surface px-[20px] py-5">
         <ItemForm
           start={{ placeId }}
@@ -25,7 +26,7 @@ export function AddSheet({ open, placeId, onClose, lang, s }: { open: boolean; p
           submitLabel={s.add}
           onSubmit={(item) => {
             inventory.add(item);
-            setToast({ id: Date.now(), text: s.added(item.name, placeName(item.placeId, s)) });
+            setToast({ id: Date.now(), text: s.added(item.name, placeName(places, item.placeId, s)) });
           }}
         />
       </div>
