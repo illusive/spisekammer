@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { strings } from './i18n/strings';
-import { defaultPlaceKind } from './inventory/categories';
 import { addItem, addPlace, EMPTY, parsePlace, removePlace, updatePlace, type Inventory } from './inventory/model';
-import { DEFAULT_PLACES, hasFridge, placeIdForKind, placeName, startingPlaces, type Place } from './places';
+import { DEFAULT_PLACES, placeName, startingPlaces, type Place } from './places';
 
 const da = strings.da;
 const en = strings.en;
@@ -13,7 +12,7 @@ describe('the starting places (S-013)', () => {
     expect(places.map((p) => placeName(places, p.id, da))).toEqual(['Fryser', 'Skabe', 'Viktualiekammer']);
     expect(places.map((p) => placeName(places, p.id, en))).toEqual(['Freezer', 'Cupboards', 'Larder']);
     expect(places.map((p) => p.kind)).toEqual(['freezer', 'pantry', 'pantry']);
-    expect(hasFridge(places)).toBe(false);
+    expect(places.some((p) => p.kind === 'fridge')).toBe(false);
     expect(added).toEqual(DEFAULT_PLACES);
   });
 
@@ -27,23 +26,6 @@ describe('the starting places (S-013)', () => {
     expect(startingPlaces(stored, ['x'], true)).toEqual({ places: stored, added: [] });
     const { added } = startingPlaces(stored, ['x', 'gone'], false);
     expect(added).toEqual([{ id: 'gone', kind: 'pantry', name: 'gone', sort: 1, updatedAt: 0 }]);
-  });
-});
-
-describe('where new things go', () => {
-  const places: Place[] = [...DEFAULT_PLACES, { id: 'garage', kind: 'freezer', name: 'Garagen', sort: 3, updatedAt: 0 }];
-  it('the first place of the kind, else a Tørvarer place', () => {
-    expect(placeIdForKind(places, 'freezer')).toBe('freezer');
-    expect(placeIdForKind(places, 'pantry')).toBe('pantry');
-    expect(placeIdForKind(places, 'fridge')).toBe('pantry');
-    expect(placeIdForKind([{ id: 'only', kind: 'freezer', sort: 0, updatedAt: 0 }], 'pantry')).toBe('only');
-  });
-  it('sends fridge things to the freezer or a cupboard when there is no fridge', () => {
-    expect(defaultPlaceKind('poultry', true)).toBe('fridge');
-    expect(defaultPlaceKind('poultry', false)).toBe('freezer');
-    expect(defaultPlaceKind('leftovers', false)).toBe('freezer');
-    expect(defaultPlaceKind('dairy', false)).toBe('pantry');
-    expect(defaultPlaceKind('frozen', false)).toBe('freezer');
   });
 });
 

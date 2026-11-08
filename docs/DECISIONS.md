@@ -156,3 +156,25 @@ Each entry records the decision, why, and what else was considered. Superseded e
   - Changing a place's kind changes the keeping times of what is in it, counted from the day each thing came in.
   - **Server:** `supabase/migrations/20261108120000_places.sql` starts new households with the same three places and drops `households.fridge`.
 - **Alternatives:** a fourth kind for a cool cellar (FoodKeeper has no times for it; Tørvarer is the cautious choice); keeping the fridge switch as well (two ways to the same thing); deleting a place with its things, or only empty places.
+
+## S-014: A Danish check on freezer times, and "bedst før" in the freezer
+
+- **Date:** 2026-11-08
+- **Context:** the owner asked for a Danish source for the times. Fødevarestyrelsen gives the rules (what the dates mean, "efter åbning", a fridge at most 5 °C) but no table of times. Forbrugerrådet Tænk has a short Danish list for the freezer (citing Arla and Fødevarestyrelsen among others) and says freezer times are about quality: food kept longer does not make you ill, as bacteria stop growing at −10 °C.
+- **Decisions (owner):**
+  - **Freezer times:** where Tænk gives a shorter freezer time than FoodKeeper's low end, the app uses Tænk's (`content/danish-freezer.json`, applied by the build). It only shortens: where FoodKeeper has no freezer time, or advises against freezing, that stands. 51 types are shortened, for example raw chicken 9 → 8 months, lean fish 6 → 3 months, smoked fish 9 months → 3 weeks, frozen vegetables 10 → 6 months, ready meals and leftovers 2 → 1 month.
+  - Only Tænk's numbers are used, never its text. Tænk is named on "Sådan regner appen". Its reuse terms are unknown, so we ask (`docs/OPEN_QUESTIONS.md`). Its page stays in stead's snapshots, not in this public repo.
+  - **"Bedst før" in the freezer:** a "bedst før / mindst holdbar til" date on a package now counts in the freezer too, since food bought frozen carries its own. A "sidste anvendelsesdato" is still replaced by the freezer time, since freezing stops that clock.
+- **Alternatives:** asking Tænk first (keeping three longer times meanwhile); FoodKeeper only; always the package date in the freezer (a use-by date would show as past while the food is still frozen).
+
+## S-015: Adding to one place, a calmer form, and a first start
+
+- **Date:** 2026-11-08
+- **Decisions (owner's notes):**
+  - **Choose the place first.** "Scan" and "Tilføj" on Hjem ask "Hvor skal tingene hen?", then things are added one after another to that place. The place is no longer in the form. From a place's own page the place is already known. The guesses that picked a place from the name (frozen words, the category's place, the food type's place) are gone.
+  - **The sheet's header stays at the top** while the sheet scrolls, so closing is one tap away.
+  - **One field style:** every single-line field (text, select, date) is 48 px high with the same border, radius and text size; selects get their own arrow (`fieldClass`, `selectClass` in `components/ui.tsx`).
+  - **Search:** Hjem searches everything; each place's page searches that place only.
+  - **Indstillinger:** Steder, Del and "Sådan regner appen" come first. "Husstand" is now **"Del"** ("Share").
+  - **A first start,** after bikeplanner's setup wizard: a welcome, the places you have (tick presets, add your own), whether to share, and "Du er klar". Shown once, on Hjem, on a phone with nothing in it; "Spring over" keeps the default places. Choosing to share goes to Del afterwards.
+- **Camera permission:** a web app cannot avoid the phone's question. Safari can remember "Tillad" for the site, but an installed web app may ask again after it restarts. A real app asks once (`docs/OPEN_QUESTIONS.md`); not now.

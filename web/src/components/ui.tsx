@@ -53,8 +53,11 @@ export function IconButton({ label, Icon, onClick, className = 'bg-surface', ...
   );
 }
 
-// Text fields and selects.
-export const inputClass = 'min-h-11 rounded-xl border border-border bg-background px-[12px]';
+// Every single-line field looks the same (S-015): one height, border, radius and text size. A
+// select gets its own arrow (index.css, .select-field), so it lines up with the text fields; a date
+// field keeps its native picker inside the same box.
+export const fieldClass = 'block h-12 w-full min-w-0 appearance-none rounded-xl border border-border bg-background px-[12px] text-lg text-text';
+export const selectClass = `${fieldClass} select-field pr-[40px]`;
 
 // A list of links on one surface, and its rows: title, optional line under it, a chevron.
 export function RowList({ children, ordered = false, lang }: { children: ReactNode; ordered?: boolean; lang?: string }) {
@@ -348,11 +351,12 @@ export function WarningNote({ title, children }: { title?: ReactNode; children: 
 }
 
 // The top of a sheet (D-070): its title, and the one way to close it, an X at the top right. Lines
-// under the title go in `children`. `autofocus`: focus starts on the title (a sheet that is already
-// filled in, D-053), not on a field whose keyboard would cover it.
+// under the title go in `children`. It stays at the top while the sheet scrolls (S-015), so closing
+// is always one tap away. `autofocus`: focus starts on the title (a sheet that is already filled
+// in, D-053), not on a field whose keyboard would cover it.
 export function SheetHeader({ id, title, closeLabel, onClose, autofocus = false, children }: { id: string; title: ReactNode; closeLabel: string; onClose: () => void; autofocus?: boolean; children?: ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-[12px] px-1">
+    <div className="sticky top-0 z-10 -mx-[16px] -mt-4 flex items-start justify-between gap-[12px] border-b border-border bg-background px-[20px] pt-4 pb-3">
       <div className="min-w-0 pt-1">
         <h2 id={id} tabIndex={-1} data-autofocus={autofocus ? '' : undefined} className="text-xl font-semibold outline-none">
           {title}

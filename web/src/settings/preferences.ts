@@ -13,9 +13,10 @@ export interface Preferences {
   // The old fridge switch (S-007). Only read once, to keep a fridge place for phones that had it
   // on (S-013 replaced it with places of the kind Køl).
   fridge: boolean;
+  onboarded: boolean; // the first-run steps are done or skipped (S-015)
 }
 
-const DEFAULTS: Preferences = { lang: 'system', theme: 'system', fridge: false };
+const DEFAULTS: Preferences = { lang: 'system', theme: 'system', fridge: false, onboarded: false };
 
 const store = createLocalStore<Preferences>({
   key: 'spisekammer.preferences.v1',
@@ -25,6 +26,7 @@ const store = createLocalStore<Preferences>({
       lang: p.lang === 'da' || p.lang === 'en' ? p.lang : DEFAULTS.lang,
       theme: p.theme === 'light' || p.theme === 'dark' ? p.theme : DEFAULTS.theme,
       fridge: p.fridge === true,
+      onboarded: p.onboarded === true,
     };
   },
 });

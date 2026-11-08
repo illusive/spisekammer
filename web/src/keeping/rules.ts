@@ -6,7 +6,8 @@
 //    (best before) is shown until the thing is opened; then the estimate takes over.
 // 2. Without a package date, the estimate: the day it came into its place (or was opened, or
 //    thawed) plus the LOW end of FoodKeeper's range for that place.
-// 3. Into the freezer: a new clock, the freezer time from the day it went in.
+// 3. Into the freezer: a new clock, the freezer time from the day it went in, unless the package
+//    has a "bedst før" date: food bought frozen carries its own (S-014). A use-by date stops there.
 //    Out of the freezer into the fridge: the after-thawing time, else the fridge time, from that day.
 // 4. Where FoodKeeper has no time, or advises against the place, there is no date, only a note.
 
@@ -111,7 +112,9 @@ export function estimate(input: KeepInput): Keeping {
 export function keeping(input: KeepInput): Keeping {
   const est = estimate(input);
   const { packageDate, packageKind, place, openedOn, thawedOn } = input;
-  if (!packageDate || !packageKind || place === 'freezer') return est;
+  if (!packageDate || !packageKind) return est;
+  // In the freezer: a best-before date is the frozen product's own; a use-by date no longer counts.
+  if (place === 'freezer') return packageKind === 'bestBefore' ? { by: packageDate, source: 'bestBefore' } : est;
 
   const changed = Boolean(openedOn) || (place === 'fridge' && Boolean(thawedOn));
   // A note stays when it matters with the package date too: a place advised against, or an opened

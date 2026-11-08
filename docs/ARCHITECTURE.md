@@ -41,11 +41,12 @@ web/src/
 
 - **Food types:** 409, built from USDA FoodKeeper (CC0, v128) by `web/scripts/build-food-types.ts` from `content/`. Each has Danish and English names, a category, the keys that find it in a name, and times per place and basis (in the place, after opening, after thawing). Times are ranges, each traced to its FoodKeeper ID. Code: `web/src/keeping/` (`foodTypes.ts` matching, `rules.ts` the rules, `itemKeeping.ts` per thing, `KeepInfo.tsx` what is shown).
 - **The estimate:** `keepBy = start + the low end of the range`, where the start is the day added, opened, frozen or thawed.
+- **The Danish check (S-014):** the build shortens freezer times to Forbrugerrådet Tænk's where theirs is shorter (`content/danish-freezer.json`); such a type carries `danish.freezer`.
 - **The package date:**
   - "Sidste anvendelsesdato" is never extended. After opening, the earlier of the two applies.
   - "Bedst før" is shown. Past it: "brug dine sanser".
 - **Places:**
-  - Into the freezer: a new clock.
+  - Into the freezer: a new clock, unless the package has a "bedst før" date, which then applies (S-014).
   - Out of it, into the fridge (only when the fridge is turned on, S-007): the after-thawing time, or the fridge time from today. Taken out without a place, it is simply gone.
   - A place the type is not recommended for: a warning.
 - **Wording:** always guidance, never "safe".

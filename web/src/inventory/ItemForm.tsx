@@ -1,18 +1,19 @@
-// The fields for a new thing, shared by "Tilføj" and the scanner (S-006, S-010): a name (the food
-// type, category and place are guessed from it until the user picks them), the place, the count,
-// an optional size and the date on the package. The type picker sits behind the guess: one tap to
-// change it. Below the place, the date the app would give it, so the guess can be checked.
+// The fields for a new thing, shared by "Tilføj" and the scanner (S-006, S-010, S-015): a name (the
+// food type and category are guessed from it until the user picks them), the count, an optional
+// size and the date on the package. The place was chosen before (several things go to the same
+// place). The type picker sits behind the guess: one tap to change it. Under the type, the date
+// the app would give it in this place, so the guess can be checked.
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Button, Choice, inputClass, Stepper } from '../components/ui';
+import { Button, fieldClass, Stepper } from '../components/ui';
 import { today } from '../i18n/format';
 import type { Lang, Strings } from '../i18n/strings';
 import { foodType, foodTypeName, matchFoodType } from '../keeping/foodTypes';
-import { defaultPackageKind, placeKindForType } from '../keeping/itemKeeping';
+import { defaultPackageKind } from '../keeping/itemKeeping';
 import { KeepDetails, PackageDateFields, readTypeValue, TypeSelect, typeValue } from '../keeping/KeepInfo';
 import { keeping, urgency, type PackageKind } from '../keeping/rules';
-import { hasFridge, placeIdForKind, placeName, placeOf, sortPlaces } from '../places';
-import { defaultPlaceKind, guessCategory, soundsFrozen, type Category } from './categories';
+import { placeName, placeOf } from '../places';
+import { guessCategory, type Category } from './categories';
 import { MAX_COUNT, type NewItem } from './model';
 import { useInventory } from './store';
 import { parseSize } from './size';
@@ -21,7 +22,7 @@ export interface FormStart {
   name?: string;
   brand?: string;
   category?: Category | null;
-  placeId?: string | null; // fixed by where the user came from (a place's page)
+  placeId: string; // chosen before (S-015)
   size?: string;
   barcode?: string;
   count?: number;
@@ -32,7 +33,6 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
   const [name, setName] = useState(start.name ?? '');
   const [category, setCategory] = useState<Category | null>(start.category ?? null); // from a scan's lookup
   const [typeChoice, setTypeChoice] = useState<string | null>(null); // null: guessed from the name
-  const [placeId, setPlaceId] = useState<string | null>(start.placeId ?? null); // null: from the type
   const [count, setCount] = useState(start.count ?? 1);
   const [size, setSize] = useState(start.size ?? '');
   const [packageDay, setPackageDay] = useState('');
@@ -41,7 +41,6 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
   const [missing, setMissing] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const allPlaces = useInventory().places;
-  const fridge = hasFridge(allPlaces);
 
   // A scan fills the form after it opened (the lookup is online): take what it found.
   useEffect(() => {
@@ -54,9 +53,7 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
   const chosen = typeChoice ? readTypeValue(typeChoice) : null;
   const shownType = chosen ? foodType(chosen.typeId ?? undefined) : matchFoodType(name);
   const shownCategory: Category = chosen?.category ?? shownType?.category ?? category ?? guessCategory(name) ?? 'other';
-  const guessedKind = soundsFrozen(name) ? 'freezer' : shownType ? placeKindForType(shownType, fridge) : defaultPlaceKind(shownCategory, fridge);
-  const shownPlace = placeId ?? placeIdForKind(allPlaces, guessedKind);
-  const places = sortPlaces(allPlaces);
+  const shownPlace = start.placeId;
   const kind = packageKind ?? defaultPackageKind(shownType);
 
   const day = today();
@@ -82,7 +79,7 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
       ...(start.barcode ? { barcode: start.barcode } : {}),
       ...(packageDay ? { packageDate: packageDay, packageKind: kind } : {}),
     });
-    // Ready for the next one; the place stays (things bought together usually go together).
+    // Ready for the next one, in the same place.
     setName('');
     setCategory(null);
     setTypeChoice(null);
@@ -121,7 +118,7 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
           enterKeyHint="done"
           aria-invalid={missing || undefined}
           aria-describedby={missing ? `${idPrefix}-name-missing` : undefined}
-          className={`${inputClass} min-h-12 text-lg`}
+          className={fieldClass}
         />
         {missing ? (
           <p id={`${idPrefix}-name-missing`} role="alert" className="text-sm font-bold text-danger">
@@ -150,7 +147,6 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
           />
         ) : null}
       </div>
-      <Choice name={`${idPrefix}-place`} legend={s.place} value={shownPlace} onChange={setPlaceId} options={places.map((p) => ({ value: p.id, label: placeName(allPlaces, p.id, s) }))} />
       {name.trim() ? (
         <div className="rounded-2xl bg-background px-[16px] py-3">
           <KeepDetails k={preview} urgency={urgency(preview, placeKind, day)} type={shownType} place={placeKind} placeLabel={placeName(allPlaces, shownPlace, s)} today={day} lang={lang} s={s} showLink={false} />
@@ -161,7 +157,7 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
         <span className="font-bold">
           {s.size} <span className="font-normal text-muted">({s.optional})</span>
         </span>
-        <input value={size} onChange={(e) => setSize(e.target.value)} placeholder={s.sizePlaceholder} autoComplete="off" className={`${inputClass} min-h-12 text-lg`} />
+        <input value={size} onChange={(e) => setSize(e.target.value)} placeholder={s.sizePlaceholder} autoComplete="off" className={fieldClass} />
       </label>
       <PackageDateFields idPrefix={idPrefix} day={packageDay} kind={kind} onDay={setPackageDay} onKind={setPackageKind} onClear={() => setPackageDay('')} s={s} />
       <Button type="submit" variant="primary">

@@ -6,7 +6,7 @@
 
 import { Copy, LogOut, Share2, UserPlus } from 'lucide-react';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Button, Card, MessageState, Page, SubPageHeader, Toast, inputClass, useConfirm, type ToastMessage } from '../components/ui';
+import { Button, Card, MessageState, Page, SubPageHeader, Toast, fieldClass, useConfirm, type ToastMessage } from '../components/ui';
 import type { Strings } from '../i18n/strings';
 import { usePageTitle } from '../lib/usePageTitle';
 import { hrefs } from '../router';
@@ -132,7 +132,7 @@ function SignIn({ s, onSignedIn }: { s: Strings; onSignedIn: () => void }) {
           <p>{t.signInIntro}</p>
           <label className="flex flex-col gap-1">
             <span className="font-bold">{t.email}</span>
-            <input type="email" required autoComplete="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.emailPlaceholder} className={`${inputClass} min-h-12 text-lg`} />
+            <input type="email" required autoComplete="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.emailPlaceholder} className={fieldClass} />
           </label>
           {error ? <ErrorNote error={error} s={s} /> : null}
           <Button type="submit" variant="primary" disabled={busy || !email.trim()}>
@@ -154,7 +154,7 @@ function SignIn({ s, onSignedIn }: { s: Strings; onSignedIn: () => void }) {
               value={token}
               onChange={(e) => setToken(e.target.value)}
               data-autofocus=""
-              className={`${inputClass} min-h-12 text-center text-2xl tracking-[0.3em]`}
+              className={`${fieldClass} text-center text-2xl tracking-[0.3em]`}
             />
           </label>
           {error ? <ErrorNote error={error} s={s} /> : null}
@@ -196,7 +196,7 @@ function NoHousehold({ code, s, onDone }: { code: string | null; s: Strings; onD
         <p>{t.joinIntro}</p>
         <label className="flex flex-col gap-1">
           <span className="font-bold">{t.inviteCode}</span>
-          <input required autoCapitalize="characters" autoComplete="off" maxLength={12} value={invite} onChange={(e) => setInvite(e.target.value.toUpperCase())} className={`${inputClass} min-h-12 text-center text-2xl tracking-[0.3em]`} />
+          <input required autoCapitalize="characters" autoComplete="off" maxLength={12} value={invite} onChange={(e) => setInvite(e.target.value.toUpperCase())} className={`${fieldClass} text-center text-2xl tracking-[0.3em]`} />
         </label>
         {join.error ? <ErrorNote error={join.error} s={s} /> : null}
         <Button type="submit" variant="primary" disabled={join.busy || invite.replace(/[^A-Za-z0-9]/g, '').length < 6}>
@@ -218,7 +218,7 @@ function NoHousehold({ code, s, onDone }: { code: string | null; s: Strings; onD
         <p>{t.createIntro}</p>
         <label className="flex flex-col gap-1">
           <span className="font-bold">{t.householdName}</span>
-          <input required maxLength={60} value={name} onChange={(e) => setName(e.target.value)} className={`${inputClass} min-h-12 text-lg`} />
+          <input required maxLength={60} value={name} onChange={(e) => setName(e.target.value)} className={fieldClass} />
         </label>
         {create.error ? <ErrorNote error={create.error} s={s} /> : null}
         <Button type="submit" variant={code ? 'secondary' : 'primary'} disabled={create.busy || !name.trim()}>

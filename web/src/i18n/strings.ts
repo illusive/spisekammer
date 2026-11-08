@@ -14,6 +14,7 @@ export interface Strings {
   homeTitle: string;
   searchPlaceholder: string;
   searchLabel: string;
+  searchIn: (place: string) => string;
   clearSearch: string;
   noMatches: (q: string) => string;
   places: string;
@@ -21,6 +22,7 @@ export interface Strings {
   placeKindHints: Record<'fridge' | 'freezer' | 'pantry', string>;
   placePresets: Record<'freezer' | 'pantry' | 'larder' | 'fridge', string>;
   placeGone: string;
+  pickPlace: { title: string; hint: string; other: string };
   placesScreen: {
     title: string;
     settingsRow: string;
@@ -141,6 +143,7 @@ export interface Strings {
     sections: { title: string; points: string[] }[];
     source: string;
     sourceLink: string;
+    taenkLink: string;
     danishLink: string;
     typesCount: (n: number) => string;
   };
@@ -191,6 +194,31 @@ export interface Strings {
     signedInAs: (email: string) => string;
     errors: { offline: string; invalidCode: string; rateLimit: string; inviteNotFound: string; alreadyInHousehold: string; invalidEmail: string; linkElsewhere: string; unknown: string };
   };
+  onboarding: {
+    brand: string;
+    title: string;
+    intro: string;
+    start: string;
+    step: (n: number, of: number) => string;
+    skip: string;
+    back: string;
+    next: string;
+    placesTitle: string;
+    placesIntro: string;
+    placesNone: string;
+    ownPlace: string;
+    ownPlaceAdd: string;
+    shareTitle: string;
+    shareIntro: string;
+    shareYes: string;
+    shareYesHint: string;
+    shareNo: string;
+    shareNoHint: string;
+    doneTitle: string;
+    donePoints: string[];
+    doneShare: string;
+    finish: string;
+  };
   offlineReady: string;
   updateReady: string;
   updateAction: string;
@@ -208,6 +236,7 @@ export const strings: Record<Lang, Strings> = {
     homeTitle: 'Hvad har du?',
     searchPlaceholder: 'Søg i alt, du har',
     searchLabel: 'Søg i alt, du har',
+    searchIn: (place) => `Søg i ${place.toLowerCase()}`,
     clearSearch: 'Ryd søgning',
     noMatches: (q) => `Intet matcher ”${q}”`,
     places: 'Steder',
@@ -215,6 +244,7 @@ export const strings: Record<Lang, Strings> = {
     placeKindHints: { freezer: 'Fx en fryser eller et fryseskab.', fridge: 'Fx et køleskab.', pantry: 'Fx et skab, en kælder eller et viktualiekammer.' },
     placePresets: { freezer: 'Fryser', pantry: 'Skabe', larder: 'Viktualiekammer', fridge: 'Køleskab' },
     placeGone: 'Slettet sted',
+    pickPlace: { title: 'Hvor skal tingene hen?', hint: 'Så kan du lægge flere ting ind efter hinanden.', other: 'Andet sted' },
     placesScreen: {
       title: 'Steder',
       settingsRow: 'Steder',
@@ -363,7 +393,7 @@ export const strings: Record<Lang, Strings> = {
         {
           title: 'Når du flytter den',
           points: [
-            'I fryseren starter tiden forfra: fryserens tid fra den dag, varen kom i.',
+            'I fryseren starter tiden forfra: fryserens tid fra den dag, varen kom i. Har pakken en bedst før-dato, fx på frosne ærter, gælder den i stedet.',
             'Fra fryseren til køleskabet: tiden efter optøning, eller køleskabets tid, fra den dag varen blev taget op.',
             'Frarådes et sted, eller findes der ingen tid for det, viser appen ingen dato, kun en besked.',
           ],
@@ -377,14 +407,15 @@ export const strings: Record<Lang, Strings> = {
           ],
         },
       ],
-      source: 'Tiderne kommer fra USDA FoodKeeper, version 128 (september 2018), udgivet af det amerikanske landbrugsministeriums fødevaresikkerhedstjeneste (FSIS) som CC0. Tiderne er amerikanske og regner med et køleskab på 4 °C. De danske navne er vores egne, og nogle er endnu ikke gennemset.',
+      source: 'Tiderne kommer fra USDA FoodKeeper, version 128 (september 2018), udgivet af det amerikanske landbrugsministeriums fødevaresikkerhedstjeneste (FSIS) som CC0. Tiderne er amerikanske og regner med et køleskab på 4 °C. Fryserens tider tjekkes mod Forbrugerrådet Tænks danske liste, og hvor Tænk siger kortere, bruger appen den. Tiderne i fryseren handler om kvalitet. De danske navne er vores egne, og nogle er endnu ikke gennemset.',
       sourceLink: 'FoodKeeper-data (data.gov)',
+      taenkLink: 'Forbrugerrådet Tænk om holdbarhed og opbevaring',
       danishLink: 'Fødevarestyrelsen (foedevarestyrelsen.dk)',
       typesCount: (n) => `Appen kender ${n} slags mad.`,
     },
     household: {
-      title: 'Husstand',
-      settingsRow: 'Husstand',
+      title: 'Del',
+      settingsRow: 'Del',
       settingsHint: 'Del det, I har, med dem, du bor med',
       notConfigured: 'Deling er ikke sat op i denne version endnu.',
       offline: 'Du skal have internet for at logge ind og dele. Alt andet virker uden.',
@@ -438,6 +469,35 @@ export const strings: Record<Lang, Strings> = {
         unknown: 'Noget gik galt. Prøv igen.',
       },
     },
+    onboarding: {
+      brand: 'Spisekammer',
+      title: 'Hold styr på det, du har',
+      intro: 'Se, hvad der er i fryseren og skabene, og hvornår det skal bruges. Alt ligger på telefonen og virker uden internet.',
+      start: 'Kom i gang',
+      step: (n, of) => `Trin ${n} af ${of}`,
+      skip: 'Spring over',
+      back: 'Tilbage',
+      next: 'Næste',
+      placesTitle: 'Hvor har du ting?',
+      placesIntro: 'Vælg de steder, du vil holde styr på. Du kan altid ændre dem under Indstillinger → Steder.',
+      placesNone: 'Vælg mindst ét sted.',
+      ownPlace: 'Eget sted',
+      ownPlaceAdd: 'Tilføj',
+      shareTitle: 'Vil du dele med dem, du bor med?',
+      shareIntro: 'Så kan I se og ændre de samme ting. Det kræver, at du logger ind med din e-mail.',
+      shareYes: 'Ja, sæt det op bagefter',
+      shareYesHint: 'Du kommer til Del, når du er færdig.',
+      shareNo: 'Ikke nu',
+      shareNoHint: 'Du kan gøre det senere under Indstillinger → Del.',
+      doneTitle: 'Du er klar',
+      donePoints: [
+        'Tryk på Scan eller Tilføj, vælg et sted, og læg tingene ind en efter en.',
+        'Appen viser, hvornår tingene bør bruges, og samler det, der snart skal bruges, øverst.',
+        'Dine ting ligger på telefonen og virker uden internet.',
+      ],
+      doneShare: 'Bagefter kommer du til Del, hvor du kan logge ind og invitere.',
+      finish: 'Start',
+    },
     offlineReady: 'Appen virker nu også uden internet.',
     updateReady: 'Der er en ny version af appen.',
     updateAction: 'Opdater',
@@ -453,6 +513,7 @@ export const strings: Record<Lang, Strings> = {
     homeTitle: 'What do you have?',
     searchPlaceholder: 'Search everything you have',
     searchLabel: 'Search everything you have',
+    searchIn: (place) => `Search ${place.toLowerCase()}`,
     clearSearch: 'Clear search',
     noMatches: (q) => `Nothing matches “${q}”`,
     places: 'Places',
@@ -460,6 +521,7 @@ export const strings: Record<Lang, Strings> = {
     placeKindHints: { freezer: 'E.g. a freezer or a freezer cabinet.', fridge: 'E.g. a fridge.', pantry: 'E.g. a cupboard, a cellar or a larder.' },
     placePresets: { freezer: 'Freezer', pantry: 'Cupboards', larder: 'Larder', fridge: 'Fridge' },
     placeGone: 'Deleted place',
+    pickPlace: { title: 'Where are the things going?', hint: 'Then you can add several things one after another.', other: 'Another place' },
     placesScreen: {
       title: 'Places',
       settingsRow: 'Places',
@@ -608,7 +670,7 @@ export const strings: Record<Lang, Strings> = {
         {
           title: 'When you move it',
           points: [
-            'In the freezer the time starts again: the freezer time from the day it went in.',
+            'In the freezer the time starts again: the freezer time from the day it went in. If the package has a best-before date, as on frozen peas, that applies instead.',
             'From the freezer to the fridge: the time after thawing, or the fridge time, from the day it came out.',
             'Where a place is advised against, or there is no time for it, the app shows no date, only a note.',
           ],
@@ -622,14 +684,15 @@ export const strings: Record<Lang, Strings> = {
           ],
         },
       ],
-      source: 'The times come from USDA FoodKeeper, version 128 (September 2018), published by the US Department of Agriculture\u2019s Food Safety and Inspection Service (FSIS) as CC0. They are US times and assume a fridge at 4 °C. The Danish names are our own, and some have not been checked yet.',
+      source: 'The times come from USDA FoodKeeper, version 128 (September 2018), published by the US Department of Agriculture\u2019s Food Safety and Inspection Service (FSIS) as CC0. They are US times and assume a fridge at 4 °C. Freezer times are checked against Forbrugerrådet Tænk’s Danish list, and where Tænk says shorter, the app uses that. Freezer times are about quality. The Danish names are our own, and some have not been checked yet.',
       sourceLink: 'FoodKeeper data (data.gov)',
+      taenkLink: 'Forbrugerrådet Tænk on keeping food (in Danish)',
       danishLink: 'The Danish Veterinary and Food Administration (foedevarestyrelsen.dk, in Danish)',
       typesCount: (n) => `The app knows ${n} kinds of food.`,
     },
     household: {
-      title: 'Household',
-      settingsRow: 'Household',
+      title: 'Share',
+      settingsRow: 'Share',
       settingsHint: 'Share what you have with the people you live with',
       notConfigured: 'Sharing is not set up in this version yet.',
       offline: 'You need internet to sign in and share. Everything else works without.',
@@ -682,6 +745,35 @@ export const strings: Record<Lang, Strings> = {
         linkElsewhere: 'The link only works in the browser where you asked for it. Ask for a new email from here.',
         unknown: 'Something went wrong. Try again.',
       },
+    },
+    onboarding: {
+      brand: 'Spisekammer',
+      title: 'Keep track of what you have',
+      intro: 'See what is in the freezer and the cupboards, and when to use it. Everything stays on your phone and works without internet.',
+      start: 'Get started',
+      step: (n, of) => `Step ${n} of ${of}`,
+      skip: 'Skip',
+      back: 'Back',
+      next: 'Next',
+      placesTitle: 'Where do you keep things?',
+      placesIntro: 'Choose the places you want to keep track of. You can always change them under Settings → Places.',
+      placesNone: 'Choose at least one place.',
+      ownPlace: 'Your own place',
+      ownPlaceAdd: 'Add',
+      shareTitle: 'Share with the people you live with?',
+      shareIntro: 'Then you see and change the same things. It needs you to sign in with your email.',
+      shareYes: 'Yes, set it up afterwards',
+      shareYesHint: 'You go to Share when you are done.',
+      shareNo: 'Not now',
+      shareNoHint: 'You can do it later under Settings → Share.',
+      doneTitle: 'You are ready',
+      donePoints: [
+        'Tap Scan or Add, choose a place, and add things one after another.',
+        'The app shows when things should be used, and gathers what to use soon at the top.',
+        'Your things stay on your phone and work without internet.',
+      ],
+      doneShare: 'Next you go to Share, where you can sign in and invite.',
+      finish: 'Start',
     },
     offlineReady: 'The app now works without internet too.',
     updateReady: 'There is a new version of the app.',

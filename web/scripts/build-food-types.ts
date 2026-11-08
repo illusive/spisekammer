@@ -14,6 +14,7 @@ const SNAPSHOT = join(root, 'content', 'sources', 'foodkeeper-v128.json');
 const SNAPSHOT_SHA256 = '037df0d301126acd8a48824506f04d49d8be1a1144b81fa69e4170228dc2e91a';
 const LISTS = [join(root, 'content', 'food-types.json'), join(root, 'content', 'food-types-produce.json')];
 const OUT = join(root, 'web', 'src', 'keeping', 'food-types.json');
+const DANISH_FREEZER = join(root, 'content', 'danish-freezer.json'); // Forbrugerrådet Tænk (S-014)
 
 const CATEGORIES = ['meat', 'poultry', 'fish', 'dairy', 'produce', 'bread', 'dry', 'canned', 'drinks', 'leftovers', 'frozen', 'other'];
 
@@ -87,6 +88,23 @@ function main() {
   const current = sheet('Version').find((v) => v['Current_Version'] === 'Yes');
   const version = `${num(current?.['Data_Version_Number'])} (${text(current?.['Modified_Date']) ?? '?'})`;
 
+  // The Danish freezer check (S-014): which FoodKeeper records each of Tænk's lines covers.
+  const danish = JSON.parse(readFileSync(DANISH_FREEZER, 'utf8')) as {
+    source: { publisher: string; title: string; url: string; retrievedAt: string };
+    groups: { taenk: string; time: Span; fk: number[]; subcategories?: string[] }[];
+  };
+  const subcategoryOf = new Map(sheet('Category').map((c) => [num(c['ID']), text(c['Subcategory_Name'])]));
+  const danishFreezer = new Map<number, { time: Span; line: string }>();
+  for (const group of danish.groups) {
+    const ids = new Set(group.fk);
+    for (const [id, p] of products) if (id !== undefined && group.subcategories?.includes(subcategoryOf.get(num(p['Category_ID'])) ?? '')) ids.add(id);
+    for (const id of ids) {
+      if (danishFreezer.has(id)) throw new Error(`Danish freezer list: FoodKeeper ${id} is in two groups`);
+      danishFreezer.set(id, { time: group.time, line: group.taenk });
+    }
+  }
+  const usedDanish = new Set<number>();
+
   const seenFk = new Set<number>();
   const keyOwner = new Map<string, string>();
   const problems: string[] = [];
@@ -110,6 +128,19 @@ function main() {
       }
       if (Object.keys(times).length === 0) throw new Error(`${context}: no keeping times`);
 
+      // The shorter of FoodKeeper's and Tænk's freezer time, by the low end. Only shortens: where
+      // FoodKeeper has no freezer time, or advises against freezing, that stands.
+      const dk = danishFreezer.get(entry.fk);
+      let freezerFrom: string | undefined;
+      if (dk) {
+        usedDanish.add(entry.fk);
+        const fk = times.freezer;
+        if (typeof fk === 'object' && dk.time.min * DAYS[dk.time.unit] < fk.min * DAYS[fk.unit]) {
+          times.freezer = dk.time;
+          freezerFrom = dk.line;
+        }
+      }
+
       for (const k of entry.keys) {
         const folded = fold(k.trim());
         const owner = keyOwner.get(folded);
@@ -120,10 +151,11 @@ function main() {
         if (!folded.startsWith('=') && folded.split(' ').every((w) => STOPWORDS.has(w))) throw new Error(`${context}: key "${k}" has only small words`);
       }
 
-      types.push({ id: `fk-${entry.fk}`, fk: entry.fk, category: entry.category, da: entry.da, en: entry.en, checked: entry.checked === true, keys: entry.keys, times });
+      types.push({ id: `fk-${entry.fk}`, fk: entry.fk, category: entry.category, da: entry.da, en: entry.en, checked: entry.checked === true, keys: entry.keys, times, ...(freezerFrom ? { danish: { freezer: freezerFrom } } : {}) });
     }
   }
 
+  for (const id of danishFreezer.keys()) if (!usedDanish.has(id) && danish.groups.some((g) => g.fk.includes(id))) problems.push(`Danish freezer list: FoodKeeper ${id} is not one of our food types`);
   if (problems.length > 0) throw new Error(`${problems.length} problems:\n${problems.join('\n')}`);
 
   const out = {
@@ -136,6 +168,7 @@ function main() {
       sha256: sha,
       url: 'https://catalog.data.gov/dataset/fsis-foodkeeper-data',
     },
+    danishSource: danish.source,
     types,
   };
   writeFileSync(OUT, JSON.stringify(out, null, 0) + '\n');

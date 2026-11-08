@@ -32,19 +32,11 @@ export const DEFAULT_PLACES: Place[] = [
 
 export const sortPlaces = (places: Place[]) => [...places].sort((a, b) => a.sort - b.sort || a.id.localeCompare(b.id));
 export const placeOf = (places: Place[], id: string): Place | undefined => places.find((p) => p.id === id);
-export const hasFridge = (places: Place[]) => places.some((p) => p.kind === 'fridge');
 
 export function placeName(places: Place[], id: string, s: Strings): string {
   const place = placeOf(places, id);
   if (!place) return s.placeGone;
   return place.name ?? (isPreset(place.id) ? s.placePresets[place.id] : s.placeKinds[place.kind]);
-}
-
-// Where a new thing of a kind goes: the first place of that kind; failing that, a Tørvarer place,
-// failing that the first place there is.
-export function placeIdForKind(places: Place[], kind: PlaceKind): string {
-  const sorted = sortPlaces(places);
-  return (sorted.find((p) => p.kind === kind) ?? sorted.find((p) => p.kind === 'pantry') ?? sorted[0])?.id ?? 'pantry';
 }
 
 // The places to keep when the app starts: the stored ones; or, the first time (and for phones from

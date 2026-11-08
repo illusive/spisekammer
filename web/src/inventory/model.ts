@@ -152,7 +152,9 @@ export const MAX_PLACE_NAME = 40;
 
 export function addPlace(state: Inventory, place: { id: string; name: string; kind: PlaceKind }, now: number): Change {
   const sort = Math.max(-1, ...state.places.map((p) => p.sort)) + 1;
-  const saved: Place = { id: place.id, kind: place.kind, name: place.name.trim().slice(0, MAX_PLACE_NAME), sort, updatedAt: now };
+  const name = place.name.trim().slice(0, MAX_PLACE_NAME);
+  // No name: a preset (Fryser, Køleskab …) shows its own name in the user's language.
+  const saved: Place = { id: place.id, kind: place.kind, ...(name ? { name } : {}), sort, updatedAt: now };
   return { state: { ...state, places: [...state.places, saved] }, putPlaces: [saved] };
 }
 

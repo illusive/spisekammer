@@ -4,11 +4,12 @@
 // looked up on Open Food Facts (online only), then added with the usual fields.
 
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import { Button, Sheet, SheetHeader, Stepper, Toast, type ToastMessage } from '../components/ui';
+import { Button, Page, Sheet, SheetHeader, Stepper, SubPageHeader, Toast, type ToastMessage } from '../components/ui';
 import type { Lang, Strings } from '../i18n/strings';
 import { categoryFromTags, guessCategory } from '../inventory/categories';
 import { ItemForm, type FormStart } from '../inventory/ItemForm';
 import { MAX_COUNT, withBarcode, type Item } from '../inventory/model';
+import { PlaceList } from '../inventory/PlacePicker';
 import { inventory, useInventory } from '../inventory/store';
 import { usePageTitle } from '../lib/usePageTitle';
 import { placeName } from '../places';
@@ -21,7 +22,23 @@ const TITLE_ID = 'scan-sheet-title';
 
 type Entry = { key: number; code: string | null };
 
+// Opened without a place (an old link): ask where first, then scan into it (S-015).
 export function ScanScreen({ placeId, lang, s }: { placeId: string | null; lang: Lang; s: Strings }) {
+  if (!placeId) return <PickPlaceFirst s={s} />;
+  return <Scanning placeId={placeId} lang={lang} s={s} />;
+}
+
+function PickPlaceFirst({ s }: { s: Strings }) {
+  usePageTitle(s.scan, s.appTitle);
+  return (
+    <Page>
+      <SubPageHeader backLabel={s.back} backTo={hrefs.home} title={s.pickPlace.title} subtitle={s.pickPlace.hint} />
+      <PlaceList onPick={(id) => location.replace(hrefs.scan(id))} s={s} />
+    </Page>
+  );
+}
+
+function Scanning({ placeId, lang, s }: { placeId: string; lang: Lang; s: Strings }) {
   const [camera, setCamera] = useState<CameraState>('starting');
   const [entry, setEntry] = useState<Entry | null>(null);
   const [added, setAdded] = useState(0);
@@ -36,13 +53,13 @@ export function ScanScreen({ placeId, lang, s }: { placeId: string | null; lang:
     setToast({ id: Date.now(), text: message });
   };
   const blocked = camera === 'denied' || camera === 'unavailable';
-  const back = placeId ? hrefs.place(placeId) : hrefs.home;
+  const back = hrefs.place(placeId);
 
   return (
     <main className="fixed inset-0 z-30 flex flex-col bg-black text-white">
       <div className="flex items-center justify-between gap-[12px] px-[16px] pt-[max(1rem,env(safe-area-inset-top))] pb-3">
         <div>
-          <h1 className="text-lg font-bold">{placeId ? `${s.scan} · ${placeName(places, placeId, s)}` : s.scan}</h1>
+          <h1 className="text-lg font-bold">{`${s.scan} · ${placeName(places, placeId, s)}`}</h1>
           <p className="text-sm text-white/70">{added > 0 ? s.addedCount(added) : ' '}</p>
         </div>
         <Button variant="primary" onClick={() => goBack(back)}>
@@ -71,7 +88,7 @@ export function ScanScreen({ placeId, lang, s }: { placeId: string | null; lang:
   );
 }
 
-type SheetProps = { code: string | null; placeId: string | null; lang: Lang; s: Strings; onDone: (message: string, counted?: boolean) => void; onCancel: () => void };
+type SheetProps = { code: string | null; placeId: string; lang: Lang; s: Strings; onDone: (message: string, counted?: boolean) => void; onCancel: () => void };
 
 function EntrySheet(props: SheetProps) {
   // Decided when the sheet opens: adding a new thing must not turn the sheet into "Du har allerede".

@@ -3,12 +3,13 @@
 
 import { ChevronRight, Plus, ScanBarcode } from 'lucide-react';
 import { useState } from 'react';
-import { Button, ButtonLink, MessageState, Page, SearchField, SettingsButton, Toast, type ToastMessage } from '../components/ui';
+import { Button, MessageState, Page, SearchField, SettingsButton, Toast, type ToastMessage } from '../components/ui';
 import { today } from '../i18n/format';
 import type { Lang, Strings } from '../i18n/strings';
 import { AddSheet } from '../inventory/AddSheet';
 import { ItemRow } from '../inventory/ItemRow';
 import { ItemSheet } from '../inventory/ItemSheet';
+import { PlacePicker } from '../inventory/PlacePicker';
 import { searchItems } from '../inventory/search';
 import { useInventory, useInventoryLoaded } from '../inventory/store';
 import { itemKeeping } from '../keeping/itemKeeping';
@@ -24,7 +25,8 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
   const places = sortPlaces(allPlaces);
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
+  const [picking, setPicking] = useState<'scan' | 'add' | null>(null); // Scan or Tilføj, asking where
+  const [addingTo, setAddingTo] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   usePageTitle('', s.appTitle);
 
@@ -66,11 +68,11 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
       ) : (
         <>
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <ButtonLink variant="primary" href={hrefs.scan()}>
+            <Button variant="primary" aria-haspopup="dialog" onClick={() => setPicking('scan')}>
               <ScanBarcode aria-hidden="true" className="size-5" />
               {s.scan}
-            </ButtonLink>
-            <Button variant="ink" onClick={() => setAdding(true)}>
+            </Button>
+            <Button variant="ink" aria-haspopup="dialog" onClick={() => setPicking('add')}>
               <Plus aria-hidden="true" className="size-5" />
               {s.add}
             </Button>
@@ -117,7 +119,18 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
         </>
       )}
       <ItemSheet openId={openId} onClose={() => setOpenId(null)} onMessage={(text) => setToast({ id: Date.now(), text })} lang={lang} s={s} />
-      <AddSheet open={adding} placeId={null} onClose={() => setAdding(false)} lang={lang} s={s} />
+      <PlacePicker
+        open={picking !== null}
+        onPick={(placeId) => {
+          const what = picking;
+          setPicking(null);
+          if (what === 'scan') location.hash = hrefs.scan(placeId);
+          else setAddingTo(placeId);
+        }}
+        onClose={() => setPicking(null)}
+        s={s}
+      />
+      {addingTo ? <AddSheet open placeId={addingTo} onClose={() => setAddingTo(null)} lang={lang} s={s} /> : null}
       <Toast message={toast} onHide={() => setToast(null)} />
     </Page>
   );

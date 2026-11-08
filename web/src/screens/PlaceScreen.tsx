@@ -1,15 +1,16 @@
-// One place (Køleskab, Fryser, Forråd): its things grouped by category (S-005), each opening its sheet;
-// "Scan" and "Tilføj" add straight to this place.
+// One place: its things grouped by category (S-005), each opening its sheet; a search within this
+// place only (Hjem searches everything, S-015); "Scan" and "Tilføj" add straight to this place.
 
 import { Plus, ScanBarcode } from 'lucide-react';
 import { useState } from 'react';
-import { ButtonLink, Button, MessageState, Page, SubPageHeader, Toast, type ToastMessage } from '../components/ui';
+import { ButtonLink, Button, MessageState, Page, SearchField, SubPageHeader, Toast, type ToastMessage } from '../components/ui';
 import { today } from '../i18n/format';
 import type { Lang, Strings } from '../i18n/strings';
 import { AddSheet } from '../inventory/AddSheet';
 import { CATEGORIES } from '../inventory/categories';
 import { ItemRow } from '../inventory/ItemRow';
 import { ItemSheet } from '../inventory/ItemSheet';
+import { searchItems } from '../inventory/search';
 import { useInventory, useInventoryLoaded } from '../inventory/store';
 import { usePageTitle } from '../lib/usePageTitle';
 import { placeName } from '../places';
@@ -22,10 +23,13 @@ export function PlaceScreen({ id, lang, s }: { id: string; lang: Lang; s: String
   const [openId, setOpenId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [query, setQuery] = useState('');
   const title = placeName(places, id, s);
   usePageTitle(title, s.appTitle);
   const total = items.reduce((sum, i) => sum + i.count, 0);
   const day = today();
+  const searching = query.trim() !== '';
+  const results = searching ? searchItems(items, query, (i) => [s.categories[i.category]]) : [];
 
   return (
     <Page>
@@ -40,10 +44,25 @@ export function PlaceScreen({ id, lang, s }: { id: string; lang: Lang; s: String
           {s.add}
         </Button>
       </div>
+      {items.length > 0 ? (
+        <div className="mb-4">
+          <SearchField id="place-search" value={query} onChange={setQuery} placeholder={s.searchIn(title)} label={s.searchIn(title)} clearLabel={s.clearSearch} />
+        </div>
+      ) : null}
       {!loaded ? (
         <MessageState title={s.loading} />
       ) : items.length === 0 ? (
         <MessageState title={s.emptyPlace} />
+      ) : searching ? (
+        results.length === 0 ? (
+          <MessageState title={s.noMatches(query.trim())} />
+        ) : (
+          <ul aria-label={s.searchIn(title)} className="flex flex-col divide-y divide-border rounded-card bg-surface">
+            {results.map((item) => (
+              <ItemRow key={item.id} item={item} today={day} onOpen={setOpenId} lang={lang} s={s} />
+            ))}
+          </ul>
+        )
       ) : (
         <div className="flex flex-col gap-5">
           {CATEGORIES.map((c) => {
@@ -65,7 +84,7 @@ export function PlaceScreen({ id, lang, s }: { id: string; lang: Lang; s: String
         </div>
       )}
       <ItemSheet openId={openId} onClose={() => setOpenId(null)} onMessage={(text) => setToast({ id: Date.now(), text })} lang={lang} s={s} />
-      <AddSheet open={adding} placeId={id} onClose={() => setAdding(false)} lang={lang} s={s} />
+      {adding ? <AddSheet open placeId={id} onClose={() => setAdding(false)} lang={lang} s={s} /> : null}
       <Toast message={toast} onHide={() => setToast(null)} />
     </Page>
   );

@@ -1,5 +1,5 @@
-// Indstillinger: language and appearance, then the places (S-013), the household (S-011) and how
-// the app counts (S-010).
+// Indstillinger: the places (S-013) and sharing (Del, S-011) first, how the app counts (S-010), then
+// language and appearance (S-015).
 
 import { Card, Choice, LinkRow, Page, RowList, SubPageHeader } from '../components/ui';
 import type { Lang, Strings } from '../i18n/strings';
@@ -15,6 +15,11 @@ export function SettingsScreen({ lang, s }: { lang: Lang; s: Strings }) {
     <Page>
       <SubPageHeader backLabel={s.back} backTo={hrefs.home} title={t.title} />
       <div className="flex flex-col gap-4">
+        <RowList>
+          <LinkRow href={hrefs.places} title={s.placesScreen.settingsRow} subtitle={<span className="block text-sm text-muted">{s.placesScreen.settingsHint}</span>} />
+          <LinkRow href={hrefs.household} title={s.household.settingsRow} subtitle={<span className="block text-sm text-muted">{s.household.settingsHint}</span>} />
+          <LinkRow href={hrefs.rules} title={s.keep.howWeCount} />
+        </RowList>
         <Card className="flex flex-col gap-5">
           <Choice<LangPref>
             name="lang"
@@ -25,11 +30,6 @@ export function SettingsScreen({ lang, s }: { lang: Lang; s: Strings }) {
           />
           <Choice<ThemePref> name="theme" legend={t.theme} value={prefs.theme} onChange={(v) => setPreference('theme', v)} options={(['system', 'light', 'dark'] as const).map((v) => ({ value: v, label: t.themes[v] }))} />
         </Card>
-        <RowList>
-          <LinkRow href={hrefs.places} title={s.placesScreen.settingsRow} subtitle={<span className="block text-sm text-muted">{s.placesScreen.settingsHint}</span>} />
-          <LinkRow href={hrefs.household} title={s.household.settingsRow} subtitle={<span className="block text-sm text-muted">{s.household.settingsHint}</span>} />
-          <LinkRow href={hrefs.rules} title={s.keep.howWeCount} />
-        </RowList>
         <p className="px-1 text-sm text-muted">{t.version(__APP_BUILD__.date, __APP_BUILD__.commit)}</p>
       </div>
     </Page>

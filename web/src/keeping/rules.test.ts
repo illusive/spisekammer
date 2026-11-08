@@ -36,8 +36,9 @@ describe('dates', () => {
 });
 
 describe('the fixed examples (FoodKeeper v128)', () => {
-  it('raw chicken breast in the freezer: 9 months from the day it went in', () => {
-    expect(estimate({ type: CHICKEN_BREAST, place: 'freezer', placedOn: '2026-11-07' })).toMatchObject({ by: '2027-08-07', source: 'estimate', basis: 'freezer' });
+  it('raw chicken breast in the freezer: 8 months from the day it went in (Tænk; FoodKeeper says 9)', () => {
+    expect(estimate({ type: CHICKEN_BREAST, place: 'freezer', placedOn: '2026-11-07' })).toMatchObject({ by: '2027-07-07', upTo: '2027-09-07', source: 'estimate', basis: 'freezer' });
+    expect(CHICKEN_BREAST.danish?.freezer).toMatch(/Kylling/);
   });
   it('minced beef in the fridge: the low end, 1 day (range to 2)', () => {
     expect(estimate({ type: MINCED_BEEF, place: 'fridge', placedOn: '2026-11-07' })).toEqual({ by: '2026-11-08', upTo: '2026-11-09', source: 'estimate', basis: 'fridge' });
@@ -62,9 +63,9 @@ describe('the fixed examples (FoodKeeper v128)', () => {
   it('out of the freezer: the after-thawing time where FoodKeeper has one', () => {
     expect(estimate({ type: NUGGETS, place: 'fridge', placedOn: '2026-11-10', thawedOn: '2026-11-10' })).toMatchObject({ by: '2026-11-11', basis: 'fridgeThawed' });
   });
-  it('leftovers: 3 days in the fridge, 2 months in the freezer', () => {
+  it('leftovers: 3 days in the fridge, 1 month in the freezer (Tænk’s ready meals; FoodKeeper says 2)', () => {
     expect(estimate({ type: LEFTOVERS, place: 'fridge', placedOn: '2026-11-07' })).toMatchObject({ by: '2026-11-10', upTo: '2026-11-11' });
-    expect(estimate({ type: LEFTOVERS, place: 'freezer', placedOn: '2026-11-07' })).toMatchObject({ by: '2027-01-07' });
+    expect(estimate({ type: LEFTOVERS, place: 'freezer', placedOn: '2026-11-07' })).toMatchObject({ by: '2026-12-07', upTo: '2027-02-07' });
   });
 });
 
@@ -97,8 +98,11 @@ describe('the package date comes first', () => {
     expect(keeping({ ...jam, packageDate: '2026-12-01' }).by).toBe('2026-12-01');
     expect(keeping({ ...jam, packageDate: '2028-01-01' })).toMatchObject({ by: '2027-05-08', source: 'estimate' });
   });
-  it('the freezer starts a new clock, whatever the package says', () => {
+  it('the freezer starts a new clock over a use-by date', () => {
     expect(keeping({ type: MINCED_BEEF, place: 'freezer', placedOn: '2026-11-07', packageDate: '2026-11-09', packageKind: 'useBy' })).toMatchObject({ by: '2027-02-07', source: 'estimate' });
+  });
+  it('in the freezer, a best-before date is the frozen food’s own and is shown', () => {
+    expect(keeping({ type: type(331), place: 'freezer', placedOn: '2026-11-07', packageDate: '2028-03-01', packageKind: 'bestBefore' })).toEqual({ by: '2028-03-01', source: 'bestBefore' });
   });
 
   it('never gives a later day than the use-by date outside the freezer (all types, places and states)', () => {

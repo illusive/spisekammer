@@ -26,9 +26,11 @@ export interface FoodType {
   checked: boolean; // the Danish name has been checked by a person
   keys: string[]; // words that point to this type (see keeping/match.ts)
   times: Partial<Record<TimeKey, Time>>;
+  danish?: { freezer: string }; // the freezer time is Forbrugerrådet Tænk's (S-014), shorter than FoodKeeper's
 }
 
 export interface FoodTypeData {
   source: { id: string; title: string; publisher: string; license: string; version: string; sha256: string; url: string };
+  danishSource: { publisher: string; title: string; url: string; retrievedAt: string };
   types: FoodType[];
 }

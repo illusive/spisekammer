@@ -4,7 +4,7 @@
 
 import { ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
-import { Button, Choice, Page, Sheet, SheetHeader, SubPageHeader, Toast, inputClass, useConfirm, type ToastMessage } from '../components/ui';
+import { Button, Choice, Page, Sheet, SheetHeader, SubPageHeader, Toast, fieldClass, useConfirm, type ToastMessage } from '../components/ui';
 import type { Strings } from '../i18n/strings';
 import { PLACE_ICON } from '../inventory/placeIcons';
 import { inventory, useInventory } from '../inventory/store';
@@ -134,7 +134,7 @@ function PlaceSheet({ placeId, s, onDone }: { placeId: string | null; s: Strings
                 placeholder={place && !place.name ? shownName(place.id) : t.namePlaceholder}
                 data-autofocus={place ? undefined : ''}
                 autoComplete="off"
-                className={`${inputClass} min-h-12 text-lg`}
+                className={fieldClass}
               />
             </label>
             <div className="flex flex-col gap-2">

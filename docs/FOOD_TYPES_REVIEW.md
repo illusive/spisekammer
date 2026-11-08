@@ -23,6 +23,7 @@ These map a Danish product to the nearest FoodKeeper record, which is not a perf
 - **Milk:** FoodKeeper says "package use-by date". Danish milk is usually marked "mindst holdbar til" (best before); the user picks the kind of date.
 - **Hakket kalv og flæsk** uses Minced beef (43); all minced meats have the same times.
 - **Quiche, tærte** is in Rester og færdigretter (FoodKeeper: 2 hours out of the fridge).
+- **Tænk's freezer lines (S-014)** are matched to types in `content/danish-freezer.json`. Check: leftovers, cooked rice and soups count as "færdige retter" (1–3 months); "Frossen fisk, rå" counts as fatty fish (2–3 months), the cautious choice when the kind of fish is unknown; Tænk's "Grøntsager" and "Frugt" cover all fresh vegetables and fruit.
 
 
 ## Kød

@@ -3,7 +3,7 @@
 
 import { Card, Page, SubPageHeader } from '../components/ui';
 import type { Strings } from '../i18n/strings';
-import { FOOD_SOURCE, FOOD_TYPES } from '../keeping/foodTypes';
+import { FOOD_SOURCE, FOOD_SOURCE_DK, FOOD_TYPES } from '../keeping/foodTypes';
 import { usePageTitle } from '../lib/usePageTitle';
 import { hrefs } from '../router';
 
@@ -32,6 +32,9 @@ export function RulesScreen({ s }: { s: Strings }) {
           <p className="text-sm text-muted">{t.typesCount(FOOD_TYPES.length)}</p>
           <a href={FOOD_SOURCE.url} target="_blank" rel="noopener noreferrer" className={linkClass}>
             {t.sourceLink}
+          </a>
+          <a href={FOOD_SOURCE_DK.url} target="_blank" rel="noopener noreferrer" className={linkClass}>
+            {t.taenkLink}
           </a>
           <a href="https://foedevarestyrelsen.dk" target="_blank" rel="noopener noreferrer" className={linkClass}>
             {t.danishLink}

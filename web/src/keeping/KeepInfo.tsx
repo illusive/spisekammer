@@ -3,7 +3,7 @@
 // never "safe" (AGENTS.md).
 
 import { Info } from 'lucide-react';
-import { Choice, inputClass } from '../components/ui';
+import { Choice, fieldClass, selectClass } from '../components/ui';
 import { formatDay } from '../i18n/format';
 import type { Lang, Strings } from '../i18n/strings';
 import { CATEGORIES, type Category } from '../inventory/categories';
@@ -94,7 +94,7 @@ export function KeepDetails(props: { k: Keeping; urgency: Urgency; type: FoodTyp
 // Value: a type id (fk-43), or cat:<category> for a category without a type.
 export function TypeSelect({ id, value, onChange, lang, s }: { id: string; value: string; onChange: (value: string) => void; lang: Lang; s: Strings }) {
   return (
-    <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={`${inputClass} min-h-12 w-full text-lg`}>
+    <select id={id} value={value} onChange={(e) => onChange(e.target.value)} className={selectClass}>
       {CATEGORIES.map((c) => (
         <optgroup key={c} label={s.categories[c]}>
           {FOOD_TYPES.filter((t) => t.category === c)
@@ -128,7 +128,7 @@ export function PackageDateFields(props: { idPrefix: string; day: string; kind: 
           {s.keep.packageDate} <span className="font-normal text-muted">({s.optional})</span>
         </span>
         <span className="flex gap-[8px]">
-          <input type="date" value={day} onChange={(e) => onDay(e.target.value)} className={`${inputClass} min-h-12 flex-1 text-lg`} />
+          <input type="date" value={day} onChange={(e) => onDay(e.target.value)} className={`${fieldClass} flex-1`} />
           {day && onClear ? (
             <button type="button" onClick={onClear} className="min-h-11 px-[8px] text-sm font-bold underline underline-offset-4">
               {s.keep.removeDate}

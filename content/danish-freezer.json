@@ -1,0 +1,29 @@
+{
+  "about": "Freezer times from Forbrugerrådet Tænk's Danish list (S-014), used as a check on FoodKeeper: where both give a freezer time, the build uses the shorter low end. Only the numbers are used, never Tænk's text, and Tænk is named on the app's 'Sådan regner appen' page. Tænk says the times are for quality ('Angivelserne af holdbarhed er vejledende'). 'groups' map Tænk's lines to FoodKeeper records; 'subcategories' to all FoodKeeper produce of that kind.",
+  "source": {
+    "id": "dk-taenk-holdbarhed-og-opbevaring",
+    "publisher": "Forbrugerrådet Tænk",
+    "title": "Stop madspild: Få styr på holdbarhed og opbevaring af mad",
+    "url": "https://taenk.dk/test-og-forbrugerliv/mad-og-indkoeb/madspild/holdbarhed-og-opbevaring",
+    "retrievedAt": "2026-10-26",
+    "snapshotSha256": "df9b79db64c61c00ddd1e3c7f12a1fca32bda360d80ee54ee22cb5a33f44b17d",
+    "snapshotNote": "The snapshot is kept in stead (offline-knowledge/content/sources/snapshots), not here: the page's reuse terms are unknown.",
+    "license": "unknown; numbers only, with credit; permission to be asked (docs/OPEN_QUESTIONS.md)"
+  },
+  "groups": [
+    { "taenk": "Færdige retter: 1-3 måneder", "time": { "min": 1, "max": 3, "unit": "months" }, "fk": [330, 185, 173, 174, 175, 177, 178, 193, 629, 484] },
+    { "taenk": "Pølser: 2-3 måneder", "time": { "min": 2, "max": 3, "unit": "months" }, "fk": [102, 103, 104, 323] },
+    { "taenk": "Magert svinekød: cirka 6 måneder", "time": { "min": 6, "max": 6, "unit": "months" }, "fk": [63, 67, 60, 75] },
+    { "taenk": "Fedt svinekød: cirka 3 måneder", "time": { "min": 3, "max": 3, "unit": "months" }, "fk": [74, 72] },
+    { "taenk": "Hakket kød: cirka 4 måneder", "time": { "min": 4, "max": 4, "unit": "months" }, "fk": [43, 73, 59, 50] },
+    { "taenk": "Røget kød: 4-6 måneder", "time": { "min": 4, "max": 6, "unit": "months" }, "fk": [79, 515, 516, 192, 675, 665] },
+    { "taenk": "Kylling: 8-10 måneder", "time": { "min": 8, "max": 10, "unit": "months" }, "fk": [113, 117, 118] },
+    { "taenk": "Oksekød: cirka 10 måneder", "time": { "min": 10, "max": 10, "unit": "months" }, "fk": [40, 41, 39, 36] },
+    { "taenk": "Lammekød: cirka 10 måneder", "time": { "min": 10, "max": 10, "unit": "months" }, "fk": [51, 44, 53, 54] },
+    { "taenk": "Røget fisk: cirka 3 uger", "time": { "min": 3, "max": 3, "unit": "weeks" }, "fk": [167, 165] },
+    { "taenk": "Fed fisk: 2-3 måneder", "time": { "min": 2, "max": 3, "unit": "months" }, "fk": [146, 312] },
+    { "taenk": "Mager fisk: 3-6 måneder", "time": { "min": 3, "max": 6, "unit": "months" }, "fk": [144, 145] },
+    { "taenk": "Grøntsager: 6-12 måneder", "time": { "min": 6, "max": 12, "unit": "months" }, "fk": [331], "subcategories": ["Fresh Vegetables"] },
+    { "taenk": "Frugt og frugtprodukter: 10-12 måneder", "time": { "min": 10, "max": 12, "unit": "months" }, "fk": [315], "subcategories": ["Fresh Fruits"] }
+  ]
+}

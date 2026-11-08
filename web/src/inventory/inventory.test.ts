@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { categoryFromTags, guessCategory, soundsFrozen } from './categories';
+import { categoryFromTags, guessCategory } from './categories';
 import { addItem, EMPTY, moveItem, parseItem, parseProduct, rememberProduct, removeItem, setCount, setOpened, setPackageDate, setType, withBarcode, type Inventory, type NewItem } from './model';
 import type { Place } from '../places';
 
@@ -94,8 +94,6 @@ describe('Categories', () => {
     expect(guessCategory('Kartofler')).toBe('produce');
     expect(guessCategory('Frosne ærter')).toBe('frozen');
     expect(guessCategory('Frosne kyllingebryst')).toBe('poultry');
-    expect(soundsFrozen('Frosne kyllingebryst')).toBe(true);
-    expect(soundsFrozen('Kyllingebryst')).toBe(false);
     expect(guessCategory('Opvaskemiddel')).toBeNull();
   });
 

@@ -13,6 +13,7 @@ import type { FoodType, FoodTypeData } from './types';
 
 export const FOOD_TYPES: FoodType[] = (data as FoodTypeData).types;
 export const FOOD_SOURCE = (data as FoodTypeData).source;
+export const FOOD_SOURCE_DK = (data as FoodTypeData).danishSource; // Forbrugerrådet Tænk, freezer check (S-014)
 
 const byId = new Map(FOOD_TYPES.map((t) => [t.id, t]));
 export const foodType = (id: string | undefined): FoodType | undefined => (id ? byId.get(id) : undefined);

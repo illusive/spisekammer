@@ -91,8 +91,8 @@ export const inventory = {
   },
   setCount: (id: string, count: number) => apply(m.setCount(state, id, count, Date.now())),
   move: (id: string, placeId: string) => apply(m.moveItem(state, id, placeId, today(), Date.now())),
-  addPlace: (name: string, kind: PlaceKind) => {
-    const id = crypto.randomUUID();
+  addPlace: (name: string, kind: PlaceKind, presetId?: string) => {
+    const id = presetId ?? crypto.randomUUID();
     apply(m.addPlace(state, { id, name, kind }, Date.now()));
     return id;
   },
