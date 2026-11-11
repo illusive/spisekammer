@@ -188,3 +188,11 @@ Each entry records the decision, why, and what else was considered. Superseded e
   - While a sheet is open it is fitted into the part of the screen the keyboard leaves free (the visual viewport), and the page behind does not scroll.
   - **The keyboard opens by itself only when adding by typing** ("Tilføj", and "Uden stregkode" on the scan screen). Every other sheet starts on its title: a scanned thing, a thing's own sheet, a new or existing place, the place picker. After adding a scanned thing, the form no longer puts the cursor back in the name while the sheet closes.
 - **Not checked yet:** the keyboard itself on an iPhone (the preview has no on-screen keyboard; the layout was checked at a short screen height).
+
+## S-017: The keyboard fix, measured against the right height
+
+- **Date:** 2026-11-11
+- **Problem (owner, on an iPhone):** after S-016 the sheet went completely out of view.
+- **Cause:** S-016 measured the keyboard with `window.innerHeight`, which on an iPhone shrinks with the keyboard, just as the visible area does. So the app saw no keyboard and did not lift the sheet, but still shrank the sheet's height to the visible height. That left a short sheet at the very bottom, behind the keyboard.
+- **Fix:** `web/src/lib/keyboardFit.ts`, a pure function with tests. It measures against the layout viewport's height (`document.documentElement.clientHeight`), which stays the same when the keyboard opens. When no keyboard covers the bottom (less than 120 px), nothing about the sheet's place is changed. When one does, the sheet is lifted by exactly what is covered, never more, and kept to the visible height.
+- **Not checked yet:** on an iPhone. The tests use iPhone-sized numbers; the preview has no on-screen keyboard.

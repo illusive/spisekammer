@@ -4,6 +4,7 @@
 
 import { ArrowLeft, Check, ChevronRight, Search, Settings, TriangleAlert, X, type LucideIcon } from 'lucide-react';
 import { decimalForInput, parseCounter } from '../i18n/format';
+import { keyboardFit } from '../lib/keyboardFit';
 import type { Lang } from '../i18n/strings';
 import { goBack, hrefs } from '../router';
 import { useCallback, useEffect, useId, useReducer, useRef, useState, type ButtonHTMLAttributes, type ElementType, type HTMLAttributes, type MouseEvent, type ReactNode, type Ref } from 'react';
@@ -279,9 +280,9 @@ export function TabHeader({ title, settingsLabel, children }: { title: string; s
 // It slides up when opened and back down when closed (D-054, index.css). While it slides down it
 // keeps showing what it showed, even if the parent has already let go of it (a deleted thing); the
 // content is dropped once it is closed, so the next opening starts afresh.
-// The keyboard (S-016): only the content scrolls, under a header that stays (SheetHeader), and
-// while the sheet is open it is fitted into the part of the screen the keyboard leaves free, so the
-// phone does not push the whole sheet up and out of view. The page behind does not scroll.
+// The keyboard (S-016, S-017): only the content scrolls, under a header that stays (SheetHeader).
+// When a keyboard covers the bottom, the sheet is lifted above it (lib/keyboardFit.ts); without one
+// nothing about its place is changed. The page behind does not scroll.
 // Focus starts on [data-autofocus] (the name when adding by typing) or else on the title, so no
 // keyboard opens by itself anywhere else.
 export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, children }: { open: boolean; onClose: () => void; labelledBy: string; dismissOnBackdrop?: boolean; children: ReactNode }) {
@@ -324,7 +325,7 @@ export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, chi
     };
   }, [open]);
 
-  // Fitted above the keyboard: the visual viewport is what the keyboard leaves visible.
+  // Fitted above the keyboard (lib/keyboardFit.ts): without a keyboard nothing is changed.
   useEffect(() => {
     const dialog = ref.current;
     if (!open || !dialog) return;
@@ -333,9 +334,9 @@ export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, chi
     const vv = window.visualViewport;
     const fit = () => {
       if (!vv) return;
-      const below = Math.max(0, window.innerHeight - vv.height - vv.offsetTop); // the keyboard
-      dialog.style.bottom = `${below}px`;
-      dialog.style.maxHeight = `${Math.round(Math.min(window.innerHeight * 0.85, vv.height - 12))}px`;
+      const place = keyboardFit({ layoutHeight: root.clientHeight, visibleTop: vv.offsetTop, visibleHeight: vv.height });
+      dialog.style.bottom = place ? `${place.lift}px` : '';
+      dialog.style.maxHeight = place ? `${place.maxHeight}px` : '';
     };
     fit();
     vv?.addEventListener('resize', fit);
