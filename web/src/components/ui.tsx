@@ -332,11 +332,12 @@ export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, chi
     const root = document.documentElement;
     root.classList.add('sheet-open');
     const vv = window.visualViewport;
+    const body = dialog.firstElementChild as HTMLElement | null; // the part that scrolls
     const fit = () => {
       if (!vv) return;
       const place = keyboardFit({ layoutHeight: root.clientHeight, visibleTop: vv.offsetTop, visibleHeight: vv.height });
       dialog.style.bottom = place ? `${place.lift}px` : '';
-      dialog.style.maxHeight = place ? `${place.maxHeight}px` : '';
+      if (body) body.style.maxHeight = place ? `${place.maxHeight}px` : '';
     };
     fit();
     vv?.addEventListener('resize', fit);
@@ -345,7 +346,7 @@ export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, chi
       vv?.removeEventListener('resize', fit);
       vv?.removeEventListener('scroll', fit);
       dialog.style.bottom = '';
-      dialog.style.maxHeight = '';
+      if (body) body.style.maxHeight = '';
       if (!document.querySelector('dialog.sheet[open]:not([data-closing])')) root.classList.remove('sheet-open');
     };
   }, [open]);
@@ -361,9 +362,11 @@ export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, chi
       onClick={(e) => {
         if (dismissOnBackdrop && e.target === e.currentTarget) onClose(); // the backdrop, not the content
       }}
-      className="sheet inset-x-0 top-auto bottom-0 m-0 mx-auto max-h-[85dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[28px] border-t border-border bg-background p-0 text-text shadow-2xl backdrop:bg-black/50 open:flex"
+      className="sheet inset-x-0 top-auto bottom-0 m-0 mx-auto max-h-none w-full max-w-2xl overflow-hidden rounded-t-[28px] border-t border-border bg-background p-0 text-text shadow-2xl backdrop:bg-black/50"
     >
-      <div className="min-h-0 flex-1 scroll-pt-24 overflow-y-auto overscroll-contain px-[16px] pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">{open ? children : last.current}</div>
+      {/* The sheet is a plain box; this part has its own height limit and scrolls (S-018: no flex,
+          no "open" selector, so older Safari lays it out the same). */}
+      <div className="sheet-body scroll-pt-24 overflow-y-auto overscroll-contain px-[16px] pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">{open ? children : last.current}</div>
     </dialog>
   );
 }

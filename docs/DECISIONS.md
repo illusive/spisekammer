@@ -196,3 +196,11 @@ Each entry records the decision, why, and what else was considered. Superseded e
 - **Cause:** S-016 measured the keyboard with `window.innerHeight`, which on an iPhone shrinks with the keyboard, just as the visible area does. So the app saw no keyboard and did not lift the sheet, but still shrank the sheet's height to the visible height. That left a short sheet at the very bottom, behind the keyboard.
 - **Fix:** `web/src/lib/keyboardFit.ts`, a pure function with tests. It measures against the layout viewport's height (`document.documentElement.clientHeight`), which stays the same when the keyboard opens. When no keyboard covers the bottom (less than 120 px), nothing about the sheet's place is changed. When one does, the sheet is lifted by exactly what is covered, never more, and kept to the visible height.
 - **Not checked yet:** on an iPhone. The tests use iPhone-sized numbers; the preview has no on-screen keyboard.
+
+## S-018: The sheet as a plain box, for older Safari
+
+- **Date:** 2026-11-13
+- **Problem (owner, on an iPhone):** the sheet opened mostly outside the screen; only its top showed. Not the keyboard.
+- **Likely cause:** since S-016 the sheet was a flex column, switched on by Tailwind's `open:` selector (`:is([open], :popover-open, :open)`), with a scrolling part sized by flex. Current WebKit and Chrome lay that out correctly (checked with Playwright's WebKit at iPhone size), but it leans on newer selectors and flex sizing that older Safari handles differently.
+- **Fix:** no flex and no `open:` selector. The sheet is a plain box with no height limit of its own (`max-h-none`, which also overrides the browser's default for dialogs). Its scrolling part has the limit (`.sheet-body`: 85 % of the screen, in `dvh` with a `vh` fallback). The keyboard fit (S-017) now limits that part.
+- **Checked:** WebKit and Chromium at iPhone width, at full and at short height. The sheet ends exactly at the screen's bottom edge, and its content scrolls. **Not checked:** on the owner's iPhone.

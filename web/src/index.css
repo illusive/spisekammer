@@ -164,3 +164,10 @@ html.sheet-open body {
   overflow: hidden;
   overscroll-behavior: none;
 }
+
+/* A sheet's scrolling part (S-018): at most 85 % of the screen. dvh follows the phone's toolbars;
+   vh is the fallback for browsers without it. */
+.sheet-body {
+  max-height: 85vh;
+  max-height: 85dvh;
+}
