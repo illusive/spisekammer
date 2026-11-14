@@ -4,7 +4,8 @@
 import { ChevronRight } from 'lucide-react';
 import { Sheet, SheetHeader } from '../components/ui';
 import type { Strings } from '../i18n/strings';
-import { placeName, sortPlaces } from '../places';
+import { placeName } from '../places';
+import { useOrderedPlaces } from './orderedPlaces';
 import { PLACE_ICON } from './placeIcons';
 import { useInventory } from './store';
 
@@ -12,10 +13,11 @@ const TITLE_ID = 'place-picker-title';
 
 export function PlaceList({ onPick, s }: { onPick: (placeId: string) => void; s: Strings }) {
   const { items, places } = useInventory();
+  const ordered = useOrderedPlaces(s);
   const countIn = (id: string) => items.filter((i) => i.placeId === id).reduce((n, i) => n + i.count, 0);
   return (
     <ul className="flex flex-col divide-y divide-border rounded-card bg-surface">
-      {sortPlaces(places).map((place) => {
+      {ordered.map((place) => {
         const Icon = PLACE_ICON[place.kind];
         return (
           <li key={place.id}>

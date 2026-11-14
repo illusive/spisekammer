@@ -97,6 +97,7 @@ export const inventory = {
     return id;
   },
   updatePlace: (id: string, change: { name?: string; kind?: PlaceKind }) => apply(m.updatePlace(state, id, change, Date.now())),
+  reorderPlaces: (orderedIds: string[]) => apply(m.reorderPlaces(state, orderedIds, Date.now())),
   removePlace: (id: string, moveTo: string | null) => apply(m.removePlace(state, id, moveTo, today(), Date.now())),
   setOpened: (id: string, opened: boolean) => apply(m.setOpened(state, id, opened ? today() : null, Date.now())),
   setPackageDate: (id: string, date: { day: string; kind: PackageKind } | null) => apply(m.setPackageDate(state, id, date, Date.now())),

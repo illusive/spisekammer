@@ -1,4 +1,4 @@
-# Build, test and publish the app to GitHub Pages on every push to main (S-001).
+# Build, test (unit and end-to-end) and publish the app to GitHub Pages on every push to main (S-001, S-019).
 # Needs Pages enabled with "GitHub Actions" as the source.
 name: Publish to GitHub Pages
 
@@ -35,6 +35,20 @@ jobs:
           npm run typecheck
           npm test
           npm run build
+      # The layout and flow tests (S-019), in WebKit (iPhone) and Chromium (Android), against the
+      # production build. The app is only published when they pass.
+      - name: End-to-end tests (Playwright)
+        working-directory: web
+        run: |
+          npx playwright install --with-deps webkit chromium
+          npm run test:e2e
+      - name: Playwright report (when a test fails)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: web/playwright-report
+          retention-days: 14
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

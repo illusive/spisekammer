@@ -10,7 +10,8 @@ import { formatDay, today } from '../i18n/format';
 import type { Lang, Strings } from '../i18n/strings';
 import { defaultPackageKind, itemKeeping } from '../keeping/itemKeeping';
 import { KeepDetails, PackageDateFields, readTypeValue, TypeSelect, typeValue } from '../keeping/KeepInfo';
-import { placeName, sortPlaces } from '../places';
+import { placeName } from '../places';
+import { useOrderedPlaces } from './orderedPlaces';
 import { MAX_COUNT } from './model';
 import { inventory, useInventory } from './store';
 import { itemSummary } from './summary';
@@ -19,6 +20,7 @@ const TITLE_ID = 'item-sheet-title';
 
 export function ItemSheet({ openId, onClose, onMessage, lang, s }: { openId: string | null; onClose: () => void; onMessage: (text: string) => void; lang: Lang; s: Strings }) {
   const { items, places } = useInventory();
+  const ordered = useOrderedPlaces(s);
   const item = items.find((i) => i.id === openId);
   const [zero, setZero] = useState(false);
   const { confirm, sheet } = useConfirm();
@@ -93,7 +95,7 @@ export function ItemSheet({ openId, onClose, onMessage, lang, s }: { openId: str
                   inventory.move(item.id, placeId);
                   onMessage(s.moved(item.name, placeName(places, placeId, s)));
                 }}
-                options={sortPlaces(places).map((p) => ({ value: p.id, label: placeName(places, p.id, s) }))}
+                options={ordered.map((p) => ({ value: p.id, label: placeName(places, p.id, s) }))}
               />
               <label className="flex flex-col gap-1">
                 <span className="font-bold">{s.keep.whatIsIt}</span>

@@ -21,6 +21,12 @@ web/src/
   settings/preferences.ts
 ```
 
+## Tests (S-019)
+
+- **Unit tests** (Vitest, `npm test`): the pure parts, such as the model, the keeping rules, the matching, the order of places and the keyboard fit. The database rules run on real Postgres with PGlite (`src/account/schema.test.ts`).
+- **End-to-end tests** (Playwright, `npm run test:e2e`, `web/e2e/`): against the production build, in `webkit-iphone` (iPhone 13) and `chromium-android` (Pixel 7). `e2e/fixtures.ts` starts the app (skipping the first start) and writes places and things into IndexedDB. `e2e/layout.ts` holds the layout checks: the sheet inside the screen with its header and scrolling content, the page scrolling after a sheet, no sideways scroll, tap targets of 44 by 24 px, and fields of 48 px.
+- **CI** runs both before every deploy (`.github/workflows/pages.yml`), and keeps the Playwright report when a test fails.
+
 ## 2. Data and sync (slices 2 and 4 done; 5 planned)
 
 - **On the phone (now, S-006):** IndexedDB (`spisekammer`: `items` by id, `products` by barcode) through `web/src/inventory/store.ts`. The state lives in memory; each change is a pure function in `model.ts` returning the new state and the rows to write.

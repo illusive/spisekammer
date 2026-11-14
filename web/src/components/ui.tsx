@@ -271,6 +271,8 @@ export function TabHeader({ title, settingsLabel, children }: { title: string; s
   );
 }
 
+let openSheets = 0; // sheets open now, for the page-scroll lock (S-019)
+
 // A sheet from the bottom of the screen (D-049): a native modal <dialog>, so focus stays inside,
 // the page behind is inert, Escape closes it and focus goes back to what opened it. A tap on the
 // dimmed page above it closes it too, unless `dismissOnBackdrop` is false (a sheet with fields, where
@@ -325,11 +327,14 @@ export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, chi
     };
   }, [open]);
 
-  // Fitted above the keyboard (lib/keyboardFit.ts): without a keyboard nothing is changed.
+  // Fitted above the keyboard (lib/keyboardFit.ts): without a keyboard nothing is changed. While
+  // any sheet is open the page behind does not scroll; counted, not looked up in the page, because
+  // a closing sheet is still [open] when this cleans up (S-019: the lookup kept the page locked).
   useEffect(() => {
     const dialog = ref.current;
     if (!open || !dialog) return;
     const root = document.documentElement;
+    openSheets += 1;
     root.classList.add('sheet-open');
     const vv = window.visualViewport;
     const body = dialog.firstElementChild as HTMLElement | null; // the part that scrolls
@@ -347,7 +352,8 @@ export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, chi
       vv?.removeEventListener('scroll', fit);
       dialog.style.bottom = '';
       if (body) body.style.maxHeight = '';
-      if (!document.querySelector('dialog.sheet[open]:not([data-closing])')) root.classList.remove('sheet-open');
+      openSheets = Math.max(0, openSheets - 1);
+      if (openSheets === 0) root.classList.remove('sheet-open');
     };
   }, [open]);
 
@@ -488,7 +494,7 @@ export function Stepper({ label, value, min, max, onChange, decimal }: { label: 
         {label}
       </span>
       <span className="flex items-center gap-[4px]" role="group" aria-labelledby={id}>
-        <button type="button" onClick={() => step(-1)} disabled={value <= min} aria-label={`${label} −1`} className="grid size-11 place-items-center rounded-full bg-background text-xl disabled:opacity-40">
+        <button type="button" onClick={() => step(-1)} disabled={value <= min} aria-label={`${label} −1`} className="grid size-12 place-items-center rounded-full bg-background text-xl disabled:opacity-40">
           −
         </button>
         <input
@@ -504,9 +510,9 @@ export function Stepper({ label, value, min, max, onChange, decimal }: { label: 
           inputMode={decimal ? 'decimal' : 'numeric'}
           autoComplete="off"
           enterKeyHint="done"
-          className="h-11 w-16 rounded-xl border border-border bg-background text-center text-lg tabular-nums"
+          className="h-12 w-16 rounded-xl border border-border bg-background text-center text-lg tabular-nums"
         />
-        <button type="button" onClick={() => step(1)} disabled={value >= max} aria-label={`${label} +1`} className="grid size-11 place-items-center rounded-full bg-background text-xl disabled:opacity-40">
+        <button type="button" onClick={() => step(1)} disabled={value >= max} aria-label={`${label} +1`} className="grid size-12 place-items-center rounded-full bg-background text-xl disabled:opacity-40">
           +
         </button>
       </span>

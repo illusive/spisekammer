@@ -30,7 +30,17 @@ export const DEFAULT_PLACES: Place[] = [
   { id: 'larder', kind: 'pantry', sort: 2, updatedAt: 0 },
 ];
 
+// The places in the order the user set (Steder → Egen, S-019): by `sort`, then id.
 export const sortPlaces = (places: Place[]) => [...places].sort((a, b) => a.sort - b.sort || a.id.localeCompare(b.id));
+
+export type PlaceOrder = 'alphabetical' | 'own';
+
+// How places are listed everywhere (S-019): alphabetically by the name shown, unless the user has
+// chosen their own order.
+export function orderPlaces(places: Place[], order: PlaceOrder, s: Strings): Place[] {
+  if (order === 'own') return sortPlaces(places);
+  return [...places].sort((a, b) => placeName(places, a.id, s).localeCompare(placeName(places, b.id, s), 'da') || a.id.localeCompare(b.id));
+}
 export const placeOf = (places: Place[], id: string): Place | undefined => places.find((p) => p.id === id);
 
 export function placeName(places: Place[], id: string, s: Strings): string {

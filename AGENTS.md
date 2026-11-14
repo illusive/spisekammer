@@ -28,6 +28,7 @@ Read `PROJECT.md` first, then `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs
 ## Checks after a change
 
 - **Every change:** `npm run typecheck`, `npm test` and `npm run build` in `web/`.
+- **Anything on screen:** also `npm run test:e2e` (WebKit and Chromium at phone size, S-019). Add a check to `web/e2e/` for what the change should hold, and fix the app when a check fails, never the check.
 - **For the interface:** look at it at phone width, light and dark, with large text.
 - **For sync:** two clients.
 - **On the iPhone:** the camera, offline use, the installed app, and sign-in.

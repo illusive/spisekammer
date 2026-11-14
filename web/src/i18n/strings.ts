@@ -44,6 +44,19 @@ export interface Strings {
     moveAndRemove: string;
     removed: (name: string) => string;
     lastPlace: string;
+    order: string;
+    orderOptions: { alphabetical: string; own: string };
+    orderHelp: string;
+    dragHandle: (name: string) => string;
+    moveUp: string;
+    moveDown: string;
+    dnd: {
+      instructions: string;
+      picked: (name: string, at: number, of: number) => string;
+      over: (name: string, at: number, of: number) => string;
+      dropped: (name: string, at: number, of: number) => string;
+      cancelled: (name: string) => string;
+    };
   };
   itemCount: (n: number) => string;
   emptyPlace: string;
@@ -266,6 +279,19 @@ export const strings: Record<Lang, Strings> = {
       moveAndRemove: 'Flyt og slet',
       removed: (name) => `${name} er slettet`,
       lastPlace: 'Du skal have mindst ét sted.',
+      order: 'Rækkefølge',
+      orderOptions: { alphabetical: 'Alfabetisk', own: 'Egen' },
+      orderHelp: 'Hold på håndtaget, og træk stedet op eller ned.',
+      dragHandle: (name) => `Flyt ${name}`,
+      moveUp: 'Flyt op',
+      moveDown: 'Flyt ned',
+      dnd: {
+        instructions: 'Tryk mellemrum for at tage stedet op. Flyt det med piletasterne, og tryk mellemrum igen for at sætte det. Escape fortryder.',
+        picked: (name, at, of) => `${name} er taget op. Plads ${at} af ${of}.`,
+        over: (name, at, of) => `${name} er over plads ${at} af ${of}.`,
+        dropped: (name, at, of) => `${name} er sat på plads ${at} af ${of}.`,
+        cancelled: (name) => `${name} blev ikke flyttet.`,
+      },
     },
     itemCount: (n) => (n === 1 ? '1 ting' : `${n} ting`),
     emptyPlace: 'Intet her endnu.',
@@ -543,6 +569,19 @@ export const strings: Record<Lang, Strings> = {
       moveAndRemove: 'Move and delete',
       removed: (name) => `${name} deleted`,
       lastPlace: 'You need at least one place.',
+      order: 'Order',
+      orderOptions: { alphabetical: 'Alphabetical', own: 'Your own' },
+      orderHelp: 'Hold the handle and drag the place up or down.',
+      dragHandle: (name) => `Move ${name}`,
+      moveUp: 'Move up',
+      moveDown: 'Move down',
+      dnd: {
+        instructions: 'Press space to pick the place up. Move it with the arrow keys and press space again to drop it. Escape cancels.',
+        picked: (name, at, of) => `Picked up ${name}. Position ${at} of ${of}.`,
+        over: (name, at, of) => `${name} is over position ${at} of ${of}.`,
+        dropped: (name, at, of) => `${name} was dropped at position ${at} of ${of}.`,
+        cancelled: (name) => `${name} was not moved.`,
+      },
     },
     itemCount: (n) => (n === 1 ? '1 item' : `${n} items`),
     emptyPlace: 'Nothing here yet.',

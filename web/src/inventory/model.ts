@@ -169,6 +169,21 @@ export function updatePlace(state: Inventory, id: string, change: { name?: strin
   return { state: { ...state, places: state.places.map((p) => (p.id === id ? next : p)) }, putPlaces: [next] };
 }
 
+// The user's own order (S-019): the places in `orderedIds` get sort 0, 1, 2 …; those not listed
+// keep theirs, after them. Only places whose sort changes are written.
+export function reorderPlaces(state: Inventory, orderedIds: string[], now: number): Change {
+  const position = new Map(orderedIds.map((id, i) => [id, i]));
+  const changed: Place[] = [];
+  const places = state.places.map((p) => {
+    const sort = position.get(p.id) ?? orderedIds.length + p.sort;
+    if (sort === p.sort) return p;
+    const next = { ...p, sort, updatedAt: now };
+    changed.push(next);
+    return next;
+  });
+  return changed.length === 0 ? { state } : { state: { ...state, places }, putPlaces: changed };
+}
+
 // Deleting a place moves its things to another place first; the last place cannot go.
 export function removePlace(state: Inventory, id: string, moveTo: string | null, today: string, now: number): Change {
   if (!state.places.some((p) => p.id === id) || state.places.length <= 1) return { state };

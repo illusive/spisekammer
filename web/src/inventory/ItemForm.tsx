@@ -132,7 +132,7 @@ export function ItemForm(props: { start: FormStart; idPrefix: string; lang: Lang
           <span>
             {s.keep.whatIsIt}: <span className="font-bold text-text">{shownType ? foodTypeName(shownType, lang) : s.keep.noTypeOption(s.categories[shownCategory])}</span>
           </span>
-          <button type="button" onClick={() => setShowTypes((v) => !v)} aria-expanded={showTypes} aria-controls={`${idPrefix}-type`} className="min-h-11 font-bold text-text underline underline-offset-4">
+          <button type="button" onClick={() => setShowTypes((v) => !v)} aria-expanded={showTypes} aria-controls={`${idPrefix}-type`} className="inline-flex min-h-11 min-w-11 items-center justify-center font-bold text-text underline underline-offset-4">
             {showTypes ? s.close : s.change}
           </button>
         </p>

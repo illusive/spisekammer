@@ -42,6 +42,8 @@ Each slice builds, is tested, and works on its own.
    **2026-11-08:** the migration is applied (checked: the tables exist and refuse signed-out reads) and the publishable key is in the app.
    **Not yet:** the email template and custom SMTP (`supabase/README.md`); sign-in and invites end to end; the fridge setting moving from the phone to the household (slice 5).
 5. **Sync:** the outbox, pulls, Realtime, count operations, deletion markers; tests with two clients.
+**Between slices (S-019, 2026-11-14):** the page-scroll fix after closing a sheet; places alphabetical by default, or in an own order by dragging; Playwright tests in WebKit and Chromium, run in CI before every deploy.
+
 **Between slices (S-014, S-015, 2026-11-08):** Tænk's Danish freezer times where shorter; "bedst før" counts in the freezer; the place is chosen before adding; a sticky sheet header; one field style; search within a place; "Del"; a first start.
 
 **Between slices (S-013, 2026-11-08):** the household's own places, each Frost, Køl or Tørvarer; defaults Fryser, Skabe and Viktualiekammer; the fridge switch is gone. Server migration `20261108120000_places.sql` to apply.

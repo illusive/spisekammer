@@ -1,16 +1,23 @@
-// Steder (S-013): the household's places, each with a kind (Frost, Køl, Tørvarer) that decides the
-// keeping times. Add one, rename it, change its kind, or delete it; deleting a place with things in
+// Steder (S-013, S-019): the household's places, each with a kind (Frost, Køl, Tørvarer) that
+// decides the keeping times. Listed alphabetically, or in the user's own order, set by dragging
+// (touch: hold the handle; mouse; keyboard: space, arrows, space) or with "Flyt op" / "Flyt ned" in
+// a place's sheet. Add, rename, change the kind of, or delete a place; deleting one with things in
 // it asks where they should go first, and the last place cannot be deleted.
 
-import { ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, useSensor, useSensors, type Announcements, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { ArrowDown, ArrowUp, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Button, Choice, Page, Sheet, SheetHeader, SubPageHeader, Toast, fieldClass, useConfirm, type ToastMessage } from '../components/ui';
 import type { Strings } from '../i18n/strings';
+import { useOrderedPlaces } from '../inventory/orderedPlaces';
 import { PLACE_ICON } from '../inventory/placeIcons';
 import { inventory, useInventory } from '../inventory/store';
 import { usePageTitle } from '../lib/usePageTitle';
-import { PLACE_KINDS, placeName, placeOf, sortPlaces, type PlaceKind } from '../places';
+import { PLACE_KINDS, orderPlaces, placeName, placeOf, type Place, type PlaceKind, type PlaceOrder } from '../places';
 import { hrefs } from '../router';
+import { readPreferences, setPreference, usePreferences } from '../settings/preferences';
 
 const TITLE_ID = 'place-sheet-title';
 
@@ -18,36 +25,39 @@ export function PlacesScreen({ s }: { s: Strings }) {
   const t = s.placesScreen;
   usePageTitle(t.title, s.appTitle);
   const { items, places } = useInventory();
+  const { placeOrder } = usePreferences();
+  const ordered = useOrderedPlaces(s);
   const [editing, setEditing] = useState<string | 'new' | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const countIn = (id: string) => items.filter((i) => i.placeId === id).reduce((n, i) => n + i.count, 0);
+  const own = placeOrder === 'own';
+
+  // Switching to the own order starts from what is shown (alphabetical), so nothing jumps.
+  const setOrder = (order: PlaceOrder) => {
+    if (order === 'own' && readPreferences().placeOrder !== 'own') inventory.reorderPlaces(orderPlaces(inventory.get().places, 'alphabetical', s).map((p) => p.id));
+    setPreference('placeOrder', order);
+  };
 
   return (
     <Page>
       <SubPageHeader backLabel={s.back} backTo={hrefs.settings} title={t.title} />
       <div className="flex flex-col gap-4">
         <p className="px-1">{t.intro}</p>
-        <ul className="flex flex-col divide-y divide-border rounded-card bg-surface">
-          {sortPlaces(places).map((place) => {
-            const Icon = PLACE_ICON[place.kind];
-            return (
+        <div className="flex flex-col gap-2">
+          <Choice<PlaceOrder> name="place-order" legend={t.order} value={placeOrder} onChange={setOrder} options={(['alphabetical', 'own'] as const).map((v) => ({ value: v, label: t.orderOptions[v] }))} />
+          {own ? <p className="px-1 text-sm text-muted">{t.orderHelp}</p> : null}
+        </div>
+        {own ? (
+          <SortablePlaces places={ordered} countIn={countIn} onOpen={setEditing} s={s} />
+        ) : (
+          <ul className="flex flex-col divide-y divide-border rounded-card bg-surface">
+            {ordered.map((place) => (
               <li key={place.id}>
-                <button type="button" aria-haspopup="dialog" onClick={() => setEditing(place.id)} className="flex min-h-16 w-full items-center gap-[14px] px-[18px] py-3 text-left">
-                  <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-soft text-on-soft">
-                    <Icon className="size-6" strokeWidth={1.75} />
-                  </span>
-                  <span className="flex-1">
-                    <span className="block font-bold">{placeName(places, place.id, s)}</span>
-                    <span className="block text-sm text-muted">
-                      {s.placeKinds[place.kind]} · {s.itemCount(countIn(place.id))}
-                    </span>
-                  </span>
-                  <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted" />
-                </button>
+                <PlaceRow place={place} places={places} count={countIn(place.id)} onOpen={setEditing} s={s} />
               </li>
-            );
-          })}
-        </ul>
+            ))}
+          </ul>
+        )}
         <Button variant="primary" onClick={() => setEditing('new')}>
           <Plus aria-hidden="true" className="size-5" />
           {t.add}
@@ -61,19 +71,104 @@ export function PlacesScreen({ s }: { s: Strings }) {
   );
 }
 
+function PlaceRow({ place, places, count, onOpen, s }: { place: Place; places: Place[]; count: number; onOpen: (id: string) => void; s: Strings }) {
+  const Icon = PLACE_ICON[place.kind];
+  return (
+    <button type="button" aria-haspopup="dialog" onClick={() => onOpen(place.id)} className="flex min-h-16 w-full min-w-0 flex-1 items-center gap-[14px] px-[18px] py-3 text-left">
+      <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-soft text-on-soft">
+        <Icon className="size-6" strokeWidth={1.75} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-bold break-words">{placeName(places, place.id, s)}</span>
+        <span className="block text-sm text-muted">
+          {s.placeKinds[place.kind]} · {s.itemCount(count)}
+        </span>
+      </span>
+      <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted" />
+    </button>
+  );
+}
+
+// The own order, by dragging a place's handle.
+function SortablePlaces({ places, countIn, onOpen, s }: { places: Place[]; countIn: (id: string) => number; onOpen: (id: string) => void; s: Strings }) {
+  const t = s.placesScreen;
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const ids = places.map((p) => p.id);
+  const nameOf = (id: string | number) => placeName(places, String(id), s);
+  const positionOf = (id: string | number) => ids.indexOf(String(id)) + 1;
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => t.dnd.picked(nameOf(active.id), positionOf(active.id), ids.length),
+    onDragOver: ({ active, over }) => (over ? t.dnd.over(nameOf(active.id), positionOf(over.id), ids.length) : undefined),
+    onDragEnd: ({ active, over }) => (over ? t.dnd.dropped(nameOf(active.id), positionOf(over.id), ids.length) : t.dnd.cancelled(nameOf(active.id))),
+    onDragCancel: ({ active }) => t.dnd.cancelled(nameOf(active.id)),
+  };
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    inventory.reorderPlaces(arrayMove(ids, ids.indexOf(String(active.id)), ids.indexOf(String(over.id))));
+  };
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd} accessibility={{ announcements, screenReaderInstructions: { draggable: t.dnd.instructions } }}>
+      <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+        <ul className="flex flex-col divide-y divide-border rounded-card bg-surface">
+          {places.map((place) => (
+            <SortableRow key={place.id} place={place} places={places} count={countIn(place.id)} onOpen={onOpen} s={s} />
+          ))}
+        </ul>
+      </SortableContext>
+    </DndContext>
+  );
+}
+
+function SortableRow({ place, places, count, onOpen, s }: { place: Place; places: Place[]; count: number; onOpen: (id: string) => void; s: Strings }) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: place.id });
+  return (
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`flex items-center ${isDragging ? 'relative z-10 rounded-card bg-surface shadow-lg' : ''}`}
+    >
+      <button
+        type="button"
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        aria-label={s.placesScreen.dragHandle(placeName(places, place.id, s))}
+        className="grid size-11 shrink-0 cursor-grab touch-none place-items-center self-center rounded-full text-muted ml-[6px]"
+      >
+        <GripVertical aria-hidden="true" className="size-5" />
+      </button>
+      <PlaceRow place={place} places={places} count={count} onOpen={onOpen} s={s} />
+    </li>
+  );
+}
+
 function PlaceSheet({ placeId, s, onDone }: { placeId: string | null; s: Strings; onDone: (message?: string) => void }) {
   const t = s.placesScreen;
   const { items, places } = useInventory();
+  const { placeOrder } = usePreferences();
+  const ordered = useOrderedPlaces(s);
   const place = placeId ? placeOf(places, placeId) : undefined;
   const [name, setName] = useState(place?.name ?? '');
   const [kind, setKind] = useState<PlaceKind>(place?.kind ?? 'freezer');
   const [removing, setRemoving] = useState(false);
-  const others = sortPlaces(places).filter((p) => p.id !== placeId);
+  const others = ordered.filter((p) => p.id !== placeId);
   const [moveTo, setMoveTo] = useState(others[0]?.id ?? '');
   const { confirm, sheet } = useConfirm();
   const inIt = placeId ? items.filter((i) => i.placeId === placeId).length : 0;
   // A preset place keeps its own name when the field is left empty; a new place needs one.
   const shownName = (id: string) => placeName(inventory.get().places, id, s);
+  const index = placeId ? ordered.findIndex((p) => p.id === placeId) : -1;
+
+  // "Flyt op" / "Flyt ned": the same as dragging, for VoiceOver and anyone who prefers buttons.
+  const move = (by: -1 | 1) => {
+    const ids = ordered.map((p) => p.id);
+    if (index < 0 || index + by < 0 || index + by >= ids.length) return;
+    inventory.reorderPlaces(arrayMove(ids, index, index + by));
+  };
 
   const save = (e: FormEvent) => {
     e.preventDefault();
@@ -143,6 +238,18 @@ function PlaceSheet({ placeId, s, onDone }: { placeId: string | null; s: Strings
             <Button type="submit" variant="primary" disabled={!place && !name.trim()}>
               {place ? t.save : t.add}
             </Button>
+            {place && placeOrder === 'own' ? (
+              <div className="grid grid-cols-2 gap-3">
+                <Button onClick={() => move(-1)} disabled={index <= 0}>
+                  <ArrowUp aria-hidden="true" className="size-5" />
+                  {t.moveUp}
+                </Button>
+                <Button onClick={() => move(1)} disabled={index < 0 || index >= ordered.length - 1}>
+                  <ArrowDown aria-hidden="true" className="size-5" />
+                  {t.moveDown}
+                </Button>
+              </div>
+            ) : null}
             {place ? (
               places.length > 1 ? (
                 <Button variant="danger" onClick={() => void remove()}>

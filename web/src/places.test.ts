@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { strings } from './i18n/strings';
-import { addItem, addPlace, EMPTY, parsePlace, removePlace, updatePlace, type Inventory } from './inventory/model';
-import { DEFAULT_PLACES, placeName, startingPlaces, type Place } from './places';
+import { addItem, addPlace, EMPTY, parsePlace, removePlace, reorderPlaces, updatePlace, type Inventory } from './inventory/model';
+import { DEFAULT_PLACES, orderPlaces, placeName, startingPlaces, type Place } from './places';
 
 const da = strings.da;
 const en = strings.en;
@@ -69,5 +69,27 @@ describe('places the household makes', () => {
 
   it('names a place that no longer exists', () => {
     expect(placeName(DEFAULT_PLACES, 'nope', da)).toBe('Slettet sted');
+  });
+});
+
+describe('the order of places (S-019)', () => {
+  const places: Place[] = [...DEFAULT_PLACES, { id: 'g', kind: 'freezer', name: 'Garagen', sort: 3, updatedAt: 0 }, { id: 'a', kind: 'pantry', name: 'Æbleskab', sort: 4, updatedAt: 0 }];
+  const names = (list: Place[], lang: typeof da) => list.map((p) => placeName(places, p.id, lang));
+
+  it('is alphabetical by the name shown, in Danish order (Æ after Z)', () => {
+    expect(names(orderPlaces(places, 'alphabetical', da), da)).toEqual(['Fryser', 'Garagen', 'Skabe', 'Viktualiekammer', 'Æbleskab']);
+    expect(names(orderPlaces(places, 'alphabetical', en), en)).toEqual(['Cupboards', 'Freezer', 'Garagen', 'Larder', 'Æbleskab']);
+  });
+
+  it('follows the own order when chosen', () => {
+    expect(orderPlaces(places, 'own', da).map((p) => p.id)).toEqual(['freezer', 'pantry', 'larder', 'g', 'a']);
+  });
+
+  it('is set by moving places, writing only those that moved', () => {
+    const start: Inventory = { ...EMPTY, places };
+    const c = reorderPlaces(start, ['g', 'freezer', 'pantry', 'larder', 'a'], 7);
+    expect(orderPlaces(c.state.places, 'own', da).map((p) => p.id)).toEqual(['g', 'freezer', 'pantry', 'larder', 'a']);
+    expect(c.putPlaces?.map((p) => p.id).sort()).toEqual(['freezer', 'g', 'larder', 'pantry']);
+    expect(reorderPlaces(start, ['freezer', 'pantry', 'larder', 'g', 'a'], 8).putPlaces).toBeUndefined();
   });
 });

@@ -204,3 +204,31 @@ Each entry records the decision, why, and what else was considered. Superseded e
 - **Likely cause:** since S-016 the sheet was a flex column, switched on by Tailwind's `open:` selector (`:is([open], :popover-open, :open)`), with a scrolling part sized by flex. Current WebKit and Chrome lay that out correctly (checked with Playwright's WebKit at iPhone size), but it leans on newer selectors and flex sizing that older Safari handles differently.
 - **Fix:** no flex and no `open:` selector. The sheet is a plain box with no height limit of its own (`max-h-none`, which also overrides the browser's default for dialogs). Its scrolling part has the limit (`.sheet-body`: 85 % of the screen, in `dvh` with a `vh` fallback). The keyboard fit (S-017) now limits that part.
 - **Checked:** WebKit and Chromium at iPhone width, at full and at short height. The sheet ends exactly at the screen's bottom edge, and its content scrolls. **Not checked:** on the owner's iPhone.
+
+## S-019: Scrolling, the order of places, and end-to-end tests
+
+- **Date:** 2026-11-14
+- **Problem (owner, on an iPhone):** scrolling broke once more things or places were added, and the layout kept misbehaving.
+- **Cause of the scrolling:** when a sheet closed, the code that unlocks the page asked the page whether a sheet was still open. The closing sheet itself still counted, so the lock (`html.sheet-open`, `overflow: hidden`) stayed on and the page could not scroll. Open sheets are now counted instead (`components/ui.tsx`). An e2e test fails on the old code and passes on the new.
+- **The order of places (owner):**
+  - Alphabetical by default (by the name shown, Danish order), on Hjem, in Steder, in the place picker and in "Flyt til" (`orderPlaces` in `places.ts`, `useOrderedPlaces`).
+  - Steder has "Rækkefølge: Alfabetisk / Egen". With Egen, places are dragged by a handle: touch (hold, about 180 ms), mouse, or keyboard (space, arrows, space), with Danish and English screen-reader announcements. VoiceOver users, who cannot drag, get "Flyt op" / "Flyt ned" in a place's sheet.
+  - Switching to Egen starts from the alphabetical order already shown.
+  - Kept per phone for now (`placeOrder` preference); it becomes per household with sync.
+  - **Dependency:** dnd-kit (`@dnd-kit/core` 6.3.1, `@dnd-kit/sortable` 10.0.0, `@dnd-kit/utilities` 3.2.2; MIT; React 19 compatible), pinned.
+- **End-to-end tests (owner: WebKit and Chromium, in CI):**
+  - Playwright 1.64.0, in `web/e2e/`, against the production build.
+  - Two projects: `webkit-iphone` (iPhone 13, Safari's engine) and `chromium-android` (Pixel 7).
+  - Run with `npm run test:e2e`. CI runs them before every deploy, and only publishes when they pass.
+  - Layout checks (`e2e/layout.ts`):
+    - the sheet sits inside the screen, keeps its header, and scrolls its content
+    - the page scrolls after a sheet closes
+    - nothing scrolls sideways
+    - every button, link and field is at least 44 px high and 24 px wide
+    - every field is 48 px high
+  - Flows: the first start, many places and things, the order of places (keyboard, touch, mouse, buttons), adding, search, and offline.
+- **What the tests found, and fixed in the app:**
+  - The counter between − and + was 44 px while every other field is 48 px. It and its buttons are now 48 px.
+  - The "Skift" / "Luk" link next to "Slags" was 23 px wide. It is now at least 44 px.
+  - **Offline:** the service worker missed its own cache when a server sends `Vary: Origin`, because Vite's tags ask with an Origin header the install did not send. It now ignores `Vary` (each cached file belongs to one build). GitHub Pages sends only `Vary: Accept-Encoding`, so the live app was likely fine, but it no longer depends on that.
+- **Not checked:** on the owner's iPhone. Playwright's WebKit is close to Safari, not the same.

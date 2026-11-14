@@ -15,14 +15,15 @@ import { useInventory, useInventoryLoaded } from '../inventory/store';
 import { itemKeeping } from '../keeping/itemKeeping';
 import { usePageTitle } from '../lib/usePageTitle';
 import { PLACE_ICON } from '../inventory/placeIcons';
-import { placeName, sortPlaces } from '../places';
+import { useOrderedPlaces } from '../inventory/orderedPlaces';
+import { placeName } from '../places';
 import { hrefs } from '../router';
 
 
 export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
   const { items, places: allPlaces } = useInventory();
   const loaded = useInventoryLoaded();
-  const places = sortPlaces(allPlaces);
+  const places = useOrderedPlaces(s);
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   const [picking, setPicking] = useState<'scan' | 'add' | null>(null); // Scan or Tilføj, asking where

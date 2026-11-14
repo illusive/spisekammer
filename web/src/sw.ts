@@ -83,8 +83,11 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     (async () => {
       const cache = await caches.open(CACHE);
-      if (request.mode === 'navigate') return (await cache.match(indexUrl)) ?? fetch(request);
-      return (await cache.match(request, { ignoreSearch: true })) ?? fetch(request);
+      // ignoreVary: each cached file belongs to one build, whatever the server's Vary header says.
+      // Vite's tags are crossorigin, so the page asks with an Origin header the install did not
+      // send; a server that varies on it would otherwise miss the cache offline (S-019).
+      if (request.mode === 'navigate') return (await cache.match(indexUrl, { ignoreVary: true })) ?? fetch(request);
+      return (await cache.match(request, { ignoreSearch: true, ignoreVary: true })) ?? fetch(request);
     })(),
   );
 });
