@@ -37,12 +37,20 @@ test('an own order, set by keyboard, kept after a reload and used on Hjem', asyn
   await page.locator('label', { hasText: 'Egen' }).click();
   await expect(stederRows(page)).toHaveText([/Fryser/, /Garagen/, /Skabe/, /Viktualiekammer/, /Æbleskab/]);
 
-  // Æbleskab to the top: pick it up, three... four steps up, drop.
+  // Æbleskab to the top: pick it up, four steps up, drop. Like a keyboard user, each step waits for
+  // the screen reader's announcement of where the place is now (a key pressed while the list is
+  // still moving would be lost, which also checks the announcements).
+  const live = page.locator('[id^="DndLiveRegion"]');
   const handle = page.getByRole('button', { name: 'Flyt Æbleskab' });
   await handle.focus();
   await page.keyboard.press('Space');
-  for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowUp');
+  await expect(live).toContainText('Æbleskab er taget op. Plads 5 af 5.');
+  for (let position = 4; position >= 1; position--) {
+    await page.keyboard.press('ArrowUp');
+    await expect(live).toContainText(`Æbleskab er over plads ${position} af 5.`);
+  }
   await page.keyboard.press('Space');
+  await expect(live).toContainText('Æbleskab er sat på plads 1 af 5.');
   await expect(stederRows(page)).toHaveText([/Æbleskab/, /Fryser/, /Garagen/, /Skabe/, /Viktualiekammer/]);
 
   await page.reload();

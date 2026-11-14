@@ -8,7 +8,7 @@ import { DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, us
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ArrowDown, ArrowUp, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { Button, Choice, Page, Sheet, SheetHeader, SubPageHeader, Toast, fieldClass, useConfirm, type ToastMessage } from '../components/ui';
 import type { Strings } from '../i18n/strings';
 import { useOrderedPlaces } from '../inventory/orderedPlaces';
@@ -100,9 +100,19 @@ function SortablePlaces({ places, countIn, onOpen, s }: { places: Place[]; count
   const ids = places.map((p) => p.id);
   const nameOf = (id: string | number) => placeName(places, String(id), s);
   const positionOf = (id: string | number) => ids.indexOf(String(id)) + 1;
+  // What was last announced, so the same place is not announced twice in a row: picking a place up
+  // also reports it as over its own spot, which would cut off "taget op" before it is read.
+  const lastOver = useRef<string | number | null>(null);
   const announcements: Announcements = {
-    onDragStart: ({ active }) => t.dnd.picked(nameOf(active.id), positionOf(active.id), ids.length),
-    onDragOver: ({ active, over }) => (over ? t.dnd.over(nameOf(active.id), positionOf(over.id), ids.length) : undefined),
+    onDragStart: ({ active }) => {
+      lastOver.current = active.id;
+      return t.dnd.picked(nameOf(active.id), positionOf(active.id), ids.length);
+    },
+    onDragOver: ({ active, over }) => {
+      if (!over || over.id === lastOver.current) return undefined;
+      lastOver.current = over.id;
+      return t.dnd.over(nameOf(active.id), positionOf(over.id), ids.length);
+    },
     onDragEnd: ({ active, over }) => (over ? t.dnd.dropped(nameOf(active.id), positionOf(over.id), ids.length) : t.dnd.cancelled(nameOf(active.id))),
     onDragCancel: ({ active }) => t.dnd.cancelled(nameOf(active.id)),
   };
