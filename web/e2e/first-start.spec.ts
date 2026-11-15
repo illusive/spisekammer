@@ -21,7 +21,7 @@ test('sets up the places, then shows them on Hjem, alphabetically', async ({ pag
   await expect(page.getByRole('heading', { name: 'Du er klar' })).toBeVisible();
   await page.getByRole('button', { name: 'Start' }).click();
 
-  const places = page.getByRole('region', { name: 'Steder' }).getByRole('link');
+  const places = page.getByRole('region', { name: 'Steder' }).getByRole('list').getByRole('link');
   await expect(places).toHaveText([/^Fryser/, /^Garagefryser/, /^Køleskab/, /^Skabe/]);
 
   await page.reload();
@@ -31,5 +31,5 @@ test('sets up the places, then shows them on Hjem, alphabetically', async ({ pag
 test('"Spring over" keeps the starting places', async ({ page }) => {
   await openApp(page, { onboarded: false });
   await page.getByRole('button', { name: 'Spring over' }).click();
-  await expect(page.getByRole('region', { name: 'Steder' }).getByRole('link')).toHaveText([/^Fryser/, /^Skabe/, /^Viktualiekammer/]);
+  await expect(page.getByRole('region', { name: 'Steder' }).getByRole('list').getByRole('link')).toHaveText([/^Fryser/, /^Skabe/, /^Viktualiekammer/]);
 });

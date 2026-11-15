@@ -4,16 +4,13 @@ import { expect, test } from '@playwright/test';
 import { openApp, seed } from './fixtures.ts';
 
 test('starts offline after one visit, with the things still there', async ({ page, context }) => {
+  test.setTimeout(90_000); // the first install downloads the whole app, slower with tests in parallel
   await openApp(page);
   await seed(page, { items: [{ name: 'Havregryn', placeId: 'pantry', category: 'dry' }] });
-  // The service worker has the app once it controls the page.
-  const ready = await page.evaluate(async () => {
-    if (!('serviceWorker' in navigator)) return false;
-    await navigator.serviceWorker.ready;
-    if (!navigator.serviceWorker.controller) await new Promise((r) => navigator.serviceWorker.addEventListener('controllerchange', () => r(null), { once: true }));
-    return true;
-  });
-  test.skip(!ready, 'this browser has no service worker here');
+  test.skip(!(await page.evaluate(() => 'serviceWorker' in navigator)), 'this browser has no service worker here');
+  // The service worker has the app once it is active and controls the page (polled, so a change
+  // that happened before the check is not missed).
+  await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller), undefined, { timeout: 60_000, polling: 250 });
 
   await context.setOffline(true);
   await page.reload();

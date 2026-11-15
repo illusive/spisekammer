@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('Hjem lists all twelve places, and the page scrolls to the last', async ({ page }) => {
-  const places = page.getByRole('region', { name: 'Steder' }).getByRole('link');
+  const places = page.getByRole('region', { name: 'Steder' }).getByRole('list').getByRole('link');
   await expect(places).toHaveCount(12);
   await expectPageScrolls(page);
   await places.last().scrollIntoViewIfNeeded();

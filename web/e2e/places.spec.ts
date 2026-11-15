@@ -13,7 +13,7 @@ const PLACES = [
   { id: 'a', kind: 'pantry' as const, name: 'Æbleskab' },
 ];
 
-const homePlaces = (page: Page) => page.getByRole('region', { name: 'Steder' }).getByRole('link');
+const homePlaces = (page: Page) => page.getByRole('region', { name: 'Steder' }).getByRole('list').getByRole('link');
 const stederRows = (page: Page) => page.locator('main ul').first().locator('li');
 
 test('places are alphabetical by default everywhere', async ({ page }) => {
@@ -74,13 +74,22 @@ test('an own order by dragging the handle', async ({ page, browserName }) => {
     const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', yy: number) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y: yy }] });
     await touch('touchStart', y);
     await page.waitForTimeout(300);
-    for (let i = 1; i <= 12; i++) await touch('touchMove', y + ((toY - y) * i) / 12);
+    for (let i = 1; i <= 12; i++) {
+      await touch('touchMove', y + ((toY - y) * i) / 12);
+      await page.waitForTimeout(25);
+    }
+    await page.waitForTimeout(300);
     await touch('touchEnd', toY);
   } else {
-    // WebKit here cannot make touch events; the mouse goes through the same sorting.
+    // WebKit here cannot make touch events; the mouse goes through the same sorting. Moved in
+    // steps, like a hand, and let go once the list has settled.
     await page.mouse.move(x, y);
     await page.mouse.down();
-    await page.mouse.move(x, toY, { steps: 12 });
+    for (let i = 1; i <= 12; i++) {
+      await page.mouse.move(x, y + ((toY - y) * i) / 12);
+      await page.waitForTimeout(25);
+    }
+    await page.waitForTimeout(300);
     await page.mouse.up();
   }
   await expect(stederRows(page).first()).toHaveText(/Æbleskab/);
@@ -123,4 +132,11 @@ test('add, rename and change the kind of a place, and delete one with a move', a
   await topSheet(page).getByRole('button', { name: 'Flyt og slet' }).click();
   await expect(stederRows(page).filter({ hasText: 'Garagen' })).toHaveCount(0);
   await expect(stederRows(page).filter({ hasText: /^Fryser/ })).toContainText('1 ting');
+});
+
+test('"Rediger" by Steder on Hjem opens Steder', async ({ page }) => {
+  await openApp(page);
+  await page.getByRole('link', { name: 'Rediger steder' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Steder' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Tilføj sted' })).toBeVisible();
 });

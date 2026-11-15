@@ -1,7 +1,7 @@
 // Hjem (S-005): search across everything on top, Scan and Tilføj, "Brug snart" (what to use soon,
 // across all places, S-010), then the places with how much is in each.
 
-import { ChevronRight, Plus, ScanBarcode } from 'lucide-react';
+import { ChevronRight, Pencil, Plus, ScanBarcode } from 'lucide-react';
 import { useState } from 'react';
 import { Button, MessageState, Page, SearchField, SettingsButton, Toast, type ToastMessage } from '../components/ui';
 import { today } from '../i18n/format';
@@ -94,9 +94,16 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
           ) : null}
 
           <section aria-labelledby="places" className="mt-6 flex flex-col gap-3">
-            <h2 id="places" className="px-1 text-lg font-bold">
-              {s.places}
-            </h2>
+            <div className="flex items-center justify-between gap-[12px] px-1">
+              <h2 id="places" className="text-lg font-bold">
+                {s.places}
+              </h2>
+              {/* Steder from Hjem (S-020): add, rename, order or delete places. */}
+              <a href={hrefs.places} aria-label={s.editPlaces.label} className="-mr-2 inline-flex min-h-11 items-center gap-[6px] rounded-full px-[10px] text-sm font-bold">
+                <Pencil aria-hidden="true" className="size-4" />
+                {s.editPlaces.text}
+              </a>
+            </div>
             <ul className={`grid grid-cols-1 gap-3 ${places.length > 2 ? 'min-[420px]:grid-cols-3' : 'min-[420px]:grid-cols-2'}`}>
               {places.map((place) => {
                 const Icon = PLACE_ICON[place.kind];

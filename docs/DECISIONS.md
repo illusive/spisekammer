@@ -232,3 +232,14 @@ Each entry records the decision, why, and what else was considered. Superseded e
   - The "Skift" / "Luk" link next to "Slags" was 23 px wide. It is now at least 44 px.
   - **Offline:** the service worker missed its own cache when a server sends `Vary: Origin`, because Vite's tags ask with an Origin header the install did not send. It now ignores `Vary` (each cached file belongs to one build). GitHub Pages sends only `Vary: Accept-Encoding`, so the live app was likely fine, but it no longer depends on that.
 - **Not checked:** on the owner's iPhone. Playwright's WebKit is close to Safari, not the same.
+
+## S-020: Steder from Hjem, and steadier tests
+
+- **Date:** 2026-11-15
+- **Decision (owner):** a "Rediger" button with a pencil at the top right of "Steder" on Hjem opens Steder (add, rename, order, delete). Read out as "Rediger steder".
+- **"Brug snart" stays as it is (owner):** shown on Hjem when something is past its date, due today, or within 3 days (Køl), 14 days (Tørvarer) or 30 days (Frost).
+- **Tests made steadier (no app change):**
+  - The drag tests move in steps and let go after the list settles.
+  - The offline test polls until the service worker controls the page.
+  - The seeding helper opens the database at the app's version with its stores, so it cannot race the app into an empty database.
+  - The whole suite ran three times over in both browsers with no failures.

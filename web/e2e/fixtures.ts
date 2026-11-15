@@ -44,8 +44,16 @@ export interface SeedItem {
 // Places replace the starting ones.
 export async function seed(page: Page, data: { places?: SeedPlace[]; items?: SeedItem[] }): Promise<void> {
   await page.evaluate(async ({ places, items }) => {
+    // At the app's version, with its stores (inventory/store.ts): the app may not have opened the
+    // database yet, and opening it without a version would make an empty one.
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('spisekammer');
+      const request = indexedDB.open('spisekammer', 2);
+      request.onupgradeneeded = () => {
+        const d = request.result;
+        if (!d.objectStoreNames.contains('items')) d.createObjectStore('items', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('products')) d.createObjectStore('products', { keyPath: 'barcode' });
+        if (!d.objectStoreNames.contains('places')) d.createObjectStore('places', { keyPath: 'id' });
+      };
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });

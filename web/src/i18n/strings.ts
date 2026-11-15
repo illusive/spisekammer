@@ -18,6 +18,7 @@ export interface Strings {
   clearSearch: string;
   noMatches: (q: string) => string;
   places: string;
+  editPlaces: { label: string; text: string };
   placeKinds: Record<'fridge' | 'freezer' | 'pantry', string>;
   placeKindHints: Record<'fridge' | 'freezer' | 'pantry', string>;
   placePresets: Record<'freezer' | 'pantry' | 'larder' | 'fridge', string>;
@@ -253,6 +254,7 @@ export const strings: Record<Lang, Strings> = {
     clearSearch: 'Ryd søgning',
     noMatches: (q) => `Intet matcher ”${q}”`,
     places: 'Steder',
+    editPlaces: { label: 'Rediger steder', text: 'Rediger' },
     placeKinds: { freezer: 'Frost', fridge: 'Køl', pantry: 'Tørvarer' },
     placeKindHints: { freezer: 'Fx en fryser eller et fryseskab.', fridge: 'Fx et køleskab.', pantry: 'Fx et skab, en kælder eller et viktualiekammer.' },
     placePresets: { freezer: 'Fryser', pantry: 'Skabe', larder: 'Viktualiekammer', fridge: 'Køleskab' },
@@ -543,6 +545,7 @@ export const strings: Record<Lang, Strings> = {
     clearSearch: 'Clear search',
     noMatches: (q) => `Nothing matches “${q}”`,
     places: 'Places',
+    editPlaces: { label: 'Edit places', text: 'Edit' },
     placeKinds: { freezer: 'Frozen', fridge: 'Chilled', pantry: 'Dry goods' },
     placeKindHints: { freezer: 'E.g. a freezer or a freezer cabinet.', fridge: 'E.g. a fridge.', pantry: 'E.g. a cupboard, a cellar or a larder.' },
     placePresets: { freezer: 'Freezer', pantry: 'Cupboards', larder: 'Larder', fridge: 'Fridge' },
