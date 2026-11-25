@@ -295,7 +295,7 @@ Each entry records the decision, why, and what else was considered. Superseded e
 - **Decisions (owner):**
   - **Shelfwise's floating menu** on Hjem and a place's page: Tilføj · **Scan** (the big centre button) · Søg. Icon-only, labelled for VoiceOver. Hjem loses its search field and Scan/Tilføj buttons; a place's page keeps its own search.
   - **Asking where:** Scan and Tilføj ask "Hvor lægger du ting?" (one tap per place, the last used marked), and the place is preset in what follows, still changeable in the form. On a place's page, and with only one place, it does not ask.
-  - **Søg** is a sheet over the page: the field takes focus, results come from every place, and a result opens the thing on top.
+  - **Søg** is a sheet over the page: the field spans the full width under the title and takes focus; results are grouped under their place (its icon, name and how many match), in the places' order; a result opens the thing on top. The sheet is tall from the start, so the field does not move while typing (owner, after trying it).
   - **The month wheel:** where the browser has a native month field (the iPhone, Android), it is used; elsewhere the two dropdowns stay.
   - **Grey group headings:** section titles are Shelfwise's small grey mono labels, with the count at the right. Things show their count at the right (Shelfwise's value column).
 - **Added with them (proposed in the plan):**

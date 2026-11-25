@@ -153,8 +153,15 @@ test('Søg finds across places and opens a thing; a place\'s own search finds on
   });
   await openSearch(page);
   await page.getByRole('searchbox', { name: 'Søg i alt, du har' }).fill('mælk');
-  const results = topSheet(page).getByRole('list', { name: 'Søg i alt, du har' }).getByRole('listitem');
-  await expect(results).toHaveText([/Letmælk/, /Mælkechokolade/]);
+  // Grouped under their place, in the places' order, each place named first.
+  const sheet = topSheet(page);
+  await expect(sheet.getByRole('heading', { level: 3 })).toHaveText(['Skabe', 'Viktualiekammer']);
+  await expect(sheet.getByRole('region', { name: 'Skabe' }).getByRole('listitem')).toHaveText([/Letmælk/]);
+  await expect(sheet.getByRole('region', { name: 'Viktualiekammer' }).getByRole('listitem')).toHaveText([/Mælkechokolade/]);
+  // The field spans the sheet's width.
+  const widths = await sheet.evaluate((d) => ({ sheet: d.getBoundingClientRect().width, field: d.querySelector('#search-sheet-field')!.parentElement!.getBoundingClientRect().width }));
+  expect(widths.field).toBeGreaterThan(widths.sheet - 40);
+  const results = sheet.getByRole('listitem');
   await results.first().getByRole('button').click();
   await expect(topSheet(page).getByRole('heading', { name: 'Letmælk' })).toBeVisible();
   await page.keyboard.press('Escape');

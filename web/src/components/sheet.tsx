@@ -118,10 +118,11 @@ export function Sheet({ open, onClose, labelledBy, dismissOnBackdrop = true, chi
 }
 
 // The top of a sheet (D-070): its title, and the one way to close it, an X at the top right. Lines
-// under the title go in `children`. It stays at the top while the sheet scrolls (S-015), so closing
-// is always one tap away. `autofocus`: focus starts on the title (a sheet that is already filled
-// in, D-053), not on a field whose keyboard would cover it.
-export function SheetHeader({ id, title, closeLabel, onClose, autofocus = false, children }: { id: string; title: ReactNode; closeLabel: string; onClose: () => void; autofocus?: boolean; children?: ReactNode }) {
+// under the title go in `children`; `below` spans the whole width under both (the search field,
+// S-024). It stays at the top while the sheet scrolls (S-015), so closing is always one tap away.
+// `autofocus`: focus starts on the title (a sheet that is already filled in, D-053), not on a field
+// whose keyboard would cover it.
+export function SheetHeader({ id, title, closeLabel, onClose, autofocus = false, children, below }: { id: string; title: ReactNode; closeLabel: string; onClose: () => void; autofocus?: boolean; children?: ReactNode; below?: ReactNode }) {
   return (
     <div className="sticky -top-4 z-10 -mx-[18px] -mt-4 border-b border-line-soft bg-background px-[18px] pt-2 pb-3">
       <SheetHandle className="mb-2" />
@@ -134,6 +135,7 @@ export function SheetHeader({ id, title, closeLabel, onClose, autofocus = false,
         </div>
         <IconButton label={closeLabel} Icon={X} onClick={onClose} className="-mr-1" />
       </div>
+      {below ? <div className="mt-3">{below}</div> : null}
     </div>
   );
 }
