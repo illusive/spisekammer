@@ -1,11 +1,14 @@
 // A thing's sheet (S-006, as stead's Forråd, D-049/D-054; S-021, S-022): on top, its date (and a
 // warning once that has passed); the count saves at once (0 means it is deleted when the sheet
 // closes, until then + keeps it); its size; "Flyt til" moves it; its group ("Slags") and its date;
-// "Slet" asks first.
+// "Slet" deletes it at once, with "Fortryd" in the message for a few seconds (S-024).
 
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { Button, Sheet, SheetHeader, Stepper, useConfirm } from '../components/ui';
+import { Sheet, SheetHeader } from '../components/sheet';
+import { Stepper } from '../components/Stepper';
+import type { ToastAction } from '../components/toast';
+import { Button, Notice } from '../components/ui';
 import { today } from '../i18n/format';
 import type { Lang, Strings } from '../i18n/strings';
 import { DateField, DateLine } from '../keeping/DateInfo';
@@ -22,26 +25,26 @@ import { itemSummary } from './summary';
 
 const TITLE_ID = 'item-sheet-title';
 
-export function ItemSheet({ openId, onClose, onMessage, lang, s }: { openId: string | null; onClose: () => void; onMessage: (text: string) => void; lang: Lang; s: Strings }) {
+export function ItemSheet({ openId, onClose, onMessage, lang, s }: { openId: string | null; onClose: () => void; onMessage: (text: string, action?: ToastAction) => void; lang: Lang; s: Strings }) {
   const { items } = useInventory();
   const item = items.find((i) => i.id === openId);
   const [zero, setZero] = useState(false);
-  const { confirm, sheet } = useConfirm();
+
+  // Deleting, from "Slet" or by closing at 0: at once, and "Fortryd" puts it back as it was.
+  const removeNow = (gone: Item) => {
+    inventory.remove(gone.id);
+    onMessage(s.removed(gone.name), { label: s.undo, run: () => inventory.restore(gone) });
+  };
 
   const close = () => {
-    if (zero && item) {
-      inventory.remove(item.id);
-      onMessage(s.removed(item.name));
-    }
+    if (zero && item) removeNow({ ...item });
     setZero(false);
     onClose();
   };
 
-  const remove = async () => {
+  const remove = () => {
     if (!item) return;
-    if (!(await confirm({ title: s.removeConfirm(item.name), body: s.cannotUndo, confirmLabel: s.remove, cancelLabel: s.cancel, danger: true }))) return;
-    inventory.remove(item.id);
-    onMessage(s.removed(item.name));
+    removeNow({ ...item });
     setZero(false);
     onClose();
   };
@@ -54,11 +57,10 @@ export function ItemSheet({ openId, onClose, onMessage, lang, s }: { openId: str
             <SheetHeader id={TITLE_ID} title={item.name} closeLabel={s.close} onClose={close}>
               <p className="text-sm text-muted">{itemSummary({ ...item, count: zero ? 0 : item.count }, lang, s)}</p>
             </SheetHeader>
-            <ItemFields key={item.id} item={item} zero={zero} setZero={setZero} onMessage={onMessage} onRemove={() => void remove()} lang={lang} s={s} />
+            <ItemFields key={item.id} item={item} zero={zero} setZero={setZero} onMessage={onMessage} onRemove={remove} lang={lang} s={s} />
           </>
         ) : null}
       </Sheet>
-      {sheet}
     </>
   );
 }
@@ -68,7 +70,7 @@ function ItemFields({ item, zero, setZero, onMessage, onRemove, lang, s }: { ite
   const ordered = useOrderedPlaces(s);
   const day = today();
   const info = itemKeeping(item, day, places);
-  const size = useLiveSize(sizeStart(item.amount, item.unit, item.sizeText, lang), item.id, (next) => inventory.setSize(item.id, next));
+  const size = useLiveSize(sizeStart(item.amount, item.unit, item.sizeText, lang), (next) => inventory.setSize(item.id, next));
   return (
     <div className="flex flex-col gap-5 pt-4">
       <DateLine item={item} urgency={info.urgency} today={day} lang={lang} s={s} />
@@ -86,9 +88,9 @@ function ItemFields({ item, zero, setZero, onMessage, onRemove, lang, s }: { ite
         }}
       />
       {zero ? (
-        <p className="rounded-[10px] bg-warning-bg px-[16px] py-3 text-warning-text" role="status">
+        <Notice tone="warning" role="status">
           {s.removeOnClose}
-        </p>
+        </Notice>
       ) : null}
       <SizeField idPrefix="item" text={size.text} unit={size.unit} onChange={size.change} s={s} />
       <PlaceField

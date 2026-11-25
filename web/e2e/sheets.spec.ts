@@ -3,13 +3,11 @@
 // once it is closed.
 
 import { expect, test } from '@playwright/test';
-import { manyItems, openApp, seed, topSheet } from './fixtures.ts';
+import { manyItems, openAdd, openApp, seed, topSheet } from './fixtures.ts';
 import { expectHeaderStays, expectPageScrolls, expectSheetFits } from './layout.ts';
 
 async function openAddSheet(page: import('@playwright/test').Page, place = 'Skabe') {
-  await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
-  await expect(topSheet(page).getByRole('heading', { name: 'Tilføj' })).toBeVisible();
-  await topSheet(page).locator('label', { hasText: place }).click();
+  await openAdd(page, place);
   await expect(topSheet(page).getByRole('radio', { name: place })).toBeChecked();
 }
 

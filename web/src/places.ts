@@ -39,14 +39,17 @@ export type PlaceOrder = 'alphabetical' | 'own';
 // chosen their own order.
 export function orderPlaces(places: Place[], order: PlaceOrder, s: Strings): Place[] {
   if (order === 'own') return sortPlaces(places);
-  return [...places].sort((a, b) => placeName(places, a.id, s).localeCompare(placeName(places, b.id, s), 'da') || a.id.localeCompare(b.id));
+  return [...places].sort((a, b) => labelOf(a, s).localeCompare(labelOf(b, s), 'da') || a.id.localeCompare(b.id));
 }
 export const placeOf = (places: Place[], id: string): Place | undefined => places.find((p) => p.id === id);
 
+// The name shown for a place: its own, else the preset's in the user's language, else its kind.
+export const labelOf = (place: Place, s: Strings): string => place.name ?? (isPreset(place.id) ? s.placePresets[place.id] : s.placeKinds[place.kind]);
+
+// The same, for a place known only by its id ("Slettet sted" when it is gone).
 export function placeName(places: Place[], id: string, s: Strings): string {
   const place = placeOf(places, id);
-  if (!place) return s.placeGone;
-  return place.name ?? (isPreset(place.id) ? s.placePresets[place.id] : s.placeKinds[place.kind]);
+  return place ? labelOf(place, s) : s.placeGone;
 }
 
 // The places to keep when the app starts: the stored ones; or, the first time (and for phones from

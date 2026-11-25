@@ -1,9 +1,9 @@
-// Adding things (S-010, S-015, S-021, S-022): the place as a field, the group guessed, no guessed
-// date; a month outside the fridge and a day in it; the size's unit; one line for the same thing;
-// "Brug snart"; search.
+// Adding things (S-021, S-022, S-024): the menu asks where, the place is preset and stays a field;
+// the group guessed, no guessed date; a month outside the fridge and a day in it; the size's unit;
+// one line for the same thing; "Brug snart"; search; undo.
 
 import { expect, test } from '@playwright/test';
-import { dayFromToday, openApp, seed, topSheet } from './fixtures.ts';
+import { dayFromToday, openAdd, openApp, openSearch, pickMonth, seed, topSheet } from './fixtures.ts';
 
 const WITH_FRIDGE = [
   { id: 'freezer', kind: 'freezer' as const },
@@ -11,14 +11,13 @@ const WITH_FRIDGE = [
   { id: 'fridge', kind: 'fridge' as const },
 ];
 
-test('adds three things in a row to one place, the group guessed and no date made up', async ({ page }) => {
+test('Tilføj asks where, presets that place, and adds three things in a row, the group guessed and no date made up', async ({ page }) => {
   await openApp(page);
-  await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
+  await openAdd(page, 'Fryser');
   const sheet = topSheet(page);
-  await expect(sheet.getByRole('heading', { name: 'Tilføj' })).toBeVisible();
-  // Three places: buttons side by side.
+  // Three places: buttons side by side, Fryser chosen.
   await expect(sheet.locator('fieldset', { hasText: 'Sted' }).locator('label')).toHaveText(['Fryser', 'Skabe', 'Viktualiekammer']);
-  await sheet.locator('label', { hasText: 'Fryser' }).click();
+  await expect(sheet.getByRole('radio', { name: 'Fryser' })).toBeChecked();
   const name = page.locator('#add-name');
 
   await name.fill('Hakket oksekød 8-12%');
@@ -43,10 +42,9 @@ test('adds three things in a row to one place, the group guessed and no date mad
 test('a month and a year in Skabe, a day in Køleskab; near and past dates come up in "Brug snart"', async ({ page }) => {
   await openApp(page);
   await seed(page, { places: WITH_FRIDGE });
-  await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
+  await openAdd(page, 'Skabe');
   const sheet = topSheet(page);
 
-  await sheet.locator('label', { hasText: 'Skabe' }).click();
   await expect(sheet.locator('input[type=date]')).toHaveCount(0);
   await page.locator('#add-name').fill('Havregryn');
   // Last month: past its date.
@@ -56,8 +54,7 @@ test('a month and a year in Skabe, a day in Køleskab; near and past dates come 
     d.setMonth(d.getMonth() - 1);
     return { month: String(d.getMonth() + 1).padStart(2, '0'), year: String(d.getFullYear()) };
   });
-  await page.locator('#add-month').selectOption(lastMonth.month);
-  await page.locator('#add-year').selectOption(lastMonth.year);
+  await pickMonth(page, 'add', lastMonth.year, lastMonth.month);
   await sheet.getByRole('button', { name: 'Tilføj', exact: true }).click();
 
   await sheet.locator('label', { hasText: 'Køleskab' }).click();
@@ -77,7 +74,7 @@ test('a month and a year in Skabe, a day in Køleskab; near and past dates come 
 
 test('a unit typed with the number moves to the unit dropdown', async ({ page }) => {
   await openApp(page);
-  await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
+  await openAdd(page);
   const size = page.locator('#add-size');
   const unit = topSheet(page).getByLabel('Enhed');
   await size.fill('500 g');
@@ -90,11 +87,10 @@ test('a unit typed with the number moves to the unit dropdown', async ({ page })
   await expect(size).toHaveValue('2');
 });
 
-test('the same thing added twice is one line with the count added up', async ({ page }) => {
+test('the same thing added twice is one line, with the count at the right', async ({ page }) => {
   await openApp(page);
-  await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
+  await openAdd(page, 'Skabe');
   const sheet = topSheet(page);
-  await sheet.locator('label', { hasText: 'Skabe' }).click();
   for (const name of ['Baked beans', 'baked beans']) {
     await page.locator('#add-name').fill(name);
     await page.locator('#add-size').fill('415 g');
@@ -104,19 +100,31 @@ test('the same thing added twice is one line with the count added up', async ({ 
   await page.keyboard.press('Escape');
   await page.getByRole('link', { name: /^Skabe/ }).click();
   await expect(page.locator('main li')).toHaveCount(1);
-  await expect(page.getByRole('button', { name: /^Baked beans/ })).toContainText('2 ting · 415 g');
+  const row = page.getByRole('button', { name: /^Baked beans/ });
+  await expect(row).toContainText('415 g');
+  await expect(row).toContainText('2 ting'); // read out; "2" is shown at the right
 });
 
-test('the add form starts on the place it was opened from, else the last one used', async ({ page }) => {
+test('on a place\'s page Tilføj starts there without asking; on Hjem the last place is marked', async ({ page }) => {
   await openApp(page);
   await page.getByRole('link', { name: /^Viktualiekammer/ }).click();
-  await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Viktualiekammer' })).toBeFocused(); // the new page is announced
+  await openAdd(page);
   await expect(topSheet(page).getByRole('radio', { name: 'Viktualiekammer' })).toBeChecked();
   await page.locator('#add-name').fill('Mel');
   await page.locator('#add-name').press('Enter');
   await page.keyboard.press('Escape');
   await page.goto('./#/');
-  await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Handlinger' }).getByRole('button', { name: 'Tilføj' }).click();
+  await expect(topSheet(page).getByRole('button', { name: /^Viktualiekammer/ })).toContainText('Sidst brugt');
+});
+
+test('Scan asks where, then scans into that place', async ({ page }) => {
+  await openApp(page);
+  await page.getByRole('navigation', { name: 'Handlinger' }).getByRole('button', { name: 'Scan' }).click();
+  await topSheet(page).getByRole('button', { name: /^Viktualiekammer/ }).click();
+  await expect(page).toHaveURL(/#\/scan\/larder$/);
+  await page.getByRole('button', { name: /Uden stregkode|Skriv i stedet/ }).click();
   await expect(topSheet(page).getByRole('radio', { name: 'Viktualiekammer' })).toBeChecked();
 });
 
@@ -134,7 +142,7 @@ test('things saved before S-021 open with their date and a group of the new list
   await expect(page.getByRole('region', { name: 'Frugt og grønt' }).getByRole('button', { name: /^Frosne ærter/ })).toBeVisible();
 });
 
-test('search on Hjem finds across places; search in a place only there', async ({ page }) => {
+test('Søg finds across places and opens a thing; a place\'s own search finds only there', async ({ page }) => {
   await openApp(page);
   await seed(page, {
     items: [
@@ -143,11 +151,28 @@ test('search on Hjem finds across places; search in a place only there', async (
       { name: 'Kyllingebryst', placeId: 'freezer', category: 'meat' },
     ],
   });
+  await openSearch(page);
   await page.getByRole('searchbox', { name: 'Søg i alt, du har' }).fill('mælk');
-  await expect(page.locator('main section li')).toHaveText([/Letmælk/, /Mælkechokolade/]);
+  const results = topSheet(page).getByRole('list', { name: 'Søg i alt, du har' }).getByRole('listitem');
+  await expect(results).toHaveText([/Letmælk/, /Mælkechokolade/]);
+  await results.first().getByRole('button').click();
+  await expect(topSheet(page).getByRole('heading', { name: 'Letmælk' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(results).toHaveCount(2); // back to the results
+  await page.keyboard.press('Escape');
 
-  await page.getByRole('searchbox').fill('');
   await page.getByRole('link', { name: /^Skabe/ }).click();
   await page.getByRole('searchbox', { name: 'Søg i skabe' }).fill('mælk');
   await expect(page.locator('main li')).toHaveText([/Letmælk/]);
+});
+
+test('deleting a thing can be undone', async ({ page }) => {
+  await openApp(page);
+  await seed(page, { items: [{ name: 'Rugbrød', placeId: 'pantry', category: 'bread', count: 2 }] });
+  await page.getByRole('link', { name: /^Skabe/ }).click();
+  await page.getByRole('button', { name: /^Rugbrød/ }).click();
+  await topSheet(page).getByRole('button', { name: 'Slet', exact: true }).click();
+  await expect(page.locator('main li')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Fortryd' }).click();
+  await expect(page.getByRole('button', { name: /^Rugbrød/ })).toContainText('2 ting');
 });

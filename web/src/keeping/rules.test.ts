@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daysBetween, monthEnd, precisionFor, urgency } from './rules';
+import { daysBetween, isUrgent, monthEnd, precisionFor, urgency, type Urgency } from './rules';
 
 describe('dates', () => {
   it('counts days across summer time', () => {
@@ -34,5 +34,11 @@ describe('how soon', () => {
     expect(urgency(monthEnd(2026, 11), 'pantry', '2026-11-16')).toBe('soon');
     expect(urgency(monthEnd(2026, 11), 'pantry', '2026-11-30')).toBe('today');
     expect(urgency(monthEnd(2026, 11), 'pantry', '2026-12-01')).toBe('past');
+  });
+});
+
+describe('what "Brug snart" shows', () => {
+  it('past, today and soon, not later or without a date', () => {
+    expect(['past', 'today', 'soon', 'later', 'unknown'].map((u) => isUrgent(u as Urgency))).toEqual([true, true, true, false, false]);
   });
 });

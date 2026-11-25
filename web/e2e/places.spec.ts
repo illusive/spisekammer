@@ -3,7 +3,7 @@
 // kind, delete with a move. A place choice is buttons up to three places, a dropdown above.
 
 import { expect, test, type Page } from '@playwright/test';
-import { openApp, seed, topSheet } from './fixtures.ts';
+import { openAdd, openApp, seed, topSheet } from './fixtures.ts';
 import { expectSheetFits } from './layout.ts';
 
 const PLACES = [
@@ -23,7 +23,10 @@ test('places are alphabetical by default everywhere, and more than three are a d
   const expected = [/^Fryser/, /^Garagen/, /^Skabe/, /^Viktualiekammer/, /^Æbleskab/];
   await expect(homePlaces(page)).toHaveText(expected);
 
-  await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
+  await page.getByRole('navigation', { name: 'Handlinger' }).getByRole('button', { name: 'Tilføj' }).click();
+  await expect(topSheet(page).getByRole('list').getByRole('button')).toHaveText(expected);
+  await page.keyboard.press('Escape');
+  await openAdd(page, 'Fryser');
   await expect(topSheet(page).getByLabel('Sted', { exact: true }).locator('option')).toHaveText(['Fryser', 'Garagen', 'Skabe', 'Viktualiekammer', 'Æbleskab']);
   await page.keyboard.press('Escape');
 

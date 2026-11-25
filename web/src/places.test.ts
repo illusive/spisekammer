@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { strings } from './i18n/strings';
 import { addItem, addPlace, EMPTY, parsePlace, removePlace, reorderPlaces, updatePlace, type Inventory } from './inventory/model';
-import { DEFAULT_PLACES, orderPlaces, placeName, startingPlaces, type Place } from './places';
+import { DEFAULT_PLACES, labelOf, orderPlaces, placeName, startingPlaces, type Place } from './places';
 
 const da = strings.da;
 const en = strings.en;
@@ -91,5 +91,14 @@ describe('the order of places (S-019)', () => {
     expect(orderPlaces(c.state.places, 'own', da).map((p) => p.id)).toEqual(['g', 'freezer', 'pantry', 'larder', 'a']);
     expect(c.putPlaces?.map((p) => p.id).sort()).toEqual(['freezer', 'g', 'larder', 'pantry']);
     expect(reorderPlaces(start, ['freezer', 'pantry', 'larder', 'g', 'a'], 8).putPlaces).toBeUndefined();
+  });
+});
+
+describe('labelOf (S-024)', () => {
+  const s = strings.da;
+  it('a place\'s own name, else the preset\'s, else its kind', () => {
+    expect(labelOf({ id: 'x', kind: 'freezer', name: 'Garagen', sort: 0, updatedAt: 0 }, s)).toBe('Garagen');
+    expect(labelOf({ id: 'larder', kind: 'pantry', sort: 0, updatedAt: 0 }, s)).toBe('Viktualiekammer');
+    expect(labelOf({ id: 'x', kind: 'fridge', sort: 0, updatedAt: 0 }, s)).toBe('Køl');
   });
 });

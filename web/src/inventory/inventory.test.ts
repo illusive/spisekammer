@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { addItem, EMPTY, moveItem, parseItem, parseProduct, rememberProduct, removeItem, setCategory, setCount, setDate, setSize, withBarcode, type Inventory, type Item, type NewItem } from './model';
+import { addItem, EMPTY, moveItem, parseItem, parseProduct, productOf, rememberProduct, removeItem, restoreItem, setCategory, setCount, setDate, setSize, withBarcode, type Inventory, type Item, type NewItem } from './model';
+import { countsByPlace, totalCount } from './summary';
 import type { Place } from '../places';
 import { searchItems } from './search';
-import { parseProduct as parseOff } from '../scan/barcode';
+import { parseOffProduct as parseOff } from '../scan/barcode';
 
 // A freezer, a fridge and a cupboard, so moves between them can be tested.
 const PLACES: Place[] = [
@@ -153,5 +154,58 @@ describe('Open Food Facts answer (S-022)', () => {
   });
   it('drinks keep their brand', () => {
     expect(parseOff({ status: 1, product: { product_name: 'Coca-Cola Zero', brands: 'Coca-Cola', categories_tags: ['en:beverages', 'en:sodas'] } })?.name).toBe('Coca-Cola Zero');
+  });
+});
+
+describe('Barcode memory (S-024)', () => {
+  const code = '5000157024671';
+  const beans: NewItem = { name: 'Baked beans', category: 'canned', placeId: 'pantry', count: 1, amount: 415, unit: 'g', barcode: code };
+
+  it('remembers what the user settled on: name, group and size', () => {
+    expect(productOf({ ...beans, barcode: code })).toEqual({ barcode: code, name: 'Baked beans', category: 'canned', amount: 415, unit: 'g' });
+    expect(productOf({ name: 'Cola', category: 'drinks', sizeText: '6 x 1,5 l', barcode: code })).toEqual({ barcode: code, name: 'Cola', category: 'drinks', sizeText: '6 x 1,5 l' });
+  });
+  it('reads memories from before S-024, where the size was the lookup text', () => {
+    expect(parseProduct({ barcode: code, name: 'Baked beans', quantity: '415 g', category: 'canned' })).toEqual({ barcode: code, name: 'Baked beans', category: 'canned', amount: 415, unit: 'g' });
+    expect(parseProduct({ barcode: code, name: 'Cola', quantity: '6 x 1,5 l' })).toEqual({ barcode: code, name: 'Cola', sizeText: '6 x 1,5 l' });
+    expect(parseProduct({ barcode: code, name: 'Kylling', category: 'poultry' })).toMatchObject({ category: 'meat' });
+  });
+  it('a merge keeps the barcode, so the next scan finds the line', () => {
+    const typed = addItem({ ...EMPTY, places: PLACES }, { ...beans, barcode: undefined }, 'a', '2026-11-07', 1).state;
+    const scanned = addItem(typed, beans, 'b', '2026-11-08', 2);
+    expect(scanned.merged).toBe(true);
+    expect(scanned.state.items[0]).toMatchObject({ id: 'a', count: 2, barcode: code });
+  });
+  it('a new group or size on the thing updates the memory', () => {
+    let s = addItem({ ...EMPTY, places: PLACES }, beans, 'a', '2026-11-07', 1).state;
+    s = rememberProduct(s, productOf({ ...beans, barcode: code })).state;
+    const sized = setSize(s, 'a', { amount: 400, unit: 'g' }, 2);
+    expect(sized.putProducts?.[0]).toMatchObject({ amount: 400, unit: 'g' });
+    expect(setCategory(sized.state, 'a', 'dry', 3).state.products[code]).toMatchObject({ category: 'dry', amount: 400 });
+    // Without a memory, nothing is remembered.
+    expect(setSize(addItem(EMPTY, beans, 'a', '2026-11-07', 1).state, 'a', null, 2).putProducts).toBeUndefined();
+  });
+});
+
+describe('Undo (S-024)', () => {
+  it('puts a deleted thing back as it was', () => {
+    const s = addItem(EMPTY, milk, 'a', '2026-11-07', 1).state;
+    const gone = s.items[0]!;
+    const back = restoreItem(removeItem(s, 'a').state, gone, 5);
+    expect(back.state.items[0]).toMatchObject({ ...gone, updatedAt: 5 });
+    expect(restoreItem(s, gone, 6).put).toBeUndefined(); // still there: nothing to do
+  });
+});
+
+describe('Counts (S-024)', () => {
+  it('adds up the counts, in all and per place', () => {
+    const items = [
+      { placeId: 'a', count: 2 },
+      { placeId: 'b', count: 1 },
+      { placeId: 'a', count: 3 },
+    ];
+    expect(totalCount(items)).toBe(6);
+    expect(countsByPlace(items).get('a')).toBe(5);
+    expect(countsByPlace(items).get('c')).toBeUndefined();
   });
 });

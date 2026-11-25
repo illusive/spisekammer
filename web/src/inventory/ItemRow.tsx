@@ -1,26 +1,38 @@
-// One thing in a list (a place, search results, "Brug snart"): its name, a line about it, and its
-// date if it has one; tapping it opens its sheet.
+// One thing in a list (a place, "Brug snart", search): its name; under it the place (where the list
+// mixes places) and size, and its date if it has one; at the right, how many (Shelfwise's value
+// column, S-024). Tapping it opens its sheet.
 
-import { ChevronRight } from 'lucide-react';
+import { ButtonRow, RowLine } from '../components/ui';
 import type { Lang, Strings } from '../i18n/strings';
 import { DateShort } from '../keeping/DateInfo';
 import { itemKeeping } from '../keeping/itemKeeping';
 import type { Item } from './model';
 import { useInventory } from './store';
-import { itemSummary } from './summary';
+import { sizeLine } from './summary';
 
-export function ItemRow({ item, prefix, today, onOpen, lang, s }: { item: Item; prefix?: string; today: string; onOpen: (id: string) => void; lang: Lang; s: Strings }) {
-  const info = itemKeeping(item, today, useInventory().places);
+export function ItemRow({ item, place, today, onOpen, lang, s }: { item: Item; place?: string; today: string; onOpen: (id: string) => void; lang: Lang; s: Strings }) {
+  const { urgency } = itemKeeping(item, today, useInventory().places);
+  const line = [place, sizeLine(item, lang, s)].filter(Boolean).join(' · ');
   return (
     <li>
-      <button type="button" aria-haspopup="dialog" onClick={() => onOpen(item.id)} className="flex min-h-16 w-full items-center gap-[12px] py-3 text-left">
-        <span className="min-w-0 flex-1">
-          <span className="block font-semibold">{item.name}</span>
-          <span className="block text-sm text-muted">{prefix ? `${prefix} · ${itemSummary(item, lang, s)}` : itemSummary(item, lang, s)}</span>
-          <DateShort item={item} urgency={info.urgency} today={today} lang={lang} s={s} />
-        </span>
-        <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted" />
-      </button>
+      <ButtonRow
+        onClick={() => onOpen(item.id)}
+        title={item.name}
+        subtitle={
+          <>
+            {line ? <RowLine>{line}</RowLine> : null}
+            <DateShort item={item} urgency={urgency} today={today} lang={lang} s={s} />
+          </>
+        }
+        value={
+          <span className="shrink-0 text-right">
+            <span aria-hidden="true" className="block text-xl font-medium tracking-[-0.045em] tabular-nums">
+              {item.count}
+            </span>
+            <span className="sr-only">{s.itemCount(item.count)}</span>
+          </span>
+        }
+      />
     </li>
   );
 }

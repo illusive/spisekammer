@@ -108,3 +108,31 @@ export async function dayFromToday(page: Page, days: number): Promise<string> {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }, days);
 }
+
+// Tilføj from the menu (S-024): on Hjem it first asks where; pick `place` there. On a place's page
+// (or with one place) it opens the form at once.
+export async function openAdd(page: Page, place = 'Skabe'): Promise<void> {
+  await page.getByRole('navigation', { name: 'Handlinger' }).getByRole('button', { name: 'Tilføj' }).click();
+  const where = page.locator('dialog[open]').filter({ has: page.getByRole('heading', { name: 'Hvor lægger du ting?' }) });
+  const add = page.locator('dialog[open]').filter({ has: page.getByRole('heading', { name: 'Tilføj', exact: true }) });
+  await expect(where.or(add).first()).toBeVisible();
+  if (await where.isVisible()) await where.getByRole('button', { name: new RegExp(`^${place}`) }).click();
+  await expect(add).toBeVisible();
+}
+
+// Søg from the menu (S-024).
+export async function openSearch(page: Page): Promise<void> {
+  await page.getByRole('navigation', { name: 'Handlinger' }).getByRole('button', { name: 'Søg' }).click();
+  await expect(page.getByRole('searchbox', { name: 'Søg i alt, du har' })).toBeFocused();
+}
+
+// A month in a date field outside the fridge: the native month field where the browser has one
+// (the iPhone's wheel, S-024), else the two dropdowns.
+export async function pickMonth(page: Page, prefix: string, year: string, month: string): Promise<void> {
+  const field = page.locator(`#${prefix}-month`);
+  if ((await field.getAttribute('type')) === 'month') await field.fill(`${year}-${month}`);
+  else {
+    await field.selectOption(month);
+    await page.locator(`#${prefix}-year`).selectOption(year);
+  }
+}

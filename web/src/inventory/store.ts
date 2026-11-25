@@ -1,5 +1,5 @@
 // The inventory on this phone (S-006): kept in memory for the screens and written to IndexedDB
-// ('spisekammer', stores 'items' and 'products'), so it survives closing the app and works without
+// ('spisekammer', stores 'items', 'products' and 'places'), so it survives closing the app and works without
 // a network. Every change applies at once; the write follows. Slice 5 adds the outbox for sync.
 
 import { openDB, type IDBPDatabase } from 'idb';
@@ -105,6 +105,7 @@ export const inventory = {
   setCategory: (id: string, category: Category) => apply(m.setCategory(state, id, category, Date.now())),
   setSize: (id: string, size: Size | null) => apply(m.setSize(state, id, size, Date.now())),
   remove: (id: string) => apply(m.removeItem(state, id)),
+  restore: (item: m.Item) => apply(m.restoreItem(state, item, Date.now())),
   rememberProduct: (product: m.Product) => apply(m.rememberProduct(state, product)),
 };
 

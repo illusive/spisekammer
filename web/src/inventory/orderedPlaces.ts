@@ -13,9 +13,9 @@ export function useOrderedPlaces(s: Strings): Place[] {
 
 export function useStartPlace(s: Strings, given: string | null): [string, (placeId: string) => void] {
   const ordered = useOrderedPlaces(s);
+  const { lastPlaceId: last } = usePreferences();
   const [chosen, setChosen] = useState<string | null>(given);
   const exists = (id: string | null): id is string => id !== null && ordered.some((p) => p.id === id);
-  const last = readPreferences().lastPlaceId;
   const placeId = exists(chosen) ? chosen : exists(last) ? last : (ordered[0]?.id ?? '');
   return [placeId, setChosen];
 }

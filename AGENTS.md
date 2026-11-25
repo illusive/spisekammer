@@ -17,7 +17,7 @@ Read `PROJECT.md` first, then `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs
 - **Stack:** React, Vite, Tailwind, `vite-plugin-pwa` with our own service worker, and TypeScript in strict mode.
   - Primitives are in `web/src/components/ui.tsx`, in the look of the owner's Shelfwise (S-023); they no longer follow stead's.
   - Before adding a dependency, check browser support (Safari on iPhone first), maintenance, licence, size, and whether what we have covers it already.
-- **Shared code:** use the existing primitives (`Sheet`, `SheetHeader`, `useConfirm`, `Stepper`, `Choice`, `SearchField`, `Toast`) and the tokens in `web/src/index.css`.
+- **Shared code:** use the existing parts before writing new markup: `components/ui.tsx` (`Button` with its `link` and `action` looks, `RowList`, `RowBody`/`LinkRow`/`ButtonRow`, `Section`, `Notice`, `FieldLabel`, `Choice`, `SearchField`, `SubPageHeader`, `Page`), `components/sheet.tsx` (`Sheet`, `SheetHeader`, `useConfirm`), `components/toast.tsx` (`useToast`), `components/Stepper.tsx`, `inventory/useInventoryActions.tsx` (the menu and its sheets) and `inventory/addThing.ts`, plus the tokens in `web/src/index.css` (colours, `rounded-field`, `shadow-float`, `shadow-sheet`, `bg-overlay`).
 - **Text:** every visible text has a key in Danish and English (`web/src/i18n/strings.ts`). A test keeps them in step.
 - **Food safety:**
   - The app shows only the dates the user gives; it never estimates one (S-021).

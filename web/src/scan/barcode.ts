@@ -54,7 +54,7 @@ export function acceptCode(code: string, last: { code: string; at: number } | nu
 // the same food from two brands is one line, except for drinks, where the brand is what tells them
 // apart (S-022). If only the brand is left, the generic name ("Baked beans in tomato sauce") is used.
 // The name gets a capital first letter.
-export function parseProduct(json: unknown): FoundProduct | null {
+export function parseOffProduct(json: unknown): FoundProduct | null {
   if (typeof json !== 'object' || json === null) return null;
   const { status, product } = json as { status?: unknown; product?: Record<string, unknown> };
   if (status !== 1 || typeof product !== 'object' || product === null) return null;
@@ -86,7 +86,7 @@ export async function lookUp(code: string): Promise<Lookup> {
     const response = await fetch(url, { signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store' });
     if (response.status === 404) return { kind: 'notFound' };
     if (!response.ok) return { kind: 'offline' };
-    const product = parseProduct(await response.json());
+    const product = parseOffProduct(await response.json());
     return product ? { kind: 'found', product } : { kind: 'notFound' };
   } catch {
     return { kind: 'offline' }; // no connection, timeout or a blocked request

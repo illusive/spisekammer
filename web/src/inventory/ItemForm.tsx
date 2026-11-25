@@ -3,8 +3,9 @@
 // name until the user picks one), the count, an optional size (a number with a unit dropdown) and
 // an optional date: a day in the fridge, a month elsewhere. The place stays for the next thing.
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Button, fieldClass, Stepper } from '../components/ui';
+import { useRef, useState, type ReactNode } from 'react';
+import { Stepper } from '../components/Stepper';
+import { Button, FieldLabel, fieldClass } from '../components/ui';
 import type { Lang, Strings } from '../i18n/strings';
 import { DateField } from '../keeping/DateInfo';
 import { precisionFor, type DatePrecision } from '../keeping/rules';
@@ -53,17 +54,8 @@ export function ItemForm(props: {
   const ordered = useOrderedPlaces(s);
   const precision = precisionFor(placeOf(allPlaces, placeId)?.kind ?? 'pantry');
 
-  // A scan fills the form after it opened (the lookup is online): take what it found.
-  useEffect(() => {
-    if (start.name) setName(start.name);
-    if (start.category) setFound(start.category);
-    if (start.size) setSize(sizeStart(undefined, undefined, start.size, lang));
-  }, [start.name, start.category, start.size, lang]);
-
-  // A day given in the fridge does not fit the month field elsewhere, or the other way: start over.
-  useEffect(() => {
-    setDate((d) => (d && d.precision !== precision ? null : d));
-  }, [precision]);
+  // A day given in the fridge does not fit the month field elsewhere, or the other way.
+  const shownDate = date?.precision === precision ? date : null;
 
   const category: Category = chosen ?? found ?? guessCategory(name) ?? 'other';
 
@@ -83,7 +75,7 @@ export function ItemForm(props: {
       count: Math.min(MAX_COUNT, count * multiplier),
       ...(read && 'amount' in read ? { amount: read.amount, unit: read.unit } : read ? { sizeText: read.sizeText } : {}),
       ...(start.barcode ? { barcode: start.barcode } : {}),
-      ...(date ? { date: date.date, datePrecision: date.precision } : {}),
+      ...(shownDate ? { date: shownDate.date, datePrecision: shownDate.precision } : {}),
     });
     // Ready for the next one, in the same place and with the same unit.
     setName('');
@@ -125,9 +117,7 @@ export function ItemForm(props: {
         s={s}
       />
       <div className="flex flex-col gap-1">
-        <label htmlFor={`${idPrefix}-name`} className="mb-1 font-semibold">
-          {s.name}
-        </label>
+        <FieldLabel htmlFor={`${idPrefix}-name`}>{s.name}</FieldLabel>
         <input
           ref={nameRef}
           id={`${idPrefix}-name`}
@@ -155,9 +145,9 @@ export function ItemForm(props: {
           <span>
             {s.keep.whatIsIt}: <span className="font-semibold text-text">{s.categories[category]}</span>
           </span>
-          <button type="button" onClick={() => setShowGroups((v) => !v)} aria-expanded={showGroups} aria-controls={`${idPrefix}-group`} className="inline-flex min-h-11 min-w-11 items-center justify-center font-semibold text-text underline underline-offset-4">
+          <Button variant="link" onClick={() => setShowGroups((v) => !v)} aria-expanded={showGroups} aria-controls={`${idPrefix}-group`} className="text-text">
             {showGroups ? s.close : s.change}
-          </button>
+          </Button>
         </p>
         {showGroups ? (
           <CategorySelect
@@ -173,7 +163,7 @@ export function ItemForm(props: {
       </div>
       <Stepper label={s.count} value={count} min={1} max={MAX_COUNT} onChange={setCount} />
       <SizeField idPrefix={idPrefix} text={size.text} unit={size.unit} onChange={(text, unit) => setSize({ text, unit })} s={s} />
-      <DateField idPrefix={idPrefix} precision={precision} date={date?.date} onChange={setDate} s={s} lang={lang} thisYear={new Date().getFullYear()} />
+      <DateField idPrefix={idPrefix} precision={precision} date={shownDate?.date} onChange={setDate} s={s} lang={lang} thisYear={new Date().getFullYear()} />
       <Button type="submit" variant="primary" arrow>
         {submitLabel}
       </Button>

@@ -42,6 +42,8 @@ Each slice builds, is tested, and works on its own.
    **2026-11-08:** the migration is applied (checked: the tables exist and refuse signed-out reads) and the publishable key is in the app.
    **Not yet:** the email template and custom SMTP (`supabase/README.md`); sign-in and invites end to end; the fridge setting moving from the phone to the household (slice 5).
 5. **Sync:** the outbox, pulls, Realtime, count operations, deletion markers; tests with two clients.
+**After use, round two (S-024, 2026-11-26):** Shelfwise's floating menu (Tilføj · Scan · Søg); "Hvor lægger du ting?" before Scan and Tilføj; search as a sheet; the iPhone's month wheel; grey group headings and counts at the right; undo on delete; barcode memory remembers the settled size and group and respects the chosen place; a tidy-up of shared parts and dead code. **Not yet checked on the iPhone:** the month wheel, the menu above the home bar, scanning a known barcode, "Fortryd".
+
 **After use (S-021–S-023, 2026-11-25):** no guessed dates, one "Dato" (a month outside the fridge); 12 kinds of food; "Åbnet i dag" and "Sådan regner appen" gone; the place as a field in the add form (buttons up to three, a dropdown above); a size field with a unit dropdown; capitalised names and no brands from scans (drinks excepted); one line for the same thing; Steder ordered by dragging with no selector; the look of Shelfwise, light only. **Not yet checked on the iPhone:** the month and year dropdowns, the size field with the keyboard, scanning a branded product, and the new look.
 
 **Between slices (S-019, 2026-11-14):** the page-scroll fix after closing a sheet; places alphabetical by default, or in an own order by dragging; Playwright tests in WebKit and Chromium, run in CI before every deploy.

@@ -26,6 +26,9 @@ export const precisionFor = (place: PlaceKind): DatePrecision => (place === 'fri
 export type Urgency = 'past' | 'today' | 'soon' | 'later' | 'unknown';
 export const SOON_DAYS: Record<PlaceKind, number> = { fridge: 3, pantry: 14, freezer: 30 };
 
+// What "Brug snart" shows: past, today or soon.
+export const isUrgent = (u: Urgency) => u === 'past' || u === 'today' || u === 'soon';
+
 export function urgency(date: string | undefined, place: PlaceKind, today: string): Urgency {
   if (!date) return 'unknown';
   const left = daysBetween(today, date);

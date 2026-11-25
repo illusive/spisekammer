@@ -8,16 +8,20 @@
 import { DndContext, KeyboardSensor, MouseSensor, TouchSensor, closestCenter, useSensor, useSensors, type Announcements, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ArrowDown, ArrowDownAZ, ArrowUp, ChevronRight, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowDownAZ, ArrowUp, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
-import { Bubble, Button, Choice, Page, Sheet, SheetHeader, SubPageHeader, Toast, fieldClass, rowListClass, useConfirm, type ToastMessage } from '../components/ui';
+import { Sheet, SheetHeader, useConfirm } from '../components/sheet';
+import { useToast } from '../components/toast';
+import { Bubble, Button, ButtonRow, Choice, FieldLabel, Page, RowLine, RowList, SubPageHeader, fieldClass } from '../components/ui';
+import { MAX_PLACE_NAME } from '../inventory/model';
 import type { Strings } from '../i18n/strings';
 import { useOrderedPlaces } from '../inventory/orderedPlaces';
 import { PlaceField } from '../inventory/PlaceField';
 import { PLACE_ICON } from '../inventory/placeIcons';
 import { inventory, useInventory } from '../inventory/store';
+import { countsByPlace, totalCount } from '../inventory/summary';
 import { usePageTitle } from '../lib/usePageTitle';
-import { PLACE_KINDS, placeName, placeOf, type Place, type PlaceKind } from '../places';
+import { PLACE_KINDS, labelOf, placeName, placeOf, type Place, type PlaceKind } from '../places';
 import { hrefs } from '../router';
 import { setPreference, usePreferences } from '../settings/preferences';
 
@@ -37,8 +41,9 @@ export function PlacesScreen({ s }: { s: Strings }) {
   const { placeOrder } = usePreferences();
   const ordered = useOrderedPlaces(s);
   const [editing, setEditing] = useState<string | 'new' | null>(null);
-  const [toast, setToast] = useState<ToastMessage | null>(null);
-  const countIn = (id: string) => items.filter((i) => i.placeId === id).reduce((n, i) => n + i.count, 0);
+  const { show, toast } = useToast();
+  const counts = countsByPlace(items);
+  const countIn = (id: string) => counts.get(id) ?? 0;
 
   return (
     <Page>
@@ -48,10 +53,10 @@ export function PlacesScreen({ s }: { s: Strings }) {
         <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-[12px]">
           <p className="text-sm text-muted">{t.orderHelp}</p>
           {placeOrder === 'own' ? (
-            <button type="button" onClick={() => setPreference('placeOrder', 'alphabetical')} className="-mr-2 inline-flex min-h-11 items-center gap-[6px] px-[8px] text-sm font-semibold">
+            <Button variant="action" onClick={() => setPreference('placeOrder', 'alphabetical')} className="-mr-[6px]">
               <ArrowDownAZ aria-hidden="true" className="size-4" />
               {t.sortAlphabetical}
-            </button>
+            </Button>
           ) : null}
         </div>
         <SortablePlaces places={ordered} countIn={countIn} onOpen={setEditing} s={s} />
@@ -61,25 +66,25 @@ export function PlacesScreen({ s }: { s: Strings }) {
         </Button>
       </div>
       <Sheet open={editing !== null} onClose={() => setEditing(null)} labelledBy={TITLE_ID} dismissOnBackdrop={false}>
-        {editing !== null ? <PlaceSheet key={editing} placeId={editing === 'new' ? null : editing} s={s} onDone={(text) => (setEditing(null), text && setToast({ id: Date.now(), text }))} /> : null}
+        {editing !== null ? <PlaceSheet key={editing} placeId={editing === 'new' ? null : editing} s={s} onDone={(text) => (setEditing(null), text && show(text))} /> : null}
       </Sheet>
-      <Toast message={toast} onHide={() => setToast(null)} />
+      {toast}
     </Page>
   );
 }
 
-function PlaceRow({ place, places, count, onOpen, s }: { place: Place; places: Place[]; count: number; onOpen: (id: string) => void; s: Strings }) {
+function PlaceRow({ place, count, onOpen, s }: { place: Place; count: number; onOpen: (id: string) => void; s: Strings }) {
   return (
-    <button type="button" aria-haspopup="dialog" onClick={() => onOpen(place.id)} className="flex min-h-16 w-full min-w-0 flex-1 items-center gap-[12px] py-3 text-left">
-      <Bubble Icon={PLACE_ICON[place.kind]} />
-      <span className="min-w-0 flex-1">
-        <span className="block font-semibold break-words">{placeName(places, place.id, s)}</span>
-        <span className="block text-sm text-muted">
+    <ButtonRow
+      onClick={() => onOpen(place.id)}
+      leading={<Bubble Icon={PLACE_ICON[place.kind]} />}
+      title={labelOf(place, s)}
+      subtitle={
+        <RowLine>
           {s.placeKinds[place.kind]} · <span className="font-mono text-xs">{s.itemCount(count)}</span>
-        </span>
-      </span>
-      <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted" />
-    </button>
+        </RowLine>
+      }
+    />
   );
 }
 
@@ -117,31 +122,31 @@ function SortablePlaces({ places, countIn, onOpen, s }: { places: Place[]; count
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd} accessibility={{ announcements, screenReaderInstructions: { draggable: t.dnd.instructions } }}>
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-        <ul className={rowListClass}>
+        <RowList>
           {places.map((place) => (
-            <SortableRow key={place.id} place={place} places={places} count={countIn(place.id)} onOpen={onOpen} s={s} />
+            <SortableRow key={place.id} place={place} count={countIn(place.id)} onOpen={onOpen} s={s} />
           ))}
-        </ul>
+        </RowList>
       </SortableContext>
     </DndContext>
   );
 }
 
-function SortableRow({ place, places, count, onOpen, s }: { place: Place; places: Place[]; count: number; onOpen: (id: string) => void; s: Strings }) {
+function SortableRow({ place, count, onOpen, s }: { place: Place; count: number; onOpen: (id: string) => void; s: Strings }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: place.id });
   return (
-    <li ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} className={`flex items-center gap-[4px] ${isDragging ? 'relative z-10 rounded-card bg-surface shadow-[0_8px_24px_rgb(16_43_36/0.16)]' : ''}`}>
+    <li ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} className={`flex items-center gap-[4px] ${isDragging ? 'relative z-10 rounded-card bg-surface shadow-float' : ''}`}>
       <button
         type="button"
         ref={setActivatorNodeRef}
         {...attributes}
         {...listeners}
-        aria-label={s.placesScreen.dragHandle(placeName(places, place.id, s))}
+        aria-label={s.placesScreen.dragHandle(labelOf(place, s))}
         className="-ml-[10px] grid size-11 shrink-0 cursor-grab touch-none place-items-center self-center rounded-full text-muted"
       >
         <GripVertical aria-hidden="true" className="size-5" />
       </button>
-      <PlaceRow place={place} places={places} count={count} onOpen={onOpen} s={s} />
+      <PlaceRow place={place} count={count} onOpen={onOpen} s={s} />
     </li>
   );
 }
@@ -157,7 +162,7 @@ function PlaceSheet({ placeId, s, onDone }: { placeId: string | null; s: Strings
   const others = ordered.filter((p) => p.id !== placeId);
   const [moveTo, setMoveTo] = useState(others[0]?.id ?? '');
   const { confirm, sheet } = useConfirm();
-  const inIt = placeId ? items.filter((i) => i.placeId === placeId).length : 0;
+  const inIt = placeId ? totalCount(items.filter((i) => i.placeId === placeId)) : 0;
   // A preset place keeps its own name when the field is left empty; a new place needs one.
   const shownName = (id: string) => placeName(inventory.get().places, id, s);
   const index = placeId ? ordered.findIndex((p) => p.id === placeId) : -1;
@@ -198,8 +203,8 @@ function PlaceSheet({ placeId, s, onDone }: { placeId: string | null; s: Strings
       <SheetHeader id={TITLE_ID} title={place ? shownName(place.id) : t.addTitle} closeLabel={s.close} onClose={() => onDone()} />
       <div className="flex flex-col gap-5 pt-4">
         {removing && place ? (
-          <div className="flex flex-col gap-4" role="group" aria-label={t.removeConfirm(shownName(place.id))}>
-            <p className="text-lg font-bold">{t.removeConfirm(shownName(place.id))}</p>
+          <div className="flex flex-col gap-4">
+            <h3 className="text-lg font-bold">{t.removeConfirm(shownName(place.id))}</h3>
             <p>{t.hasThings(inIt)}</p>
             <PlaceField name="place-move-to" legend={t.moveTo} value={moveTo} onChange={setMoveTo} places={others} s={s} />
             <Button
@@ -219,10 +224,10 @@ function PlaceSheet({ placeId, s, onDone }: { placeId: string | null; s: Strings
         ) : (
           <form onSubmit={save} className="flex flex-col gap-5">
             <label className="flex flex-col gap-1">
-              <span className="mb-1 font-semibold">{t.name}</span>
+              <FieldLabel>{t.name}</FieldLabel>
               <input
                 required={!place}
-                maxLength={40}
+                maxLength={MAX_PLACE_NAME}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={place && !place.name ? shownName(place.id) : t.namePlaceholder}

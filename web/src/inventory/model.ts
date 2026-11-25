@@ -7,8 +7,9 @@ import type { DatePrecision } from '../keeping/rules';
 import { fold } from '../lib/fold';
 import { tidyName } from '../lib/name';
 import { PLACE_KINDS, type Place, type PlaceKind } from '../places';
-import { CATEGORIES, readCategory, type Category } from './categories';
-import { SIZE_UNITS, type Size, type SizeUnit } from './size';
+import { isBarcode } from '../scan/barcode';
+import { readCategory, type Category } from './categories';
+import { parseSize, SIZE_UNITS, type Size, type SizeUnit } from './size';
 
 export const MAX_COUNT = 999;
 
@@ -29,12 +30,16 @@ export interface Item {
   updatedAt: number; // ms; the last change (sync in slice 5 compares it)
 }
 
-// What a barcode stands for, remembered on this phone after a lookup or typed once.
+// What a barcode stands for, remembered on this phone with what the user settled on when adding
+// it (S-004, S-024): the name, the group and the size. Kept up to date when the thing's group or
+// size is changed later.
 export interface Product {
   barcode: string;
   name: string;
-  quantity?: string;
   category?: Category;
+  amount?: number; // the size as a number and a unit
+  unit?: SizeUnit;
+  sizeText?: string; // a size that is not a number and a unit (a multipack: "6 x 1,5 l")
 }
 
 export interface Inventory {
@@ -76,7 +81,7 @@ export function parseItem(x: unknown): Item | null {
     if (sizeText) item.sizeText = sizeText;
   }
   const barcode = str(r.barcode, 14);
-  if (barcode && /^\d{8,14}$/.test(barcode)) item.barcode = barcode;
+  if (barcode && isBarcode(barcode)) item.barcode = barcode;
   return item;
 }
 
@@ -97,13 +102,26 @@ export function parseProduct(x: unknown): Product | null {
   const r = x as Record<string, unknown>;
   const barcode = str(r.barcode, 14);
   const name = str(r.name);
-  if (!barcode || !/^\d{8,14}$/.test(barcode) || !name) return null;
+  if (!barcode || !isBarcode(barcode) || !name) return null;
   const product: Product = { barcode, name: tidyName(name) };
-  const quantity = str(r.quantity, 40);
-  if (quantity) product.quantity = quantity;
-  const category = CATEGORIES.find((c) => c === r.category) ?? (r.category === 'poultry' ? 'meat' : undefined);
-  if (category) product.category = category;
-  return product;
+  if (r.category !== undefined) product.category = readCategory(r.category, product.name);
+  const unit = SIZE_UNITS.find((u) => u === r.unit);
+  if (typeof r.amount === 'number' && r.amount > 0 && unit) return { ...product, amount: r.amount, unit };
+  // Before S-024 the size was the lookup's text ("400 g"); read it as a size where it is one.
+  const text = str(r.sizeText, 40) ?? str(r.quantity, 40);
+  const read = text ? parseSize(text) : null;
+  if (read && read.count === undefined) return { ...product, amount: read.amount, unit: read.unit };
+  return text ? { ...product, sizeText: text } : product;
+}
+
+// A thing's memory under its barcode: its name, group and size.
+export function productOf(item: Pick<Item, 'name' | 'category' | 'amount' | 'unit' | 'sizeText'> & { barcode: string }): Product {
+  return {
+    barcode: item.barcode,
+    name: item.name,
+    category: item.category,
+    ...(item.amount && item.unit ? { amount: item.amount, unit: item.unit } : item.sizeText ? { sizeText: item.sizeText } : {}),
+  };
 }
 
 export type NewItem = Omit<Item, 'id' | 'addedOn' | 'placedOn' | 'updatedAt'>;
@@ -126,7 +144,9 @@ export function addItem(state: Inventory, item: NewItem, id: string, today: stri
     const earlier = item.date !== undefined && (existing.date === undefined || item.date < existing.date);
     const { date: _d, datePrecision: _p, ...rest } = existing;
     const date = earlier ? { date: item.date!, datePrecision: item.datePrecision ?? 'day' } : existing.date ? { date: existing.date, datePrecision: existing.datePrecision ?? 'day' } : {};
-    const next: Item = { ...rest, ...date, count: clampCount(existing.count + item.count), updatedAt: now };
+    // The barcode stays with the line, so the next scan finds it (S-024).
+    const barcode = existing.barcode ?? item.barcode;
+    const next: Item = { ...rest, ...date, ...(barcode ? { barcode } : {}), count: clampCount(existing.count + item.count), updatedAt: now };
     return { ...replace(state, next), id: existing.id, merged: true };
   }
   const saved: Item = { ...item, name, count: clampCount(item.count), id, addedOn: today, placedOn: today, updatedAt: now };
@@ -208,23 +228,38 @@ export function setDate(state: Inventory, id: string, date: { date: string; prec
   return replace(state, { ...rest, ...(date ? { date: date.date, datePrecision: date.precision } : {}), updatedAt: now });
 }
 
-// What kind of food it is ("Slags").
+// What kind of food it is ("Slags"). The barcode's memory follows (S-024).
 export function setCategory(state: Inventory, id: string, category: Category, now: number): Change {
   const item = state.items.find((i) => i.id === id);
   if (!item) return { state };
-  return replace(state, { ...item, category, updatedAt: now });
+  return withMemory(replace(state, { ...item, category, updatedAt: now }), id);
 }
 
-// Its size as a number and a unit, or none (null).
+// Its size as a number and a unit, or none (null). The barcode's memory follows (S-024).
 export function setSize(state: Inventory, id: string, size: Size | null, now: number): Change {
   const item = state.items.find((i) => i.id === id);
   if (!item) return { state };
   const { amount: _a, unit: _u, sizeText: _t, ...rest } = item;
-  return replace(state, { ...rest, ...(size ? { amount: size.amount, unit: size.unit } : {}), updatedAt: now });
+  return withMemory(replace(state, { ...rest, ...(size ? { amount: size.amount, unit: size.unit } : {}), updatedAt: now }), id);
 }
 
 function replace(state: Inventory, next: Item): Change {
   return { state: { ...state, items: state.items.map((i) => (i.id === next.id ? next : i)) }, put: [next] };
+}
+
+// After a change to a thing with a remembered barcode, the memory is updated with it.
+function withMemory(change: Change, id: string): Change {
+  const item = change.state.items.find((i) => i.id === id);
+  if (!item?.barcode || !change.state.products[item.barcode]) return change;
+  const product = productOf({ ...item, barcode: item.barcode });
+  return { ...change, state: { ...change.state, products: { ...change.state.products, [product.barcode]: product } }, putProducts: [product] };
+}
+
+// A deleted thing put back as it was ("Fortryd", S-024).
+export function restoreItem(state: Inventory, item: Item, now: number): Change {
+  if (state.items.some((i) => i.id === item.id)) return { state };
+  const back = { ...item, updatedAt: now };
+  return { state: { ...state, items: [...state.items, back] }, put: [back] };
 }
 
 export function removeItem(state: Inventory, id: string): Change {

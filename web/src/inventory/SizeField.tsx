@@ -1,11 +1,9 @@
 // The size as one field (S-022): a number with the unit in a dropdown at its end (stk., pk., ds.,
 // g, kg, ml, cl, dl, l). A unit typed with the number ("500 g") moves to the dropdown.
 
-import { useEffect, useId, useState } from 'react';
+import { useId, useState } from 'react';
 import type { Strings } from '../i18n/strings';
 import { SIZE_UNITS, sizeFromInput, splitUnit, type SizeUnit } from './size';
-
-export type SizeInput = ReturnType<typeof sizeFromInput>;
 
 export function SizeField({ text, unit, onChange, s, idPrefix }: { text: string; unit: SizeUnit; onChange: (text: string, unit: SizeUnit) => void; s: Strings; idPrefix: string }) {
   const id = useId();
@@ -14,7 +12,7 @@ export function SizeField({ text, unit, onChange, s, idPrefix }: { text: string;
       <label htmlFor={`${idPrefix}-size`} className="mb-1 font-semibold">
         {s.size} <span className="font-normal text-muted">({s.optional})</span>
       </label>
-      <div data-field="" className="flex h-12 w-full overflow-hidden rounded-[10px] border border-border bg-surface focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-text">
+      <div data-field="" className="flex h-12 w-full overflow-hidden rounded-field border border-border bg-surface focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary">
         <input
           id={`${idPrefix}-size`}
           value={text}
@@ -54,16 +52,11 @@ export function sizeStart(amount: number | undefined, unit: SizeUnit | undefined
   return { text: '', unit: 'g' };
 }
 
-// In a thing's sheet the size saves as it is typed (like the count): a valid size or nothing.
-export function useLiveSize(start: { text: string; unit: SizeUnit }, key: string, save: (size: { amount: number; unit: SizeUnit } | null) => void) {
+// In a thing's sheet the size saves as it is typed (like the count): a valid size, or nothing when
+// the field is emptied. The sheet's fields are remounted for each thing, so this starts afresh.
+export function useLiveSize(start: { text: string; unit: SizeUnit }, save: (size: { amount: number; unit: SizeUnit } | null) => void) {
   const [text, setText] = useState(start.text);
   const [unit, setUnit] = useState<SizeUnit>(start.unit);
-  useEffect(() => {
-    setText(start.text);
-    setUnit(start.unit);
-    // A different thing: start from its size. Its own saves must not reset what is being typed.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
   const change = (t: string, u: SizeUnit) => {
     setText(t);
     setUnit(u);

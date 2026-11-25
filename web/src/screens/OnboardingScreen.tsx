@@ -3,10 +3,11 @@
 // "Spring over" keeps the default places. Everything chosen here can be changed in Indstillinger.
 
 import { Check, Plus } from 'lucide-react';
-import { useState } from 'react';
-import { Bubble, Button, Choice, fieldClass, pageTitleClass, rowListClass } from '../components/ui';
+import { useState, type FormEvent } from 'react';
+import { Bubble, Button, Card, Choice, FieldLabel, RowBody, RowList, Wordmark, fieldClass, pageTitleClass } from '../components/ui';
 import type { Strings } from '../i18n/strings';
 import { PLACE_ICON } from '../inventory/placeIcons';
+import { MAX_PLACE_NAME } from '../inventory/model';
 import { inventory, useInventory } from '../inventory/store';
 import { usePageTitle } from '../lib/usePageTitle';
 import { PLACE_KINDS, placeName, placeOf, PRESET_IDS, type PlaceKind, type PresetId } from '../places';
@@ -75,64 +76,62 @@ export function OnboardingScreen({ s }: { s: Strings }) {
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-[18px] pt-[max(2rem,env(safe-area-inset-top))] pb-8">
         {step === 0 ? (
           <div className="flex flex-col gap-5">
-            <p className="text-xl font-bold tracking-[-0.02em]">
-              {t.brand.toLowerCase()}
-              <span aria-hidden="true" className="text-sage">
-                .
-              </span>
-            </p>
+            <Wordmark name={s.appTitle} />
             <h1 className={`${pageTitleClass} text-[min(2.75rem,12vw)]`}>{t.title}</h1>
             <p className="text-lg">{t.intro}</p>
             <Button variant="primary" arrow onClick={() => setStep(1)} className="mt-2">
               {t.start}
             </Button>
-            <button type="button" onClick={finish} className="min-h-11 self-center text-sm font-semibold underline underline-offset-4">
+            <Button variant="link" onClick={finish} className="self-center">
               {t.skip}
-            </button>
+            </Button>
           </div>
         ) : step === 1 ? (
           <div className="flex flex-col gap-4">
             <p className="font-mono text-xs tracking-[0.06em] text-muted uppercase">{t.step(1, STEPS)}</p>
             <h1 className={pageTitleClass}>{t.placesTitle}</h1>
             <p>{t.placesIntro}</p>
-            <ul className={rowListClass}>
+            <RowList>
               {rows.map((row) => {
                 const Icon = PLACE_ICON[row.kind];
                 const on = chosen.has(row.id);
                 return (
                   <li key={row.id}>
-                    <label className="relative flex min-h-16 cursor-pointer items-center gap-[12px] py-3">
-                      <Bubble Icon={Icon} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-semibold">{row.name}</span>
-                        <span className="block text-sm text-muted">{s.placeKinds[row.kind]}</span>
-                      </span>
-                      <input type="checkbox" checked={on} onChange={() => toggle(row.id)} className="peer sr-only" />
-                      <span aria-hidden="true" className={`grid size-7 place-items-center rounded-full border-2 peer-focus-visible:outline-2 peer-focus-visible:outline-primary ${on ? 'border-primary bg-primary text-accent' : 'border-border bg-surface'}`}>
-                        {on ? <Check className="size-4" strokeWidth={3} /> : null}
-                      </span>
+                    <label className="relative flex min-h-16 cursor-pointer items-center gap-[12px] py-3 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary">
+                      <input type="checkbox" checked={on} onChange={() => toggle(row.id)} className="sr-only" />
+                      <RowBody
+                        leading={<Bubble Icon={Icon} />}
+                        title={row.name}
+                        subtitle={<span className="block text-sm text-muted">{s.placeKinds[row.kind]}</span>}
+                        trailing={
+                          <span aria-hidden="true" className={`grid size-7 shrink-0 place-items-center rounded-full border-2 ${on ? 'border-primary bg-primary text-accent' : 'border-border bg-surface'}`}>
+                            {on ? <Check className="size-4" strokeWidth={3} /> : null}
+                          </span>
+                        }
+                      />
                     </label>
                   </li>
                 );
               })}
-            </ul>
-            <form
-              onSubmit={(e) => {
+            </RowList>
+            <Card
+              as="form"
+              onSubmit={(e: FormEvent) => {
                 e.preventDefault();
                 addOwn();
               }}
-              className="flex flex-col gap-3 rounded-card border border-line-soft bg-surface px-[16px] py-4"
+              className="flex flex-col gap-3"
             >
               <label className="flex flex-col gap-1">
-                <span className="mb-1 font-semibold">{t.ownPlace}</span>
-                <input value={ownName} onChange={(e) => setOwnName(e.target.value)} maxLength={40} placeholder={s.placesScreen.namePlaceholder} autoComplete="off" className={fieldClass} />
+                <FieldLabel>{t.ownPlace}</FieldLabel>
+                <input value={ownName} onChange={(e) => setOwnName(e.target.value)} maxLength={MAX_PLACE_NAME} placeholder={s.placesScreen.namePlaceholder} autoComplete="off" className={fieldClass} />
               </label>
               <Choice<PlaceKind> name="own-kind" legend={s.placesScreen.kind} value={ownKind} onChange={setOwnKind} options={PLACE_KINDS.map((k) => ({ value: k, label: s.placeKinds[k] }))} />
               <Button type="submit" disabled={!ownName.trim()}>
                 <Plus aria-hidden="true" className="size-5" />
                 {t.ownPlaceAdd}
               </Button>
-            </form>
+            </Card>
             {chosen.size === 0 ? (
               <p role="alert" className="text-sm font-semibold text-danger">
                 {t.placesNone}
@@ -174,9 +173,9 @@ export function OnboardingScreen({ s }: { s: Strings }) {
       {step > 0 ? (
         <nav className="sticky bottom-0 flex items-center justify-between gap-[12px] border-t border-line-soft bg-background px-[18px] pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {step < 3 ? (
-            <button type="button" onClick={finish} className="min-h-11 text-sm font-semibold underline underline-offset-4">
+            <Button variant="link" onClick={finish}>
               {t.skip}
-            </button>
+            </Button>
           ) : (
             <span />
           )}

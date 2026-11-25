@@ -288,3 +288,26 @@ Each entry records the decision, why, and what else was considered. Superseded e
     - a dark-green toast
   - `web/src/components/ui.tsx` no longer follows stead's.
 - **Checked:** screenshots at iPhone size in WebKit, and the layout tests (sheet fit, tap targets, field heights, no sideways scroll) on every screen.
+
+## S-024: The menu, asking where, search as a sheet, the month wheel, and a tidy-up
+
+- **Date:** 2026-11-26
+- **Decisions (owner):**
+  - **Shelfwise's floating menu** on Hjem and a place's page: Tilføj · **Scan** (the big centre button) · Søg. Icon-only, labelled for VoiceOver. Hjem loses its search field and Scan/Tilføj buttons; a place's page keeps its own search.
+  - **Asking where:** Scan and Tilføj ask "Hvor lægger du ting?" (one tap per place, the last used marked), and the place is preset in what follows, still changeable in the form. On a place's page, and with only one place, it does not ask.
+  - **Søg** is a sheet over the page: the field takes focus, results come from every place, and a result opens the thing on top.
+  - **The month wheel:** where the browser has a native month field (the iPhone, Android), it is used; elsewhere the two dropdowns stay.
+  - **Grey group headings:** section titles are Shelfwise's small grey mono labels, with the count at the right. Things show their count at the right (Shelfwise's value column).
+- **Added with them (proposed in the plan):**
+  - **Undo:** deleting a thing happens at once, with "Fortryd" in the message for 6 seconds. The confirm question for a thing is gone (it said "cannot be undone"); places still ask.
+  - **Barcode memory gaps fixed:** the size the user settled on is remembered (not the lookup's); a later group or size change updates the memory; a merge keeps the barcode; "Du har allerede" no longer acts silently in another place (it offers "Læg n i ‹the chosen place›", and names the other place on its buttons); a form filled from memory says so.
+- **Tidy-up (from a code audit):**
+  - shared `useToast`, `RowBody`/`LinkRow`/`ButtonRow`, `Notice`, `FieldLabel`, `Wordmark`, the `link`/`action` button looks
+  - `components/sheet.tsx` and `Stepper.tsx` split from `ui.tsx`
+  - `addThing`, `countsByPlace`/`totalCount`, `labelOf`, `isUrgent`
+  - fewer prop-to-state effects
+  - tokens for the field radius, shadows and the overlay
+  - focus moves to a page's title when it opens
+  - lists keep their list role in Safari
+  - dead code removed: the install-progress messages, the unused update check, unused helpers and strings
+- **Not checked:** on the owner's iPhone (the wheel, the menu above the home bar, scanning a known barcode). The "Du har allerede" choices are not covered by e2e, since a test cannot hand the scanner a barcode; the model under them is unit-tested.

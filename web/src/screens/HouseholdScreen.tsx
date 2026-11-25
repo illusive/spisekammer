@@ -6,7 +6,9 @@
 
 import { Copy, LogOut, Share2, UserPlus } from 'lucide-react';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Button, Card, MessageState, Page, SubPageHeader, Toast, fieldClass, useConfirm, type ToastMessage } from '../components/ui';
+import { useConfirm } from '../components/sheet';
+import { useToast } from '../components/toast';
+import { Button, Card, MessageState, Notice, Page, SubPageHeader, fieldClass } from '../components/ui';
 import type { Strings } from '../i18n/strings';
 import { usePageTitle } from '../lib/usePageTitle';
 import { hrefs } from '../router';
@@ -18,7 +20,7 @@ export default function HouseholdScreen({ code, s }: { code: string | null; s: S
   usePageTitle(t.title, s.appTitle);
   const [account, setAccount] = useState<Account | null>(null);
   const [error, setError] = useState<AccountError | null>(null);
-  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const { show, toast } = useToast();
 
   const reload = useCallback(async () => {
     try {
@@ -63,7 +65,7 @@ export default function HouseholdScreen({ code, s }: { code: string | null; s: S
   else
     body = (
       <>
-        <InHousehold household={account.household} userId={account.userId} s={s} onChange={reload} onMessage={(text) => setToast({ id: Date.now(), text })} />
+        <InHousehold household={account.household} userId={account.userId} s={s} onChange={reload} onMessage={show} />
         <SignedInAs email={account.email} s={s} onSignedOut={reload} />
       </>
     );
@@ -72,16 +74,16 @@ export default function HouseholdScreen({ code, s }: { code: string | null; s: S
     <Page>
       <SubPageHeader backLabel={s.back} backTo={hrefs.settings} title={account?.status === 'signedIn' && account.household ? account.household.name : t.title} />
       <div className="flex flex-col gap-4">{body}</div>
-      <Toast message={toast} onHide={() => setToast(null)} />
+      {toast}
     </Page>
   );
 }
 
 function ErrorNote({ error, s }: { error: AccountError; s: Strings }) {
   return (
-    <p role="alert" className="rounded-card bg-warning-bg px-[16px] py-3 text-warning-text">
+    <Notice tone="warning" role="alert">
       {s.household.errors[error]}
-    </p>
+    </Notice>
   );
 }
 
@@ -124,9 +126,9 @@ function SignIn({ s, onSignedIn }: { s: Strings; onSignedIn: () => void }) {
   };
 
   return (
-    <Card className="flex flex-col gap-4">
+    <Card as="section" className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold">{t.signInTitle}</h2>
-      {!online ? <p className="rounded-card bg-warning-bg px-[16px] py-3 text-warning-text">{t.offline}</p> : null}
+      {!online ? <Notice tone="warning">{t.offline}</Notice> : null}
       {sentTo === null ? (
         <form onSubmit={(e) => void send(e)} className="flex flex-col gap-3">
           <p>{t.signInIntro}</p>
@@ -167,7 +169,7 @@ function SignIn({ s, onSignedIn }: { s: Strings; onSignedIn: () => void }) {
               setSentTo(null);
               setToken('');
             }}
-            className="min-h-11 self-start text-sm font-semibold underline underline-offset-4"
+            className="min-h-11 min-w-11 self-start px-[6px] text-sm font-semibold underline underline-offset-4"
           >
             {t.otherEmail}
           </button>
@@ -184,7 +186,7 @@ function NoHousehold({ code, s, onDone }: { code: string | null; s: Strings; onD
   const create = useAction();
   const join = useAction();
   const joinCard = (
-    <Card key="join" className="flex flex-col gap-3">
+    <Card as="section" key="join" className="flex flex-col gap-3">
       <h2 className="text-lg font-semibold">{t.joinTitle}</h2>
       <form
         onSubmit={(e) => {
@@ -206,7 +208,7 @@ function NoHousehold({ code, s, onDone }: { code: string | null; s: Strings; onD
     </Card>
   );
   const createCard = (
-    <Card key="create" className="flex flex-col gap-3">
+    <Card as="section" key="create" className="flex flex-col gap-3">
       <h2 className="text-lg font-semibold">{t.createTitle}</h2>
       <form
         onSubmit={(e) => {
@@ -256,7 +258,7 @@ function InHousehold({ household, userId, s, onChange, onMessage }: { household:
 
   return (
     <>
-      <Card className="flex flex-col gap-3">
+      <Card as="section" className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">{t.members}</h2>
         <ul className="flex flex-col gap-1">
           {household.members.map((m) => (
@@ -296,7 +298,7 @@ function InHousehold({ household, userId, s, onChange, onMessage }: { household:
         {invite.error ? <ErrorNote error={invite.error} s={s} /> : null}
       </Card>
       <p className="px-1 text-sm text-muted">{t.syncLater}</p>
-      <Card className="flex flex-col gap-3">
+      <Card as="section" className="flex flex-col gap-3">
         {leave.error ? <ErrorNote error={leave.error} s={s} /> : null}
         <Button
           variant="danger"
@@ -324,10 +326,10 @@ function SignedInAs({ email, s, onSignedOut }: { email: string; s: Strings; onSi
   return (
     <div className="flex flex-wrap items-center justify-between gap-[12px] px-1">
       <p className="text-sm text-muted">{s.household.signedInAs(email)}</p>
-      <button type="button" onClick={() => void signOut().then(onSignedOut)} className="inline-flex min-h-11 items-center gap-[6px] text-sm font-semibold underline underline-offset-4">
+      <Button variant="action" onClick={() => void signOut().then(onSignedOut)}>
         <LogOut aria-hidden="true" className="size-4" />
         {s.household.signOut}
-      </button>
+      </Button>
     </div>
   );
 }

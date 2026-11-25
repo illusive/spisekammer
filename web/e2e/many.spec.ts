@@ -1,7 +1,7 @@
 // Many places and things (S-019): everything stays reachable by scrolling, nothing spills sideways.
 
 import { expect, test } from '@playwright/test';
-import { manyItems, manyPlaces, openApp, seed, topSheet } from './fixtures.ts';
+import { manyItems, manyPlaces, openAdd, openApp, seed, topSheet } from './fixtures.ts';
 import { expectNoSideScroll, expectPageScrolls, expectSheetFits } from './layout.ts';
 
 test.beforeEach(async ({ page }) => {
@@ -19,9 +19,18 @@ test('Hjem lists all twelve places, and the page scrolls to the last', async ({ 
 });
 
 test('with twelve places, the add form place field is a dropdown with all of them', async ({ page }) => {
-  await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
+  // "Hvor lægger du ting?" scrolls to its last place …
+  await page.getByRole('navigation', { name: 'Handlinger' }).getByRole('button', { name: 'Tilføj' }).click();
+  await expectSheetFits(page);
+  const last = topSheet(page).getByRole('button', { name: /^Sted 12/ });
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toBeInViewport();
+  await page.keyboard.press('Escape');
+  // … and the form's place is a dropdown with all twelve.
+  await openAdd(page, 'Sted 12');
   await expectSheetFits(page);
   const place = topSheet(page).getByLabel('Sted', { exact: true });
+  await expect(place).toHaveValue('p11');
   await expect(place.locator('option')).toHaveCount(12);
   await expect(place.locator('option').last()).toHaveText('Sted 12');
 });

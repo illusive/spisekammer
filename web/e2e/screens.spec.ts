@@ -2,7 +2,7 @@
 // fields are one height.
 
 import { expect, test } from '@playwright/test';
-import { openApp, seed, topSheet } from './fixtures.ts';
+import { openAdd, openApp, seed, topSheet } from './fixtures.ts';
 import { expectEqualFields, expectNoSideScroll, expectTapTargets } from './layout.ts';
 
 const SCREENS: [string, string, RegExp][] = [
@@ -28,8 +28,7 @@ test('the add form and a thing\'s sheet: fields one height, targets big enough',
   await openApp(page);
   await seed(page, { items: [{ name: 'Letmælk', placeId: 'pantry', category: 'dairy', date: '2030-05-31', datePrecision: 'month' }] });
 
-  await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
-  await topSheet(page).locator('label', { hasText: 'Skabe' }).click();
+  await openAdd(page, 'Skabe');
   await page.locator('#add-name').fill('Pasta');
   await topSheet(page).getByRole('button', { name: 'Skift' }).click();
   await expectEqualFields(topSheet(page));
@@ -40,4 +39,16 @@ test('the add form and a thing\'s sheet: fields one height, targets big enough',
   await page.getByRole('button', { name: /^Letmælk/ }).click();
   await expectEqualFields(topSheet(page));
   await expectTapTargets(topSheet(page));
+});
+
+test('the menu is on Hjem and a place, not on Steder or Indstillinger', async ({ page }) => {
+  await openApp(page);
+  const nav = page.getByRole('navigation', { name: 'Handlinger' });
+  await expect(nav.getByRole('button')).toHaveText(['', '', '']);
+  await expect(nav.getByRole('button', { name: 'Scan' })).toBeVisible();
+  for (const [hash, shown] of [['#/place/pantry', true], ['#/places', false], ['#/settings', false]] as const) {
+    await page.goto(`./${hash}`);
+    await expect(page.locator('h1').first()).toBeVisible();
+    await expect(nav).toHaveCount(shown ? 1 : 0);
+  }
 });

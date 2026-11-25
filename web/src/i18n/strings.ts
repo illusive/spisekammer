@@ -1,7 +1,10 @@
 // Every user-facing text, in Danish (first) and English. A test keeps the two in step.
 
 import type { Category } from '../inventory/categories';
+import type { AccountError } from '../account/account';
 import type { SizeUnit } from '../inventory/size';
+import type { PlaceKind, PresetId } from '../places';
+import type { LangPref } from '../settings/preferences';
 
 export type Lang = 'da' | 'en';
 
@@ -20,9 +23,9 @@ export interface Strings {
   noMatches: (q: string) => string;
   places: string;
   editPlaces: { label: string; text: string };
-  placeKinds: Record<'fridge' | 'freezer' | 'pantry', string>;
-  placeKindHints: Record<'fridge' | 'freezer' | 'pantry', string>;
-  placePresets: Record<'freezer' | 'pantry' | 'larder' | 'fridge', string>;
+  placeKinds: Record<PlaceKind, string>;
+  placeKindHints: Record<PlaceKind, string>;
+  placePresets: Record<PresetId, string>;
   placeGone: string;
   placesScreen: {
     title: string;
@@ -31,7 +34,6 @@ export interface Strings {
     intro: string;
     add: string;
     addTitle: string;
-    editTitle: string;
     name: string;
     namePlaceholder: string;
     kind: string;
@@ -95,21 +97,24 @@ export interface Strings {
   alreadyHave: (where: string) => string;
   inPlace: (n: number, place: string) => string;
   addMore: (n: number) => string;
+  addMoreIn: (n: number, place: string) => string;
+  addInto: (n: number, place: string) => string;
   takeOne: string;
+  takeOneFrom: (place: string) => string;
+  knownBarcode: string;
   takenOut: (name: string, left: number) => string;
   stocked: (name: string, total: number) => string;
   // A thing's sheet
   moveTo: string;
   moved: (name: string, place: string) => string;
   remove: string;
-  removeConfirm: (name: string) => string;
   cannotUndo: string;
   removeOnClose: string;
   removed: (name: string) => string;
   settings: {
     title: string;
     language: string;
-    languages: Record<'system' | 'da' | 'en', string>;
+    languages: Record<LangPref, string>;
     version: (date: string, commit: string) => string;
   };
   keep: {
@@ -123,7 +128,6 @@ export interface Strings {
     dateLabel: string;
     month: string;
     year: string;
-    noDate: string;
     removeDate: string;
   };
   household: {
@@ -171,10 +175,9 @@ export interface Strings {
     left: string;
     signOut: string;
     signedInAs: (email: string) => string;
-    errors: { offline: string; invalidCode: string; rateLimit: string; inviteNotFound: string; alreadyInHousehold: string; invalidEmail: string; linkElsewhere: string; unknown: string };
+    errors: Record<AccountError, string>;
   };
   onboarding: {
-    brand: string;
     title: string;
     intro: string;
     start: string;
@@ -198,6 +201,10 @@ export interface Strings {
     doneShare: string;
     finish: string;
   };
+  nav: { label: string; search: string };
+  where: { title: string; last: string };
+  searchTitle: string;
+  undo: string;
   offlineReady: string;
   updateReady: string;
   updateAction: string;
@@ -231,7 +238,6 @@ export const strings: Record<Lang, Strings> = {
       intro: 'Lav et sted for hver fryser, hvert skab eller rum, du vil holde styr på. I køleskabet giver du datoer som en dag, andre steder som en måned.',
       add: 'Tilføj sted',
       addTitle: 'Nyt sted',
-      editTitle: 'Ret sted',
       name: 'Navn',
       namePlaceholder: 'Fx Fryser i garagen',
       kind: 'Slags',
@@ -260,7 +266,7 @@ export const strings: Record<Lang, Strings> = {
     },
     itemCount: (n) => (n === 1 ? '1 ting' : `${n} ting`),
     emptyPlace: 'Intet her endnu.',
-    emptyHome: 'Scan en vare, eller tilføj den med navn. Så kan du altid se, hvad du har.',
+    emptyHome: 'Tryk på Scan eller + nederst for at lægge noget ind. Så kan du altid se, hvad du har.',
     categories: {
       meat: 'Kød og fjerkræ',
       fish: 'Fisk',
@@ -306,14 +312,17 @@ export const strings: Record<Lang, Strings> = {
     lookupOffline: 'Varen kan ikke slås op uden internet. Skriv navnet – så husker appen stregkoden næste gang.',
     alreadyHave: (where) => `Du har allerede: ${where}.`,
     inPlace: (n, place) => `${n} i ${place.toLowerCase()}`,
-    addMore: (n) => (n === 1 ? 'Læg 1 til' : `Læg ${n} til`),
+    addMore: (n) => `Læg ${n} til`,
+    addMoreIn: (n, place) => `Læg ${n} til i ${place.toLowerCase()}`,
+    addInto: (n, place) => `Læg ${n} i ${place.toLowerCase()}`,
     takeOne: 'Tag 1 ud',
+    takeOneFrom: (place) => `Tag 1 ud af ${place.toLowerCase()}`,
+    knownBarcode: 'Kendt fra en tidligere scanning.',
     takenOut: (name, left) => (left === 0 ? `${name} er taget ud` : `${name}: 1 taget ud, ${left} tilbage`),
     stocked: (name, total) => `${name}: nu ${total}`,
     moveTo: 'Flyt til',
     moved: (name, place) => `${name} er flyttet til ${place.toLowerCase()}`,
     remove: 'Slet',
-    removeConfirm: (name) => `Vil du slette ${name}?`,
     cannotUndo: 'Det kan ikke fortrydes.',
     removeOnClose: 'Den slettes, når du lukker. Tryk + for at beholde den.',
     removed: (name) => `${name} er slettet`,
@@ -334,7 +343,6 @@ export const strings: Record<Lang, Strings> = {
       dateLabel: 'Dato',
       month: 'Måned',
       year: 'År',
-      noDate: 'Ingen dato',
       removeDate: 'Fjern dato',
     },
     household: {
@@ -394,7 +402,6 @@ export const strings: Record<Lang, Strings> = {
       },
     },
     onboarding: {
-      brand: 'Spisekammer',
       title: 'Hold styr på det, du har',
       intro: 'Se, hvad der er i fryseren og skabene, og hvornår det skal bruges. Alt ligger på telefonen og virker uden internet.',
       start: 'Kom i gang',
@@ -422,6 +429,10 @@ export const strings: Record<Lang, Strings> = {
       doneShare: 'Bagefter kommer du til Del, hvor du kan logge ind og invitere.',
       finish: 'Start',
     },
+    nav: { label: 'Handlinger', search: 'Søg' },
+    where: { title: 'Hvor lægger du ting?', last: 'Sidst brugt' },
+    searchTitle: 'Søg',
+    undo: 'Fortryd',
     offlineReady: 'Appen virker nu også uden internet.',
     updateReady: 'Der er en ny version af appen.',
     updateAction: 'Opdater',
@@ -453,7 +464,6 @@ export const strings: Record<Lang, Strings> = {
       intro: 'Make a place for each freezer, cupboard or room you want to keep track of. In the fridge, dates are a day; elsewhere, a month.',
       add: 'Add place',
       addTitle: 'New place',
-      editTitle: 'Edit place',
       name: 'Name',
       namePlaceholder: 'E.g. Garage freezer',
       kind: 'Kind',
@@ -482,7 +492,7 @@ export const strings: Record<Lang, Strings> = {
     },
     itemCount: (n) => (n === 1 ? '1 item' : `${n} items`),
     emptyPlace: 'Nothing here yet.',
-    emptyHome: 'Scan a product, or add it by name. Then you can always see what you have.',
+    emptyHome: 'Tap Scan or + at the bottom to add something. Then you can always see what you have.',
     categories: {
       meat: 'Meat and poultry',
       fish: 'Fish',
@@ -529,13 +539,16 @@ export const strings: Record<Lang, Strings> = {
     alreadyHave: (where) => `You already have: ${where}.`,
     inPlace: (n, place) => `${n} in the ${place.toLowerCase()}`,
     addMore: (n) => `Add ${n}`,
+    addMoreIn: (n, place) => `Add ${n} to ${place.toLowerCase()}`,
+    addInto: (n, place) => `Put ${n} in ${place.toLowerCase()}`,
     takeOne: 'Take 1 out',
+    takeOneFrom: (place) => `Take 1 out of ${place.toLowerCase()}`,
+    knownBarcode: 'Known from an earlier scan.',
     takenOut: (name, left) => (left === 0 ? `${name} taken out` : `${name}: took 1 out, ${left} left`),
     stocked: (name, total) => `${name}: now ${total}`,
     moveTo: 'Move to',
     moved: (name, place) => `${name} moved to ${place.toLowerCase()}`,
     remove: 'Delete',
-    removeConfirm: (name) => `Delete ${name}?`,
     cannotUndo: 'This cannot be undone.',
     removeOnClose: 'It is deleted when you close. Tap + to keep it.',
     removed: (name) => `${name} deleted`,
@@ -556,7 +569,6 @@ export const strings: Record<Lang, Strings> = {
       dateLabel: 'Date',
       month: 'Month',
       year: 'Year',
-      noDate: 'No date',
       removeDate: 'Remove date',
     },
     household: {
@@ -616,7 +628,6 @@ export const strings: Record<Lang, Strings> = {
       },
     },
     onboarding: {
-      brand: 'Spisekammer',
       title: 'Keep track of what you have',
       intro: 'See what is in the freezer and the cupboards, and when to use it. Everything stays on your phone and works without internet.',
       start: 'Get started',
@@ -644,6 +655,10 @@ export const strings: Record<Lang, Strings> = {
       doneShare: 'Next you go to Share, where you can sign in and invite.',
       finish: 'Start',
     },
+    nav: { label: 'Actions', search: 'Search' },
+    where: { title: 'Where are things going?', last: 'Last used' },
+    searchTitle: 'Search',
+    undo: 'Undo',
     offlineReady: 'The app now works without internet too.',
     updateReady: 'There is a new version of the app.',
     updateAction: 'Update',
