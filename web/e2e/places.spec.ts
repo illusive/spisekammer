@@ -51,6 +51,10 @@ test('moving a place by keyboard makes the order your own: kept after a reload, 
   await handle.focus();
   await page.keyboard.press('Space');
   await expect(live).toContainText('Æbleskab er taget op. Plads 5 af 5.');
+  // The keyboard sensor listens once the drag has started (the handle is pressed); a moment more,
+  // as a person would take.
+  await expect(handle).toHaveAttribute('aria-pressed', 'true');
+  await page.waitForTimeout(150);
   for (let position = 4; position >= 1; position--) {
     await page.keyboard.press('ArrowUp');
     await expect(live).toContainText(`Æbleskab er over plads ${position} af 5.`);

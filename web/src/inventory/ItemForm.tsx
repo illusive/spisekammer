@@ -113,8 +113,13 @@ export function ItemForm(props: {
         value={placeId}
         onChange={(id) => {
           onPlace(id);
-          // Typing things in: after picking the place, straight on with the name.
-          if (autofocusName) nameRef.current?.focus({ preventScroll: true });
+          // Typing things in: after picking the place, straight on with the name. At once, so an
+          // iPhone keeps the keyboard (focus only opens it within the tap), and once more after the
+          // tap, as some browsers move focus to the tapped button afterwards.
+          if (autofocusName) {
+            nameRef.current?.focus({ preventScroll: true });
+            window.setTimeout(() => nameRef.current?.focus({ preventScroll: true }), 0);
+          }
         }}
         places={ordered}
         s={s}
