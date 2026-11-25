@@ -1,24 +1,23 @@
-// Hjem (S-005): search across everything on top, Scan and Tilføj, "Brug snart" (what to use soon,
-// across all places, S-010), then the places with how much is in each.
+// Hjem (S-005, S-023): the wordmark and the gear, "Hvad har du?" with a search across everything,
+// Scan and Tilføj, "Brug snart" (things whose date is near or past, across all places), then the
+// places with how much is in each, and "Rediger" to Steder (S-020).
 
 import { ChevronRight, Pencil, Plus, ScanBarcode } from 'lucide-react';
 import { useState } from 'react';
-import { Button, MessageState, Page, SearchField, SettingsButton, Toast, type ToastMessage } from '../components/ui';
+import { Bubble, Button, MessageState, Page, SearchField, Section, SettingsButton, Toast, pageTitleClass, rowListClass, type ToastMessage } from '../components/ui';
 import { today } from '../i18n/format';
 import type { Lang, Strings } from '../i18n/strings';
 import { AddSheet } from '../inventory/AddSheet';
 import { ItemRow } from '../inventory/ItemRow';
 import { ItemSheet } from '../inventory/ItemSheet';
-import { PlacePicker } from '../inventory/PlacePicker';
+import { useOrderedPlaces } from '../inventory/orderedPlaces';
+import { PLACE_ICON } from '../inventory/placeIcons';
 import { searchItems } from '../inventory/search';
 import { useInventory, useInventoryLoaded } from '../inventory/store';
 import { itemKeeping } from '../keeping/itemKeeping';
 import { usePageTitle } from '../lib/usePageTitle';
-import { PLACE_ICON } from '../inventory/placeIcons';
-import { useOrderedPlaces } from '../inventory/orderedPlaces';
 import { placeName } from '../places';
 import { hrefs } from '../router';
-
 
 export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
   const { items, places: allPlaces } = useInventory();
@@ -26,8 +25,7 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
   const places = useOrderedPlaces(s);
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
-  const [picking, setPicking] = useState<'scan' | 'add' | null>(null); // Scan or Tilføj, asking where
-  const [addingTo, setAddingTo] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   usePageTitle('', s.appTitle);
 
@@ -36,30 +34,31 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
   const day = today();
   // Use soon: past, today or within the place's window (rules.urgency), the earliest first.
   const soon = items
-    .map((item) => ({ item, info: itemKeeping(item, day, allPlaces) }))
-    .filter(({ info }) => info.urgency === 'past' || info.urgency === 'today' || info.urgency === 'soon')
-    .sort((a, b) => (a.info.keeping.by ?? '').localeCompare(b.info.keeping.by ?? ''))
-    .map(({ item }) => item);
+    .filter((item) => ['past', 'today', 'soon'].includes(itemKeeping(item, day, allPlaces).urgency))
+    .sort((a, b) => (a.date ?? '').localeCompare(b.date ?? ''));
   const countIn = (placeId: string) => items.filter((i) => i.placeId === placeId).reduce((sum, i) => sum + i.count, 0);
 
   return (
     <Page>
-      <header className="mt-2 mb-4 flex items-center justify-between gap-[12px] px-1">
-        <p className="text-xl font-bold tracking-tight">{s.appTitle}</p>
+      <header className="mb-5 flex items-center justify-between gap-[12px]">
+        <p className="text-xl font-bold tracking-[-0.02em]">
+          {s.appTitle.toLowerCase()}
+          <span aria-hidden="true" className="text-sage">
+            .
+          </span>
+        </p>
         <SettingsButton label={s.settingsOpen} />
       </header>
 
-      <section className="rounded-hero bg-accent px-[20px] pt-5 pb-6 text-on-accent">
-        <h1 className="mb-5 text-[min(2.25rem,10vw)] leading-tight font-bold tracking-tight">{s.homeTitle}</h1>
-        <SearchField id="home-search" value={query} onChange={setQuery} placeholder={s.searchPlaceholder} label={s.searchLabel} clearLabel={s.clearSearch} />
-      </section>
+      <h1 className={`${pageTitleClass} mb-4 text-[2.25rem]`}>{s.homeTitle}</h1>
+      <SearchField id="home-search" value={query} onChange={setQuery} placeholder={s.searchPlaceholder} label={s.searchLabel} clearLabel={s.clearSearch} />
 
       {searching ? (
         <section aria-label={s.searchLabel} className="mt-4">
           {results.length === 0 ? (
             <MessageState title={s.noMatches(query.trim())} />
           ) : (
-            <ul className="flex flex-col divide-y divide-border rounded-card bg-surface">
+            <ul className={rowListClass}>
               {results.map((item) => (
                 <ItemRow key={item.id} item={item} prefix={placeName(allPlaces, item.placeId, s)} today={day} onOpen={setOpenId} lang={lang} s={s} />
               ))}
@@ -68,77 +67,64 @@ export function HomeScreen({ lang, s }: { lang: Lang; s: Strings }) {
         </section>
       ) : (
         <>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <Button variant="primary" aria-haspopup="dialog" onClick={() => setPicking('scan')}>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <Button variant="primary" onClick={() => (location.hash = hrefs.scan())}>
               <ScanBarcode aria-hidden="true" className="size-5" />
               {s.scan}
             </Button>
-            <Button variant="ink" aria-haspopup="dialog" onClick={() => setPicking('add')}>
+            <Button variant="secondary" aria-haspopup="dialog" onClick={() => setAdding(true)}>
               <Plus aria-hidden="true" className="size-5" />
               {s.add}
             </Button>
           </div>
-          {loaded && items.length === 0 ? <p className="mt-4 px-1 text-center text-muted">{s.emptyHome}</p> : null}
+          {loaded && items.length === 0 ? <p className="mt-4 text-center text-muted">{s.emptyHome}</p> : null}
 
           {soon.length > 0 ? (
-            <section aria-labelledby="use-soon" className="mt-6 flex flex-col gap-3">
-              <h2 id="use-soon" className="px-1 text-lg font-bold">
-                {s.keep.useSoon}
-              </h2>
-              <ul className="flex flex-col divide-y divide-border rounded-card bg-surface">
+            <Section
+              id="use-soon"
+              title={s.keep.useSoon}
+              aside={<span className="font-mono text-xs text-muted">{soon.length}</span>}
+              className="mt-7"
+            >
+              <ul className={rowListClass}>
                 {soon.map((item) => (
                   <ItemRow key={item.id} item={item} prefix={placeName(allPlaces, item.placeId, s)} today={day} onOpen={setOpenId} lang={lang} s={s} />
                 ))}
               </ul>
-            </section>
+            </Section>
           ) : null}
 
-          <section aria-labelledby="places" className="mt-6 flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-[12px] px-1">
-              <h2 id="places" className="text-lg font-bold">
-                {s.places}
-              </h2>
-              {/* Steder from Hjem (S-020): add, rename, order or delete places. */}
-              <a href={hrefs.places} aria-label={s.editPlaces.label} className="-mr-2 inline-flex min-h-11 items-center gap-[6px] rounded-full px-[10px] text-sm font-bold">
+          <Section
+            id="places"
+            title={s.places}
+            className="mt-7"
+            aside={
+              // Steder from Hjem (S-020): add, rename, order or delete places.
+              <a href={hrefs.places} aria-label={s.editPlaces.label} className="-mr-2 inline-flex min-h-11 items-center gap-[6px] px-[8px] text-sm font-semibold">
                 <Pencil aria-hidden="true" className="size-4" />
                 {s.editPlaces.text}
               </a>
-            </div>
-            <ul className={`grid grid-cols-1 gap-3 ${places.length > 2 ? 'min-[420px]:grid-cols-3' : 'min-[420px]:grid-cols-2'}`}>
-              {places.map((place) => {
-                const Icon = PLACE_ICON[place.kind];
-                return (
-                  <li key={place.id}>
-                    <a href={hrefs.place(place.id)} className="flex min-h-16 items-center gap-[14px] rounded-card bg-surface px-[18px] py-4 min-[420px]:flex-col min-[420px]:items-start">
-                      <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-soft text-on-soft">
-                        <Icon className="size-6" strokeWidth={1.75} />
-                      </span>
-                      <span className="flex-1">
-                        <span className="block font-bold">{placeName(allPlaces, place.id, s)}</span>
-                        <span className="block text-sm text-muted">{loaded ? s.itemCount(countIn(place.id)) : s.loading}</span>
-                      </span>
-                      <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted min-[420px]:hidden" />
-                    </a>
-                  </li>
-                );
-              })}
+            }
+          >
+            <ul className={rowListClass}>
+              {places.map((place) => (
+                <li key={place.id}>
+                  <a href={hrefs.place(place.id)} className="flex min-h-16 items-center gap-[12px] py-3">
+                    <Bubble Icon={PLACE_ICON[place.kind]} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold break-words">{placeName(allPlaces, place.id, s)}</span>
+                      <span className="block font-mono text-xs text-muted">{loaded ? s.itemCount(countIn(place.id)) : s.loading}</span>
+                    </span>
+                    <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted" />
+                  </a>
+                </li>
+              ))}
             </ul>
-          </section>
+          </Section>
         </>
       )}
       <ItemSheet openId={openId} onClose={() => setOpenId(null)} onMessage={(text) => setToast({ id: Date.now(), text })} lang={lang} s={s} />
-      <PlacePicker
-        open={picking !== null}
-        onPick={(placeId) => {
-          const what = picking;
-          setPicking(null);
-          if (what === 'scan') location.hash = hrefs.scan(placeId);
-          else setAddingTo(placeId);
-        }}
-        onClose={() => setPicking(null)}
-        s={s}
-      />
-      {addingTo ? <AddSheet open placeId={addingTo} onClose={() => setAddingTo(null)} lang={lang} s={s} /> : null}
+      {adding ? <AddSheet open placeId={null} onClose={() => setAdding(false)} lang={lang} s={s} /> : null}
       <Toast message={toast} onHide={() => setToast(null)} />
     </Page>
   );

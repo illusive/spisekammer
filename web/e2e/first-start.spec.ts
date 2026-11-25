@@ -9,8 +9,11 @@ test('sets up the places, then shows them on Hjem, alphabetically', async ({ pag
   await page.getByRole('button', { name: 'Kom i gang' }).click();
 
   await expect(page.getByRole('heading', { name: 'Hvor har du ting?' })).toBeVisible();
-  await page.getByRole('checkbox', { name: /Viktualiekammer/ }).uncheck({ force: true });
-  await page.getByRole('checkbox', { name: /Køleskab/ }).check({ force: true });
+  // Tapping a row turns its place on or off.
+  await page.locator('label', { hasText: 'Viktualiekammer' }).click();
+  await expect(page.getByRole('checkbox', { name: /Viktualiekammer/ })).not.toBeChecked();
+  await page.locator('label', { hasText: 'Køleskab' }).click();
+  await expect(page.getByRole('checkbox', { name: /Køleskab/ })).toBeChecked();
   await page.getByPlaceholder('Fx Fryser i garagen').fill('Garagefryser');
   await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: /Garagefryser/ })).toBeChecked();

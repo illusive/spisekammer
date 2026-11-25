@@ -5,7 +5,7 @@
 - **Stack:** a PWA; React with Vite and Tailwind; our own service worker (`web/src/sw.ts`, cache prefix `spisekammer-`), which precaches the app so it starts without a network.
 - **Routes:** hash routes (`web/src/router.ts`), with relative paths, so the app runs from any static host.
 - **Text:** `web/src/i18n/strings.ts` in Danish and English; formatting in `web/src/i18n/format.ts`.
-- **Preferences** (language, theme): `web/src/settings/preferences.ts`, in localStorage (`spisekammer.preferences.v1`).
+- **Preferences** (language, the order of places, the last place used): `web/src/settings/preferences.ts`, in localStorage (`spisekammer.preferences.v1`).
 - **Primitives:** `web/src/components/ui.tsx`, from stead.
 
 ```
@@ -23,7 +23,7 @@ web/src/
 
 ## Tests (S-019)
 
-- **Unit tests** (Vitest, `npm test`): the pure parts, such as the model, the keeping rules, the matching, the order of places and the keyboard fit. The database rules run on real Postgres with PGlite (`src/account/schema.test.ts`).
+- **Unit tests** (Vitest, `npm test`): the pure parts, such as the model, the dates, the food-group guess, names and sizes, the order of places and the keyboard fit. The database rules run on real Postgres with PGlite (`src/account/schema.test.ts`).
 - **End-to-end tests** (Playwright, `npm run test:e2e`, `web/e2e/`): against the production build, in `webkit-iphone` (iPhone 13) and `chromium-android` (Pixel 7). `e2e/fixtures.ts` starts the app (skipping the first start) and writes places and things into IndexedDB. `e2e/layout.ts` holds the layout checks: the sheet inside the screen with its header and scrolling content, the page scrolling after a sheet, no sideways scroll, tap targets of 44 by 24 px, and fields of 48 px.
 - **CI** runs both before every deploy (`.github/workflows/pages.yml`), and keeps the Playwright report when a test fails.
 
@@ -43,16 +43,12 @@ web/src/
   - A deletion marker (`deleted_at`) wins over an edit.
 - **Secrets:** the app holds only the project URL and the anon key. Migrations live in `supabase/`. The database password stays in a local, git-ignored `.env`.
 
-## 3. Keeping times (slice 3, S-009, S-010)
+## 3. Dates and kinds of food (S-021, S-022)
 
-- **Food types:** 409, built from USDA FoodKeeper (CC0, v128) by `web/scripts/build-food-types.ts` from `content/`. Each has Danish and English names, a category, the keys that find it in a name, and times per place and basis (in the place, after opening, after thawing). Times are ranges, each traced to its FoodKeeper ID. Code: `web/src/keeping/` (`foodTypes.ts` matching, `rules.ts` the rules, `itemKeeping.ts` per thing, `KeepInfo.tsx` what is shown).
-- **The estimate:** `keepBy = start + the low end of the range`, where the start is the day added, opened, frozen or thawed.
-- **The Danish check (S-014):** the build shortens freezer times to Forbrugerrådet Tænk's where theirs is shorter (`content/danish-freezer.json`); such a type carries `danish.freezer`.
-- **The package date:**
-  - "Sidste anvendelsesdato" is never extended. After opening, the earlier of the two applies.
-  - "Bedst før" is shown. Past it: "brug dine sanser".
-- **Places:**
-  - Into the freezer: a new clock, unless the package has a "bedst før" date, which then applies (S-014).
-  - Out of it, into the fridge (only when the fridge is turned on, S-007): the after-thawing time, or the fridge time from today. Taken out without a place, it is simply gone.
-  - A place the type is not recommended for: a warning.
-- **Wording:** always guidance, never "safe".
+- **No estimates.** A thing has `date` only when the user gives one, with `datePrecision`: `day` in a fridge place, `month` elsewhere (stored as the month's last day). Code: `web/src/keeping/` (`rules.ts`: urgency and month ends; `itemKeeping.ts`; `DateInfo.tsx`: the list line, the sheet's line with the overdue warning, and the date field).
+- **"Brug snart":** past, today, or within 3 days (Køl), 14 (Tørvarer) or 30 (Frost).
+- **Kinds of food:** 12 groups in `web/src/inventory/categories.ts`, guessed from whole words in the name (or the end or start of a compound) and from Open Food Facts' category tags; no match is Andet. Tested in `categories.test.ts`.
+- **Names:** `web/src/lib/name.ts` gives a capital first letter and takes brands out of scanned names (not for drinks).
+- **One line per thing:** `addItem` adds to the count of the same name, size and place.
+- **Wording:** never "safe".
+

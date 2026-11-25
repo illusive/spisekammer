@@ -29,7 +29,7 @@ Each entry records the decision, why, and what else was considered. Superseded e
 - **Sign-in:** a 6-digit email code, not a magic link, which would open Safari instead of the installed app.
 - **Alternatives:** phone-only with a backup file (no sharing); Firebase (offline sync built in, but harder to move); self-hosted PocketBase (we run the server).
 
-## S-003: The package date first; estimates from ground rules
+## S-003: The package date first; estimates from ground rules (replaced by S-021)
 
 - **Date:** 2026-11-07
 - **Decision (owner):** when the package's date is entered, it is shown first.
@@ -86,7 +86,7 @@ Each entry records the decision, why, and what else was considered. Superseded e
 - **Decision (owner):** the place for dry and long-keeping things is called **Forråd** (English: "Pantry"). "Skab" (cupboard) did not fit a viktualiekammer, a basement shelf or a larder.
 - **Alternatives:** Skab; Spisekammer (the app's own name); Viktualier (old-fashioned).
 
-## S-009: Food types from FoodKeeper, found from the name
+## S-009: Food types from FoodKeeper, found from the name (replaced by S-021)
 
 - **Date:** 2026-11-07
 - **Decision:** the app knows 409 food types, each one USDA FoodKeeper record (CC0, v128, 2018): 101 produce types with stead's checked Danish names, and 308 others chosen for Danish homes with drafted Danish names (`docs/FOOD_TYPES_REVIEW.md`).
@@ -99,7 +99,7 @@ Each entry records the decision, why, and what else was considered. Superseded e
 - **Finding the type from a name:** each word of a key must start a word of the name, in any order ("hakket oksekød" matches "Oksekød, hakket"). A key starting with "=" must be the whole word ("=is"). Small words are skipped. The longest key wins ("kyllingefond" beats "kylling"). The user sees the type and can change it.
 - **Alternatives:** asking the user for the type every time (slow); using Open Food Facts categories only (patchy for Danish products); an AI guess (not traceable, and not offline).
 
-## S-010: The keeping rules in the app
+## S-010: The keeping rules in the app (replaced by S-021)
 
 - **Date:** 2026-11-07
 - **Decision:** the rules in `web/src/keeping/rules.ts`, as planned in S-003:
@@ -157,7 +157,7 @@ Each entry records the decision, why, and what else was considered. Superseded e
   - **Server:** `supabase/migrations/20261108120000_places.sql` starts new households with the same three places and drops `households.fridge`.
 - **Alternatives:** a fourth kind for a cool cellar (FoodKeeper has no times for it; Tørvarer is the cautious choice); keeping the fridge switch as well (two ways to the same thing); deleting a place with its things, or only empty places.
 
-## S-014: A Danish check on freezer times, and "bedst før" in the freezer
+## S-014: A Danish check on freezer times, and "bedst før" in the freezer (replaced by S-021)
 
 - **Date:** 2026-11-08
 - **Context:** the owner asked for a Danish source for the times. Fødevarestyrelsen gives the rules (what the dates mean, "efter åbning", a fridge at most 5 °C) but no table of times. Forbrugerrådet Tænk has a short Danish list for the freezer (citing Arla and Fødevarestyrelsen among others) and says freezer times are about quality: food kept longer does not make you ill, as bacteria stop growing at −10 °C.
@@ -167,7 +167,7 @@ Each entry records the decision, why, and what else was considered. Superseded e
   - **"Bedst før" in the freezer:** a "bedst før / mindst holdbar til" date on a package now counts in the freezer too, since food bought frozen carries its own. A "sidste anvendelsesdato" is still replaced by the freezer time, since freezing stops that clock.
 - **Alternatives:** asking Tænk first (keeping three longer times meanwhile); FoodKeeper only; always the package date in the freezer (a use-by date would show as past while the food is still frozen).
 
-## S-015: Adding to one place, a calmer form, and a first start
+## S-015: Adding to one place, a calmer form, and a first start (the place step replaced by S-022)
 
 - **Date:** 2026-11-08
 - **Decisions (owner's notes):**
@@ -205,7 +205,7 @@ Each entry records the decision, why, and what else was considered. Superseded e
 - **Fix:** no flex and no `open:` selector. The sheet is a plain box with no height limit of its own (`max-h-none`, which also overrides the browser's default for dialogs). Its scrolling part has the limit (`.sheet-body`: 85 % of the screen, in `dvh` with a `vh` fallback). The keyboard fit (S-017) now limits that part.
 - **Checked:** WebKit and Chromium at iPhone width, at full and at short height. The sheet ends exactly at the screen's bottom edge, and its content scrolls. **Not checked:** on the owner's iPhone.
 
-## S-019: Scrolling, the order of places, and end-to-end tests
+## S-019: Scrolling, the order of places, and end-to-end tests (the order selector replaced by S-022)
 
 - **Date:** 2026-11-14
 - **Problem (owner, on an iPhone):** scrolling broke once more things or places were added, and the layout kept misbehaving.
@@ -243,3 +243,48 @@ Each entry records the decision, why, and what else was considered. Superseded e
   - The offline test polls until the service worker controls the page.
   - The seeding helper opens the database at the app's version with its stores, so it cannot race the app into an empty database.
   - The whole suite ran three times over in both browsers with no failures.
+
+## S-021: No guessed dates; a month outside the fridge; a short list of kinds of food
+
+- **Date:** 2026-11-25
+- **Why (owner, after using the app):** the guessed dates, the explanation page and the extra lines were too much, and a wrong food type was annoying. "The app doesn't calculate. It shouldn't."
+- **Decisions (owner):**
+  - **No estimates.** A thing has a date only when the user gives one. The FoodKeeper food types, the Tænk freezer check, the build script and its content files are removed (they stay in git history).
+  - **One date, no kind.** The choice between "Bedst før" and "Sidste anvendelsesdato" is gone; the date is just "Dato".
+  - **A month outside the fridge.** In a fridge place (kind Køl) the date is a day; elsewhere a month and a year, picked from two dropdowns (the same in every browser). A month is stored as its last day, with `datePrecision: 'month'`, and shown as "mar. 2027". A thing keeps how its date was given when it moves.
+  - **"Brug snart" keeps its windows** (Køl 3 days, Tørvarer 14, Frost 30), counted to a month's last day.
+  - **The top of a thing's sheet:** only the date, and once it has passed one warning: "Datoen er overskredet. Se, lugt og smag, før du bruger det. Kød, fisk og rester: smid det ud." Needs the owner's check of the wording.
+  - **"Åbnet i dag" is gone**, and with it the opened and thawed clocks.
+  - **"Sådan regner appen" is gone** (the page, its route and its links).
+  - **Kinds of food ("Slags"):** 12 groups people recognise: Kød og fjerkræ, Fisk, Mejeri og æg, Frugt og grønt, Brød og kager, Pasta, ris og mel, Dåser og glas, Krydderier og saucer, Snacks og slik, Drikkevarer, Rester og færdigretter, Andet. They are guessed from whole words (the end of a Danish compound counts: rug|brød), or from Open Food Facts' categories. When nothing matches, the group is Andet, never a wrong guess. A test checks about 110 everyday names.
+- **Old data:** read as before, with no database change. The package date becomes the date (as a day); `typeId`, `openedOn`, `thawedOn`, `packageKind` and `brand` are dropped; Fjerkræ becomes Kød og fjerkræ, and Frost is guessed again from the name.
+
+## S-022: Easier adding, and Steder without a selector
+
+- **Date:** 2026-11-25
+- **Decisions (owner):**
+  - **The place is a field at the top of the add form**, no longer a first step. It starts on the place you are on, else the last one used (`lastPlaceId`), else the first. Scanning has the same field in its sheet.
+  - **Place choices:** buttons side by side up to three places, a dropdown above three. Used when adding, in "Flyt til" and when a place with things is deleted.
+  - **Size:** a number with a unit dropdown in one field (stk., pk., ds., g, kg, ml, cl, dl, l). A unit typed with the number ("500 g", "2 dåser") moves to the dropdown. The size can now be changed in a thing's sheet.
+  - **Names:** a capital first letter, and ALL CAPS as ordinary text, for typed and scanned names.
+  - **Brands:** taken out of scanned names (the brands Open Food Facts lists, as whole words), so "Heinz Baked Beans" is "Baked Beans". Drinks keep their brand. If only the brand is left, Open Food Facts' generic name is used. Brands are no longer kept on things.
+  - **The same thing is one line:** the same name (ignoring case and accents), size and place adds to the count; the earlier date stays.
+  - **Steder:** "Slet sted" is now "Slet". There is no order selector: alphabetical until the user first drags a place or uses "Flyt op" / "Flyt ned", which makes the order their own; "Sortér alfabetisk" (shown only then) goes back.
+
+## S-023: The look of Shelfwise, light only
+
+- **Date:** 2026-11-25
+- **Decision (owner):** Spisekammer takes the look of the owner's Shelfwise (github.com/illusive/shelfwise: `src/ui/tokens.css`, `docs/ui-guidelines.md`), with its own screens and no tab bar.
+  - **Colours:** paper `#f5f4ee`, deep green `#173d32`, lime `#d8ed94`, muted `#68746c`, soft lines, and Shelfwise's warning and danger pairs.
+  - **Light only (owner):** the dark tokens and the "Udseende" setting are gone.
+  - **Type:** Manrope 500/600/700 and IBM Plex Mono for small counts, self-hosted (`@fontsource/manrope` and `@fontsource/ibm-plex-mono` 5.3.0, OFL-1.1). Fixed weights, because Playwright's WebKit drew the variable file at one thin weight. Nunito is gone.
+  - **Parts:**
+    - flat rows with dividers and a round icon bubble
+    - deep-green primary buttons, with a lime arrow on the form's main one
+    - outlined round icon buttons
+    - a segmented choice
+    - white fields with a line
+    - paper sheets with a handle
+    - a dark-green toast
+  - `web/src/components/ui.tsx` no longer follows stead's.
+- **Checked:** screenshots at iPhone size in WebKit, and the layout tests (sheet fit, tap targets, field heights, no sideways scroll) on every screen.

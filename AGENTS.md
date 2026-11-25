@@ -15,13 +15,13 @@ Read `PROJECT.md` first, then `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs
   - Changes apply locally at once and sync later (`docs/ARCHITECTURE.md` §2).
   - The barcode lookup and sync are the only network uses so far. Any new one needs a decision.
 - **Stack:** React, Vite, Tailwind, `vite-plugin-pwa` with our own service worker, and TypeScript in strict mode.
-  - Primitives are in `web/src/components/ui.tsx`, copied from stead and kept in step by hand.
+  - Primitives are in `web/src/components/ui.tsx`, in the look of the owner's Shelfwise (S-023); they no longer follow stead's.
   - Before adding a dependency, check browser support (Safari on iPhone first), maintenance, licence, size, and whether what we have covers it already.
 - **Shared code:** use the existing primitives (`Sheet`, `SheetHeader`, `useConfirm`, `Stepper`, `Choice`, `SearchField`, `Toast`) and the tokens in `web/src/index.css`.
 - **Text:** every visible text has a key in Danish and English (`web/src/i18n/strings.ts`). A test keeps them in step.
 - **Food safety:**
-  - Keeping times come only from traced sources (FoodKeeper CC0, Danish rules).
-  - They are always an estimate. A use-by date is never extended.
+  - The app shows only the dates the user gives; it never estimates one (S-021).
+  - A passed date says so, with "look, smell and taste" and "throw out meat, fish and leftovers".
   - Never write "safe".
 - **Secrets:** the database password and the service key never go in the repo or the app. The app uses only the project URL and the public anon key. Local secrets go in git-ignored `.env` files.
 
@@ -29,7 +29,7 @@ Read `PROJECT.md` first, then `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, `docs
 
 - **Every change:** `npm run typecheck`, `npm test` and `npm run build` in `web/`.
 - **Anything on screen:** also `npm run test:e2e` (WebKit and Chromium at phone size, S-019). Add a check to `web/e2e/` for what the change should hold, and fix the app when a check fails, never the check.
-- **For the interface:** look at it at phone width, light and dark, with large text.
+- **For the interface:** look at it at phone width and with large text (the look is light only, S-023).
 - **For sync:** two clients.
 - **On the iPhone:** the camera, offline use, the installed app, and sign-in.
 

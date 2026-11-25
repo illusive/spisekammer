@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatSize, parseSize, sizeText } from './size';
+import { formatSize, parseSize, sizeFromInput, sizeText, splitUnit } from './size';
 
 describe('Forråd sizes', () => {
   it('reads a number and a unit, written the ways packs write them', () => {
@@ -16,6 +16,13 @@ describe('Forråd sizes', () => {
     expect(parseSize('1.000 g')).toEqual({ amount: 1000, unit: 'g' });
   });
 
+  it('reads packs and cans (S-022)', () => {
+    expect(parseSize('1 pakke')).toEqual({ amount: 1, unit: 'pk' });
+    expect(parseSize('2 pk.')).toEqual({ amount: 2, unit: 'pk' });
+    expect(parseSize('2 dåser')).toEqual({ amount: 2, unit: 'dåse' });
+    expect(parseSize('3 cans')).toEqual({ amount: 3, unit: 'dåse' });
+  });
+
   it('reads a multipack as a count and the size of each one', () => {
     expect(parseSize('6 x 1,5 l')).toEqual({ amount: 1.5, unit: 'l', count: 6 });
     expect(parseSize('4×125 g')).toEqual({ amount: 125, unit: 'g', count: 4 });
@@ -24,7 +31,7 @@ describe('Forråd sizes', () => {
   });
 
   it('leaves text it cannot read alone', () => {
-    for (const text of ['stor', 'familiepakke', '1 pakke', '0 g', '400', 'g', '2,5 x 3 l', '']) expect(parseSize(text)).toBeNull();
+    for (const text of ['stor', 'familiepakke', '0 g', '400', 'g', '2,5 x 3 l', '']) expect(parseSize(text)).toBeNull();
   });
 
   it('shows and writes a size', () => {
@@ -33,5 +40,25 @@ describe('Forråd sizes', () => {
     expect(formatSize({ amount: 0.33, unit: 'l' }, 'en', label)).toBe('0.33 l');
     expect(formatSize({ amount: 10, unit: 'stk' }, 'da', label)).toBe('10 stk.');
     expect(parseSize(sizeText({ amount: 0.33, unit: 'l' }))).toEqual({ amount: 0.33, unit: 'l' });
+  });
+});
+
+describe('the size field (S-022)', () => {
+  it('moves a typed unit to the dropdown', () => {
+    expect(splitUnit('500 g')).toEqual({ amountText: '500', unit: 'g' });
+    expect(splitUnit('1,5 l')).toEqual({ amountText: '1,5', unit: 'l' });
+    expect(splitUnit('2 dåser')).toEqual({ amountText: '2', unit: 'dåse' });
+    expect(splitUnit('500')).toBeNull();
+    expect(splitUnit('500 k')).toBeNull();
+    expect(splitUnit('6 x 1,5 l')).toBeNull();
+  });
+  it('reads what the field holds', () => {
+    expect(sizeFromInput('500', 'g')).toEqual({ amount: 500, unit: 'g' });
+    expect(sizeFromInput('1,5', 'l')).toEqual({ amount: 1.5, unit: 'l' });
+    expect(sizeFromInput('6 x 1,5 l', 'g')).toEqual({ amount: 1.5, unit: 'l', count: 6 });
+    expect(sizeFromInput('6 x 1,5', 'l')).toEqual({ amount: 1.5, unit: 'l', count: 6 });
+    expect(sizeFromInput('stor', 'g')).toEqual({ sizeText: 'stor' });
+    expect(sizeFromInput('  ', 'g')).toBeNull();
+    expect(sizeFromInput('0', 'g')).toBeNull();
   });
 });

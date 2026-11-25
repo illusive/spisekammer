@@ -1,5 +1,6 @@
-// Places (S-013, S-019): alphabetical by default; an own order by dragging, by keyboard, or with
-// "Flyt op" / "Flyt ned"; add, rename, change kind, delete with a move.
+// Places (S-013, S-019, S-022): alphabetical until the user moves one, by dragging, by keyboard or
+// with "Flyt op" / "Flyt ned", with no selector; "Sortér alfabetisk" goes back. Add, rename, change
+// kind, delete with a move. A place choice is buttons up to three places, a dropdown above.
 
 import { expect, test, type Page } from '@playwright/test';
 import { openApp, seed, topSheet } from './fixtures.ts';
@@ -16,25 +17,30 @@ const PLACES = [
 const homePlaces = (page: Page) => page.getByRole('region', { name: 'Steder' }).getByRole('list').getByRole('link');
 const stederRows = (page: Page) => page.locator('main ul').first().locator('li');
 
-test('places are alphabetical by default everywhere', async ({ page }) => {
+test('places are alphabetical by default everywhere, and more than three are a dropdown', async ({ page }) => {
   await openApp(page);
   await seed(page, { places: PLACES, items: [{ name: 'Mælk', placeId: 'pantry' }] });
   const expected = [/^Fryser/, /^Garagen/, /^Skabe/, /^Viktualiekammer/, /^Æbleskab/];
   await expect(homePlaces(page)).toHaveText(expected);
 
   await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
-  await expect(topSheet(page).locator('li button')).toHaveText(expected);
+  await expect(topSheet(page).getByLabel('Sted', { exact: true }).locator('option')).toHaveText(['Fryser', 'Garagen', 'Skabe', 'Viktualiekammer', 'Æbleskab']);
   await page.keyboard.press('Escape');
 
   await page.getByRole('link', { name: /^Skabe/ }).click();
   await page.getByRole('button', { name: /^Mælk/ }).click();
-  await expect(topSheet(page).locator('fieldset', { hasText: 'Flyt til' }).locator('label')).toHaveText(['Fryser', 'Garagen', 'Skabe', 'Viktualiekammer', 'Æbleskab']);
+  const moveTo = topSheet(page).getByLabel('Flyt til');
+  await expect(moveTo.locator('option')).toHaveText(['Fryser', 'Garagen', 'Skabe', 'Viktualiekammer', 'Æbleskab']);
+  await expect(moveTo).toHaveValue('pantry');
+  await moveTo.selectOption({ label: 'Garagen' });
+  await expect(page.getByText('Mælk er flyttet til garagen')).toBeVisible();
 });
 
-test('an own order, set by keyboard, kept after a reload and used on Hjem', async ({ page }) => {
+test('moving a place by keyboard makes the order your own: kept after a reload, used on Hjem, undone by "Sortér alfabetisk"', async ({ page }) => {
   await openApp(page, { hash: '#/places' });
   await seed(page, { places: PLACES });
-  await page.locator('label', { hasText: 'Egen' }).click();
+  await expect(page.getByText('Egen', { exact: true })).toHaveCount(0); // no selector (S-022)
+  await expect(page.getByRole('button', { name: 'Sortér alfabetisk' })).toHaveCount(0);
   await expect(stederRows(page)).toHaveText([/Fryser/, /Garagen/, /Skabe/, /Viktualiekammer/, /Æbleskab/]);
 
   // Æbleskab to the top: pick it up, four steps up, drop. Like a keyboard user, each step waits for
@@ -57,10 +63,15 @@ test('an own order, set by keyboard, kept after a reload and used on Hjem', asyn
   await expect(stederRows(page)).toHaveText([/Æbleskab/, /Fryser/, /Garagen/, /Skabe/, /Viktualiekammer/]);
   await page.goto('./#/');
   await expect(homePlaces(page)).toHaveText([/^Æbleskab/, /^Fryser/, /^Garagen/, /^Skabe/, /^Viktualiekammer/]);
+
+  await page.goto('./#/places');
+  await page.getByRole('button', { name: 'Sortér alfabetisk' }).click();
+  await expect(stederRows(page)).toHaveText([/Fryser/, /Garagen/, /Skabe/, /Viktualiekammer/, /Æbleskab/]);
+  await expect(page.getByRole('button', { name: 'Sortér alfabetisk' })).toHaveCount(0);
 });
 
 test('an own order by dragging the handle', async ({ page, browserName }) => {
-  await openApp(page, { hash: '#/places', placeOrder: 'own' });
+  await openApp(page, { hash: '#/places' });
   await seed(page, { places: PLACES });
   const from = await page.getByRole('button', { name: 'Flyt Æbleskab' }).boundingBox();
   const to = await page.getByRole('button', { name: 'Flyt Fryser' }).boundingBox();
@@ -93,25 +104,26 @@ test('an own order by dragging the handle', async ({ page, browserName }) => {
     await page.mouse.up();
   }
   await expect(stederRows(page).first()).toHaveText(/Æbleskab/);
+  await expect(page.getByRole('button', { name: 'Sortér alfabetisk' })).toBeVisible();
 });
 
-test('"Flyt op" and "Flyt ned" in a place\'s sheet', async ({ page }) => {
-  await openApp(page, { hash: '#/places', placeOrder: 'own' });
+test('"Flyt op" and "Flyt ned" in a place\'s sheet, from the alphabetical order', async ({ page }) => {
+  await openApp(page, { hash: '#/places' });
   await seed(page, { places: PLACES });
   await stederRows(page).filter({ hasText: 'Skabe' }).getByRole('button', { name: /^Skabe/ }).click();
   await expectSheetFits(page);
-  // Skabe is second: one step up makes it first, and "Flyt op" then greys out.
+  // Skabe is third (Fryser, Garagen, Skabe …): two steps up make it first, and "Flyt op" greys out.
+  await topSheet(page).getByRole('button', { name: 'Flyt op' }).click();
   await topSheet(page).getByRole('button', { name: 'Flyt op' }).click();
   await expect(topSheet(page).getByRole('button', { name: 'Flyt op' })).toBeDisabled();
   await topSheet(page).getByRole('button', { name: 'Flyt ned' }).click();
-  await topSheet(page).getByRole('button', { name: 'Flyt ned' }).click();
   await page.keyboard.press('Escape');
-  await expect(stederRows(page)).toHaveText([/Fryser/, /Viktualiekammer/, /Skabe/, /Garagen/, /Æbleskab/]);
+  await expect(stederRows(page)).toHaveText([/Fryser/, /Skabe/, /Garagen/, /Viktualiekammer/, /Æbleskab/]);
 });
 
 test('add, rename and change the kind of a place, and delete one with a move', async ({ page }) => {
   await openApp(page, { hash: '#/places' });
-  await seed(page, { places: PLACES, items: [{ name: 'Is', placeId: 'g', category: 'frozen' }] });
+  await seed(page, { places: PLACES, items: [{ name: 'Is', placeId: 'g', category: 'snacks' }] });
 
   await page.getByRole('button', { name: 'Tilføj sted' }).click();
   await topSheet(page).getByPlaceholder('Fx Fryser i garagen').fill('Kælder');
@@ -126,9 +138,9 @@ test('add, rename and change the kind of a place, and delete one with a move', a
   await expect(stederRows(page).filter({ hasText: 'Kælderen' })).toContainText('Køl');
 
   await stederRows(page).getByRole('button', { name: /^Garagen/ }).click();
-  await topSheet(page).getByRole('button', { name: 'Slet sted' }).click();
+  await topSheet(page).getByRole('button', { name: 'Slet', exact: true }).click();
   await expect(topSheet(page).getByText('Der er 1 ting i. Hvor skal den hen?')).toBeVisible();
-  await topSheet(page).locator('fieldset', { hasText: 'Flyt til' }).locator('label', { hasText: 'Fryser' }).click();
+  await topSheet(page).getByLabel('Flyt til').selectOption({ label: 'Fryser' });
   await topSheet(page).getByRole('button', { name: 'Flyt og slet' }).click();
   await expect(stederRows(page).filter({ hasText: 'Garagen' })).toHaveCount(0);
   await expect(stederRows(page).filter({ hasText: /^Fryser/ })).toContainText('1 ting');

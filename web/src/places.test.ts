@@ -49,7 +49,7 @@ describe('places the household makes', () => {
   });
 
   it('deletes a place only after moving its things, and never the last one', () => {
-    let s = addItem(start, { name: 'Ærter', category: 'frozen', placeId: 'freezer', count: 1 }, 'a', '2026-11-07', 1).state;
+    let s = addItem(start, { name: 'Ærter', category: 'produce', placeId: 'freezer', count: 1 }, 'a', '2026-11-07', 1).state;
     expect(removePlace(s, 'freezer', null, '2026-11-08', 2).state).toBe(s); // things, nowhere to go
     expect(removePlace(s, 'freezer', 'freezer', '2026-11-08', 2).state).toBe(s);
     const c = removePlace(s, 'freezer', 'pantry', '2026-11-08', 2);

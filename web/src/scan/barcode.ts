@@ -3,17 +3,18 @@
 // unknown, the user types the name and the barcode is remembered on this phone with it. The answer is
 // kept on this phone only, never in the shared catalogue (S-004). Parsing is pure, for tests.
 
+import { categoryFromTags } from '../inventory/categories';
 import { parseSize, SIZE_UNITS, sizeText } from '../inventory/size';
+import { stripBrand, tidyName } from '../lib/name';
 
 export const OFF_ATTRIBUTION = 'Open Food Facts';
 export const OFF_URL = 'https://world.openfoodfacts.org';
 const TIMEOUT_MS = 6000;
 
-// What Open Food Facts says about a barcode: name, brand, size, and its category tags (for a
-// first guess of the category, inventory/categories.ts).
+// What Open Food Facts says about a barcode: the name (without the brand, S-022), size, and its
+// category tags (for a first guess of the group, inventory/categories.ts).
 export interface FoundProduct {
   name: string;
-  brand?: string;
   quantity?: string;
   tags: string[];
 }
@@ -49,24 +50,28 @@ export function acceptCode(code: string, last: { code: string; at: number } | nu
   return !last || code !== last.code || now - last.at >= SAME_CODE_PAUSE_MS;
 }
 
-// Name, brand and size of a product in an Open Food Facts answer; the category is guessed from the
-// name in the form, like a typed name.
+// Name and size of a product in an Open Food Facts answer. The brand is taken out of the name, so
+// the same food from two brands is one line, except for drinks, where the brand is what tells them
+// apart (S-022). If only the brand is left, the generic name ("Baked beans in tomato sauce") is used.
+// The name gets a capital first letter.
 export function parseProduct(json: unknown): FoundProduct | null {
   if (typeof json !== 'object' || json === null) return null;
   const { status, product } = json as { status?: unknown; product?: Record<string, unknown> };
   if (status !== 1 || typeof product !== 'object' || product === null) return null;
   const text = (x: unknown, max = 200) => (typeof x === 'string' && x.trim() ? x.trim().slice(0, max) : undefined);
-  const name = text(product.product_name_da) ?? text(product.product_name);
-  if (!name) return null;
-  const brand = text(product.brands)?.split(',')[0]?.trim();
+  const given = text(product.product_name_da) ?? text(product.product_name);
+  const generic = text(product.generic_name_da) ?? text(product.generic_name);
+  if (!given && !generic) return null;
+  const tags = Array.isArray(product.categories_tags) ? product.categories_tags.filter((t): t is string => typeof t === 'string').slice(0, 40) : [];
+  const brands = text(product.brands);
+  const name = categoryFromTags(tags) === 'drinks' ? (given ?? generic)! : ((given && stripBrand(given, brands)) ?? (generic && stripBrand(generic, brands)) ?? (given ?? generic)!);
   // The size text ("6 x 1,5 l") keeps a multipack; Open Food Facts' own number and unit are the
   // fallback when the text cannot be read (D-050).
-  const given = text(product.quantity, 40);
+  const written = text(product.quantity, 40);
   const n = typeof product.product_quantity === 'string' ? Number(product.product_quantity) : product.product_quantity;
   const unit = SIZE_UNITS.find((u) => u === text(product.product_quantity_unit)?.toLowerCase());
-  const quantity = given && parseSize(given) ? given : typeof n === 'number' && n > 0 && unit ? sizeText({ amount: n, unit }) : given;
-  const tags = Array.isArray(product.categories_tags) ? product.categories_tags.filter((t): t is string => typeof t === 'string').slice(0, 40) : [];
-  return { name, ...(brand ? { brand } : {}), ...(quantity ? { quantity } : {}), tags };
+  const quantity = written && parseSize(written) ? written : typeof n === 'number' && n > 0 && unit ? sizeText({ amount: n, unit }) : written;
+  return { name: tidyName(name), ...(quantity ? { quantity } : {}), tags };
 }
 
 export type Lookup = { kind: 'found'; product: FoundProduct } | { kind: 'notFound' } | { kind: 'offline' };
@@ -77,7 +82,7 @@ export async function lookUp(code: string): Promise<Lookup> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const url = `${OFF_URL}/api/v2/product/${code}.json?fields=product_name,product_name_da,brands,quantity,product_quantity,product_quantity_unit,categories_tags`;
+    const url = `${OFF_URL}/api/v2/product/${code}.json?fields=product_name,product_name_da,generic_name,generic_name_da,brands,quantity,product_quantity,product_quantity_unit,categories_tags`;
     const response = await fetch(url, { signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store' });
     if (response.status === 404) return { kind: 'notFound' };
     if (!response.ok) return { kind: 'offline' };

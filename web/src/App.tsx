@@ -1,4 +1,4 @@
-// The app shell: language and appearance, the inventory loaded once, the update banner, the first-run
+// The app shell: the language, the inventory loaded once, the update banner, the first-run
 // steps on a new phone (S-015), and the screen for the route.
 
 import { lazy, Suspense, useEffect } from 'react';
@@ -12,16 +12,14 @@ import { HomeScreen } from './screens/HomeScreen';
 import { OnboardingScreen } from './screens/OnboardingScreen';
 import { PlaceScreen } from './screens/PlaceScreen';
 import { PlacesScreen } from './screens/PlacesScreen';
-import { RulesScreen } from './screens/RulesScreen';
 import { ScanScreen } from './screens/ScanScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
-import { setPreference, useApplyTheme, useLang, usePreferences } from './settings/preferences';
+import { setPreference, useLang, usePreferences } from './settings/preferences';
 
 // With the Supabase library, only when someone opens Del (S-011).
 const HouseholdScreen = lazy(() => import('./screens/HouseholdScreen'));
 
 export function App() {
-  useApplyTheme();
   const lang = useLang();
   const s = strings[lang];
   const route = useRoute();
@@ -50,8 +48,6 @@ export function App() {
         <SettingsScreen lang={lang} s={s} />
       ) : route.name === 'places' ? (
         <PlacesScreen s={s} />
-      ) : route.name === 'rules' ? (
-        <RulesScreen s={s} />
       ) : route.name === 'household' ? (
         <Suspense fallback={null}>
           <HouseholdScreen code={route.code} s={s} />

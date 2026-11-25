@@ -1,5 +1,5 @@
 // Search across everything you have (S-006): a thing matches when every word of the query is found
-// in its name, brand, category or place, anywhere in a word (Danish joins words: "mælk" finds
+// in its name, group or place, anywhere in a word (Danish joins words: "mælk" finds
 // "Letmælk"), case and accents ignored. Name matches come first. Pure.
 
 import { fold } from '../lib/fold';
@@ -13,7 +13,7 @@ export function searchItems(items: Item[], query: string, labelsOf: (item: Item)
   const scored: { item: Item; inName: boolean }[] = [];
   for (const item of items) {
     const nameWords = words(item.name);
-    const all = [...nameWords, ...words(item.brand ?? ''), ...labelsOf(item).flatMap(words)];
+    const all = [...nameWords, ...labelsOf(item).flatMap(words)];
     if (!q.every((w) => all.some((x) => x.includes(w)))) continue;
     scored.push({ item, inName: q.every((w) => nameWords.some((x) => x.includes(w))) });
   }

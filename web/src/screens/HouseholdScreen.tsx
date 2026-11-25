@@ -79,7 +79,7 @@ export default function HouseholdScreen({ code, s }: { code: string | null; s: S
 
 function ErrorNote({ error, s }: { error: AccountError; s: Strings }) {
   return (
-    <p role="alert" className="rounded-2xl bg-note-bg px-[16px] py-3 text-note-text">
+    <p role="alert" className="rounded-card bg-warning-bg px-[16px] py-3 text-warning-text">
       {s.household.errors[error]}
     </p>
   );
@@ -125,13 +125,13 @@ function SignIn({ s, onSignedIn }: { s: Strings; onSignedIn: () => void }) {
 
   return (
     <Card className="flex flex-col gap-4">
-      <h2 className="text-lg font-bold">{t.signInTitle}</h2>
-      {!online ? <p className="rounded-2xl bg-note-bg px-[16px] py-3 text-note-text">{t.offline}</p> : null}
+      <h2 className="text-lg font-semibold">{t.signInTitle}</h2>
+      {!online ? <p className="rounded-card bg-warning-bg px-[16px] py-3 text-warning-text">{t.offline}</p> : null}
       {sentTo === null ? (
         <form onSubmit={(e) => void send(e)} className="flex flex-col gap-3">
           <p>{t.signInIntro}</p>
           <label className="flex flex-col gap-1">
-            <span className="font-bold">{t.email}</span>
+            <span className="font-semibold">{t.email}</span>
             <input type="email" required autoComplete="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.emailPlaceholder} className={fieldClass} />
           </label>
           {error ? <ErrorNote error={error} s={s} /> : null}
@@ -144,7 +144,7 @@ function SignIn({ s, onSignedIn }: { s: Strings; onSignedIn: () => void }) {
         <form onSubmit={(e) => void verify(e)} className="flex flex-col gap-3">
           <p role="status">{t.codeSent(sentTo)}</p>
           <label className="flex flex-col gap-1">
-            <span className="font-bold">{t.code}</span>
+            <span className="font-semibold">{t.code}</span>
             <input
               required
               autoComplete="one-time-code"
@@ -167,7 +167,7 @@ function SignIn({ s, onSignedIn }: { s: Strings; onSignedIn: () => void }) {
               setSentTo(null);
               setToken('');
             }}
-            className="min-h-11 self-start text-sm font-bold underline underline-offset-4"
+            className="min-h-11 self-start text-sm font-semibold underline underline-offset-4"
           >
             {t.otherEmail}
           </button>
@@ -185,7 +185,7 @@ function NoHousehold({ code, s, onDone }: { code: string | null; s: Strings; onD
   const join = useAction();
   const joinCard = (
     <Card key="join" className="flex flex-col gap-3">
-      <h2 className="text-lg font-bold">{t.joinTitle}</h2>
+      <h2 className="text-lg font-semibold">{t.joinTitle}</h2>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -195,7 +195,7 @@ function NoHousehold({ code, s, onDone }: { code: string | null; s: Strings; onD
       >
         <p>{t.joinIntro}</p>
         <label className="flex flex-col gap-1">
-          <span className="font-bold">{t.inviteCode}</span>
+          <span className="font-semibold">{t.inviteCode}</span>
           <input required autoCapitalize="characters" autoComplete="off" maxLength={12} value={invite} onChange={(e) => setInvite(e.target.value.toUpperCase())} className={`${fieldClass} text-center text-2xl tracking-[0.3em]`} />
         </label>
         {join.error ? <ErrorNote error={join.error} s={s} /> : null}
@@ -207,7 +207,7 @@ function NoHousehold({ code, s, onDone }: { code: string | null; s: Strings; onD
   );
   const createCard = (
     <Card key="create" className="flex flex-col gap-3">
-      <h2 className="text-lg font-bold">{t.createTitle}</h2>
+      <h2 className="text-lg font-semibold">{t.createTitle}</h2>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -217,7 +217,7 @@ function NoHousehold({ code, s, onDone }: { code: string | null; s: Strings; onD
       >
         <p>{t.createIntro}</p>
         <label className="flex flex-col gap-1">
-          <span className="font-bold">{t.householdName}</span>
+          <span className="font-semibold">{t.householdName}</span>
           <input required maxLength={60} value={name} onChange={(e) => setName(e.target.value)} className={fieldClass} />
         </label>
         {create.error ? <ErrorNote error={create.error} s={s} /> : null}
@@ -257,7 +257,7 @@ function InHousehold({ household, userId, s, onChange, onMessage }: { household:
   return (
     <>
       <Card className="flex flex-col gap-3">
-        <h2 className="text-lg font-bold">{t.members}</h2>
+        <h2 className="text-lg font-semibold">{t.members}</h2>
         <ul className="flex flex-col gap-1">
           {household.members.map((m) => (
             <li key={m.userId}>
@@ -267,9 +267,9 @@ function InHousehold({ household, userId, s, onChange, onMessage }: { household:
           ))}
         </ul>
         {code ? (
-          <div className="flex flex-col gap-3 rounded-2xl bg-background px-[16px] py-4" role="status">
-            <p className="font-bold">{t.inviteTitle}</p>
-            <p className="text-center text-3xl font-bold tracking-[0.3em]">{code}</p>
+          <div className="flex flex-col gap-3 rounded-card bg-surface-muted px-[16px] py-4" role="status">
+            <p className="font-semibold">{t.inviteTitle}</p>
+            <p className="text-center text-3xl font-semibold tracking-[0.3em]">{code}</p>
             <p className="text-sm">{t.inviteIntro}</p>
             <p className="text-sm text-muted">{t.inviteExpires}</p>
             <div className="grid grid-cols-2 gap-3">
@@ -324,7 +324,7 @@ function SignedInAs({ email, s, onSignedOut }: { email: string; s: Strings; onSi
   return (
     <div className="flex flex-wrap items-center justify-between gap-[12px] px-1">
       <p className="text-sm text-muted">{s.household.signedInAs(email)}</p>
-      <button type="button" onClick={() => void signOut().then(onSignedOut)} className="inline-flex min-h-11 items-center gap-[6px] text-sm font-bold underline underline-offset-4">
+      <button type="button" onClick={() => void signOut().then(onSignedOut)} className="inline-flex min-h-11 items-center gap-[6px] text-sm font-semibold underline underline-offset-4">
         <LogOut aria-hidden="true" className="size-4" />
         {s.household.signOut}
       </button>

@@ -8,9 +8,9 @@ import { expectHeaderStays, expectPageScrolls, expectSheetFits } from './layout.
 
 async function openAddSheet(page: import('@playwright/test').Page, place = 'Skabe') {
   await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
-  await expect(topSheet(page).getByRole('heading', { name: 'Hvor skal tingene hen?' })).toBeVisible();
-  await topSheet(page).getByRole('button', { name: new RegExp(`^${place}`) }).click();
-  await expect(topSheet(page).getByRole('heading', { name: `Tilføj i ${place.toLowerCase()}` })).toBeVisible();
+  await expect(topSheet(page).getByRole('heading', { name: 'Tilføj' })).toBeVisible();
+  await topSheet(page).locator('label', { hasText: place }).click();
+  await expect(topSheet(page).getByRole('radio', { name: place })).toBeChecked();
 }
 
 test('the add sheet fits the screen, keeps its header, and puts the cursor in the name', async ({ page }, testInfo) => {

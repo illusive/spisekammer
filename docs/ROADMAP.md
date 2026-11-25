@@ -31,7 +31,7 @@ Each slice builds, is tested, and works on its own.
    - a "Sådan regner appen" page
 
    **Checked in the preview:** adding with the guessed type and a live date, the package date and its kind, "Brug snart", "Åbnet i dag" and undo, the rules page.
-   **Not yet:** the owner's check of the drafted names and keys (`docs/FOOD_TYPES_REVIEW.md`); a Danish check of the most common times (`docs/OPEN_QUESTIONS.md`); Playwright e2e tests.
+   **Replaced by S-021 (2026-11-25):** the food types and estimates are gone; the app shows only the dates the user gives.
 4. **Accounts and households** (S-011), **built 2026-11-08:**
    - the schema with row-level security and its functions (`supabase/migrations/`), 12 tests on real Postgres (PGlite)
    - sign-in with an email code, create or join a household, invite with a link and a code, leave, sign out
@@ -42,6 +42,8 @@ Each slice builds, is tested, and works on its own.
    **2026-11-08:** the migration is applied (checked: the tables exist and refuse signed-out reads) and the publishable key is in the app.
    **Not yet:** the email template and custom SMTP (`supabase/README.md`); sign-in and invites end to end; the fridge setting moving from the phone to the household (slice 5).
 5. **Sync:** the outbox, pulls, Realtime, count operations, deletion markers; tests with two clients.
+**After use (S-021–S-023, 2026-11-25):** no guessed dates, one "Dato" (a month outside the fridge); 12 kinds of food; "Åbnet i dag" and "Sådan regner appen" gone; the place as a field in the add form (buttons up to three, a dropdown above); a size field with a unit dropdown; capitalised names and no brands from scans (drinks excepted); one line for the same thing; Steder ordered by dragging with no selector; the look of Shelfwise, light only. **Not yet checked on the iPhone:** the month and year dropdowns, the size field with the keyboard, scanning a branded product, and the new look.
+
 **Between slices (S-019, 2026-11-14):** the page-scroll fix after closing a sheet; places alphabetical by default, or in an own order by dragging; Playwright tests in WebKit and Chromium, run in CI before every deploy.
 
 **Between slices (S-014, S-015, 2026-11-08):** Tænk's Danish freezer times where shorter; "bedst før" counts in the freezer; the place is chosen before adding; a sticky sheet header; one field style; search within a place; "Del"; a first start.

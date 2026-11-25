@@ -72,11 +72,12 @@ export async function expectTapTargets(scope: Locator): Promise<void> {
   expect(small, 'tap targets smaller than 44 px high or 24 px wide').toEqual([]);
 }
 
-// Every text, select and date field in the scope is 48 px high.
+// Every text, select and date field in the scope is 48 px high. A field made of parts (the size: a
+// number and a unit, data-field) is measured as one.
 export async function expectEqualFields(scope: Locator): Promise<void> {
   const heights = await scope.evaluate((root) =>
-    [...root.querySelectorAll<HTMLElement>('input[type=text], input:not([type]), input[type=email], input[type=date], input[type=search], select')]
-      .filter((el) => el.getBoundingClientRect().height > 0 && !el.closest('[role=search], .rounded-full'))
+    [...root.querySelectorAll<HTMLElement>('input[type=text], input:not([type]), input[type=email], input[type=date], input[type=search], select, [data-field]')]
+      .filter((el) => el.getBoundingClientRect().height > 0 && !el.closest('[role=search], .rounded-full') && !el.parentElement?.closest('[data-field]'))
       .map((el) => ({ name: el.getAttribute('placeholder') || el.id || el.tagName, h: Math.round(el.getBoundingClientRect().height) })),
   );
   expect(heights.length, 'fields to check').toBeGreaterThan(0);

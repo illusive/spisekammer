@@ -18,12 +18,12 @@ test('Hjem lists all twelve places, and the page scrolls to the last', async ({ 
   await expectNoSideScroll(page);
 });
 
-test('the place picker scrolls to its last place', async ({ page }) => {
+test('with twelve places, the add form place field is a dropdown with all of them', async ({ page }) => {
   await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
   await expectSheetFits(page);
-  const last = topSheet(page).getByRole('button', { name: /^Sted 12/ });
-  await last.scrollIntoViewIfNeeded();
-  await expect(last).toBeInViewport();
+  const place = topSheet(page).getByLabel('Sted', { exact: true });
+  await expect(place.locator('option')).toHaveCount(12);
+  await expect(place.locator('option').last()).toHaveText('Sted 12');
 });
 
 test('a place with forty things scrolls to the last', async ({ page }) => {
@@ -40,8 +40,8 @@ test('"Flyt til" with twelve places stays inside the sheet', async ({ page }) =>
   await expectSheetFits(page);
   const fits = await topSheet(page).evaluate((d) => {
     const sheet = d.getBoundingClientRect();
-    const group = [...d.querySelectorAll('fieldset')].find((f) => f.querySelector('legend')?.textContent === 'Flyt til');
-    const r = group!.getBoundingClientRect();
+    const label = [...d.querySelectorAll('label')].find((l) => l.textContent === 'Flyt til');
+    const r = document.getElementById(label!.htmlFor)!.getBoundingClientRect();
     return r.left >= sheet.left - 1 && r.right <= sheet.right + 1 && d.querySelector('.sheet-body')!.scrollWidth <= d.querySelector('.sheet-body')!.clientWidth + 1;
   });
   expect(fits, '"Flyt til" inside the sheet, no sideways scroll').toBe(true);

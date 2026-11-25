@@ -37,7 +37,9 @@ export interface SeedItem {
   placeId: string;
   category?: string;
   count?: number;
-  typeId?: string;
+  date?: string; // yyyy-mm-dd; a month is its last day
+  datePrecision?: 'day' | 'month';
+  extra?: Record<string, unknown>; // fields as older versions stored them
 }
 
 // Writes places and things straight into the app's IndexedDB, then reloads so the app reads them.
@@ -69,7 +71,8 @@ export async function seed(page: Page, data: { places?: SeedPlace[]; items?: See
         category: item.category ?? 'other',
         placeId: item.placeId,
         count: item.count ?? 1,
-        ...(item.typeId ? { typeId: item.typeId } : {}),
+        ...(item.date ? { date: item.date, datePrecision: item.datePrecision ?? 'day' } : {}),
+        ...(item.extra ?? {}),
         addedOn: '2026-11-01',
         placedOn: '2026-11-01',
         updatedAt: 1,
@@ -96,3 +99,12 @@ export function manyItems(n: number, placeId: string): SeedItem[] {
 
 // The sheet on top (the last open dialog).
 export const topSheet = (page: Page) => page.locator('dialog[open]').last();
+
+// A day counted from today on the device, as yyyy-mm-dd (local time, like the app's today()).
+export async function dayFromToday(page: Page, days: number): Promise<string> {
+  return page.evaluate((n) => {
+    const d = new Date();
+    d.setDate(d.getDate() + n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, days);
+}

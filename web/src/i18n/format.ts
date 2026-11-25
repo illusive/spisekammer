@@ -29,6 +29,12 @@ export function formatDay(day: string, lang: Lang, thisYear = today().slice(0, 4
   return new Date(y, m - 1, d).toLocaleDateString(localeOf(lang), options);
 }
 
+// A month given as its last day (S-021), as "mar. 2027" / "Mar 2027".
+export function formatMonth(day: string, lang: Lang): string {
+  const [y = 1970, m = 1] = day.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString(localeOf(lang), { month: 'short', year: 'numeric' });
+}
+
 // The name of a month, 0 = January.
 export function monthName(index: number, lang: Lang): string {
   return new Intl.DateTimeFormat(localeOf(lang), { month: 'long' }).format(new Date(2000, index, 1));

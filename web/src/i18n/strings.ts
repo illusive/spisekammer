@@ -1,6 +1,7 @@
 // Every user-facing text, in Danish (first) and English. A test keeps the two in step.
 
 import type { Category } from '../inventory/categories';
+import type { SizeUnit } from '../inventory/size';
 
 export type Lang = 'da' | 'en';
 
@@ -23,7 +24,6 @@ export interface Strings {
   placeKindHints: Record<'fridge' | 'freezer' | 'pantry', string>;
   placePresets: Record<'freezer' | 'pantry' | 'larder' | 'fridge', string>;
   placeGone: string;
-  pickPlace: { title: string; hint: string; other: string };
   placesScreen: {
     title: string;
     settingsRow: string;
@@ -45,9 +45,8 @@ export interface Strings {
     moveAndRemove: string;
     removed: (name: string) => string;
     lastPlace: string;
-    order: string;
-    orderOptions: { alphabetical: string; own: string };
     orderHelp: string;
+    sortAlphabetical: string;
     dragHandle: (name: string) => string;
     moveUp: string;
     moveDown: string;
@@ -67,17 +66,16 @@ export interface Strings {
   scan: string;
   add: string;
   addTitle: string;
-  addHere: (place: string) => string;
   name: string;
   namePlaceholder: string;
   nameMissing: string;
-  brand: string;
-  category: string;
   change: string;
   place: string;
   count: string;
   size: string;
   sizePlaceholder: string;
+  unit: string;
+  units: Record<SizeUnit, string>;
   optional: string;
   added: (name: string, place: string) => string;
   addedCount: (n: number) => string;
@@ -112,54 +110,21 @@ export interface Strings {
     title: string;
     language: string;
     languages: Record<'system' | 'da' | 'en', string>;
-    theme: string;
-    themes: Record<'system' | 'light' | 'dark', string>;
     version: (date: string, commit: string) => string;
   };
   keep: {
-    estimate: (date: string) => string;
-    useBy: (date: string) => string;
-    bestBefore: (date: string) => string;
-    range: (from: string, to: string) => string;
-    pastEstimate: string;
-    pastUseBy: string;
-    pastBestBefore: string;
+    date: (date: string) => string;
+    past: string;
     today: string;
     inDays: (n: number) => string;
     daysAgo: (n: number) => string;
-    noType: string;
-    noTime: (place: string) => string;
-    notRecommended: (place: string) => string;
-    indefinitely: string;
-    whenRipe: string;
-    fridgeAfterOpening: string;
-    packageOnly: string;
-    roomHours: (n: number) => string;
-    inDoubt: string;
-    howWeCount: string;
     useSoon: string;
     whatIsIt: string;
-    noTypeOption: (category: string) => string;
-    opened: string;
-    openedOn: (date: string) => string;
-    openedToday: string;
-    notOpened: string;
-    packageDate: string;
-    packageKind: string;
-    packageKinds: { useBy: string; bestBefore: string };
-    packageHelp: string;
+    dateLabel: string;
+    month: string;
+    year: string;
+    noDate: string;
     removeDate: string;
-    unchecked: string;
-  };
-  rules: {
-    title: string;
-    intro: string;
-    sections: { title: string; points: string[] }[];
-    source: string;
-    sourceLink: string;
-    taenkLink: string;
-    danishLink: string;
-    typesCount: (n: number) => string;
   };
   household: {
     title: string;
@@ -259,12 +224,11 @@ export const strings: Record<Lang, Strings> = {
     placeKindHints: { freezer: 'Fx en fryser eller et fryseskab.', fridge: 'Fx et køleskab.', pantry: 'Fx et skab, en kælder eller et viktualiekammer.' },
     placePresets: { freezer: 'Fryser', pantry: 'Skabe', larder: 'Viktualiekammer', fridge: 'Køleskab' },
     placeGone: 'Slettet sted',
-    pickPlace: { title: 'Hvor skal tingene hen?', hint: 'Så kan du lægge flere ting ind efter hinanden.', other: 'Andet sted' },
     placesScreen: {
       title: 'Steder',
       settingsRow: 'Steder',
       settingsHint: 'Frysere, skabe og andre steder, du har ting',
-      intro: 'Lav et sted for hver fryser, hvert skab eller rum, du vil holde styr på. Slagsen afgør, hvor længe tingene holder.',
+      intro: 'Lav et sted for hver fryser, hvert skab eller rum, du vil holde styr på. I køleskabet giver du datoer som en dag, andre steder som en måned.',
       add: 'Tilføj sted',
       addTitle: 'Nyt sted',
       editTitle: 'Ret sted',
@@ -274,16 +238,15 @@ export const strings: Record<Lang, Strings> = {
       save: 'Gem',
       added: (name) => `${name} er tilføjet`,
       saved: (name) => `${name} er gemt`,
-      remove: 'Slet sted',
+      remove: 'Slet',
       removeConfirm: (name) => `Slet ${name}?`,
       hasThings: (n) => (n === 1 ? 'Der er 1 ting i. Hvor skal den hen?' : `Der er ${n} ting i. Hvor skal de hen?`),
       moveTo: 'Flyt til',
       moveAndRemove: 'Flyt og slet',
       removed: (name) => `${name} er slettet`,
       lastPlace: 'Du skal have mindst ét sted.',
-      order: 'Rækkefølge',
-      orderOptions: { alphabetical: 'Alfabetisk', own: 'Egen' },
-      orderHelp: 'Hold på håndtaget, og træk stedet op eller ned.',
+      orderHelp: 'Hold på håndtaget, og træk et sted op eller ned.',
+      sortAlphabetical: 'Sortér alfabetisk',
       dragHandle: (name) => `Flyt ${name}`,
       moveUp: 'Flyt op',
       moveDown: 'Flyt ned',
@@ -299,33 +262,32 @@ export const strings: Record<Lang, Strings> = {
     emptyPlace: 'Intet her endnu.',
     emptyHome: 'Scan en vare, eller tilføj den med navn. Så kan du altid se, hvad du har.',
     categories: {
-      meat: 'Kød',
-      poultry: 'Fjerkræ',
+      meat: 'Kød og fjerkræ',
       fish: 'Fisk',
       dairy: 'Mejeri og æg',
       produce: 'Frugt og grønt',
-      bread: 'Brød',
-      dry: 'Tørvarer',
-      canned: 'Konserves og glas',
-      drinks: 'Drikke',
-      leftovers: 'Rester',
-      frozen: 'Frost',
+      bread: 'Brød og kager',
+      dry: 'Pasta, ris og mel',
+      canned: 'Dåser og glas',
+      spices: 'Krydderier og saucer',
+      snacks: 'Snacks og slik',
+      drinks: 'Drikkevarer',
+      leftovers: 'Rester og færdigretter',
       other: 'Andet',
     },
     scan: 'Scan',
     add: 'Tilføj',
     addTitle: 'Tilføj',
-    addHere: (place) => `Tilføj i ${place.toLowerCase()}`,
     name: 'Hvad er det?',
     namePlaceholder: 'Fx letmælk',
     nameMissing: 'Skriv, hvad det er.',
-    brand: 'Mærke',
-    category: 'Kategori',
     change: 'Skift',
-    place: 'Hvor?',
+    place: 'Sted',
     count: 'Antal',
     size: 'Størrelse',
-    sizePlaceholder: 'Fx 1 l eller 500 g',
+    sizePlaceholder: 'Fx 500',
+    unit: 'Enhed',
+    units: { stk: 'stk.', pk: 'pk.', dåse: 'ds.', g: 'g', kg: 'kg', ml: 'ml', cl: 'cl', dl: 'dl', l: 'l' },
     optional: 'valgfri',
     added: (name, place) => `${name} er tilføjet i ${place.toLowerCase()}`,
     addedCount: (n) => (n === 1 ? '1 tilføjet' : `${n} tilføjet`),
@@ -359,87 +321,21 @@ export const strings: Record<Lang, Strings> = {
       title: 'Indstillinger',
       language: 'Sprog',
       languages: { system: 'Følg telefonen', da: 'Dansk', en: 'English' },
-      theme: 'Udseende',
-      themes: { system: 'Følg telefonen', light: 'Lyst', dark: 'Mørkt' },
       version: (date, commit) => `Version fra ${date} (${commit})`,
     },
     keep: {
-      estimate: (date) => `Brug senest ca. ${date}`,
-      useBy: (date) => `Sidste anvendelsesdato ${date}`,
-      bestBefore: (date) => `Bedst før ${date}`,
-      range: (from, to) => `Vejledende: ${from}–${to}`,
-      pastEstimate: 'Over den vejledende tid.',
-      pastUseBy: 'Sidste anvendelsesdato er overskredet. Spis det ikke.',
-      pastBestBefore: 'Bedst før-datoen er passeret. Se, lugt og smag, før du bruger det.',
+      date: (date) => `Dato: ${date}`,
+      past: 'Datoen er overskredet. Se, lugt og smag, før du bruger det. Kød, fisk og rester: smid det ud.',
       today: 'i dag',
       inDays: (n) => (n === 1 ? 'i morgen' : `om ${n} dage`),
       daysAgo: (n) => (n === 1 ? 'i går' : `for ${n} dage siden`),
-      noType: 'Vælg, hvad det er, for at få en vejledende dato.',
-      noTime: (place) => `Der er ingen vejledende tid for det i ${place.toLowerCase()}.`,
-      notRecommended: (place) => `Det frarådes at opbevare det i ${place.toLowerCase()}.`,
-      indefinitely: 'Holder sig meget længe.',
-      whenRipe: 'Holder sig, til det er modent.',
-      fridgeAfterOpening: 'Bør stå på køl, når det er åbnet.',
-      packageOnly: 'Brug datoen på pakken. Skriv den ind, så holder appen øje med den.',
-      roomHours: (n) => `Bør ikke stå uden for køl i mere end ${n} timer.`,
-      inDoubt: 'Ved tvivl: smid ud.',
-      howWeCount: 'Sådan regner appen',
       useSoon: 'Brug snart',
       whatIsIt: 'Slags',
-      noTypeOption: (category) => `${category}, andet`,
-      opened: 'Åbnet',
-      openedOn: (date) => `Åbnet ${date}`,
-      openedToday: 'Åbnet i dag',
-      notOpened: 'Ikke åbnet',
-      packageDate: 'Dato på pakken',
-      packageKind: 'Hvilken dato?',
-      packageKinds: { useBy: 'Sidste anvendelsesdato', bestBefore: 'Bedst før' },
-      packageHelp: 'Står der "mindst holdbar til", er det bedst før.',
+      dateLabel: 'Dato',
+      month: 'Måned',
+      year: 'År',
+      noDate: 'Ingen dato',
       removeDate: 'Fjern dato',
-      unchecked: 'Navnet er ikke gennemset endnu.',
-    },
-    rules: {
-      title: 'Sådan regner appen',
-      intro: 'Datoerne i appen er vejledende. De kommer fra faste regler, ikke fra nogen, der har set din mad. Brug altid også dine sanser.',
-      sections: [
-        {
-          title: 'Datoen på pakken kommer først',
-          points: [
-            'Har du skrevet datoen fra pakken, viser appen den.',
-            'Sidste anvendelsesdato: appen giver aldrig en senere dato. Er varen åbnet eller tøet op, gælder den tidligste af datoen og appens vurdering.',
-            'Bedst før (eller "mindst holdbar til"): vises, til varen er åbnet. Derefter bruger appen sin vurdering. Efter datoen kan maden ofte stadig bruges, hvis den ser, lugter og smager, som den skal.',
-          ],
-        },
-        {
-          title: 'Uden dato: en vurdering',
-          points: [
-            'Appen finder ud fra navnet, hvad det er, fx hakket oksekød. Du kan altid vælge noget andet.',
-            'For hver slags mad har appen tider for frost, køl og tørvarer, og for når den er åbnet eller tøet op. Hvert af dine steder er en af de tre slags.',
-            'Appen tæller fra den dag, varen kom på sin plads, blev åbnet eller tøet op, og bruger den korteste tid. Hakket oksekød holder 1–2 dage i køleskabet, så appen siger 1 dag.',
-          ],
-        },
-        {
-          title: 'Når du flytter den',
-          points: [
-            'I fryseren starter tiden forfra: fryserens tid fra den dag, varen kom i. Har pakken en bedst før-dato, fx på frosne ærter, gælder den i stedet.',
-            'Fra fryseren til køleskabet: tiden efter optøning, eller køleskabets tid, fra den dag varen blev taget op.',
-            'Frarådes et sted, eller findes der ingen tid for det, viser appen ingen dato, kun en besked.',
-          ],
-        },
-        {
-          title: 'Ved tvivl: smid ud',
-          points: [
-            'Ved råt kød, fisk, rester og varer med sidste anvendelsesdato skriver appen "Ved tvivl: smid ud".',
-            'Appen kan ikke se, hvordan maden er blevet behandlet. Har den stået varmt for længe, eller ser, lugter eller smager den forkert, så smid den ud.',
-            'Hold køleskabet på højst 5 °C.',
-          ],
-        },
-      ],
-      source: 'Tiderne kommer fra USDA FoodKeeper, version 128 (september 2018), udgivet af det amerikanske landbrugsministeriums fødevaresikkerhedstjeneste (FSIS) som CC0. Tiderne er amerikanske og regner med et køleskab på 4 °C. Fryserens tider tjekkes mod Forbrugerrådet Tænks danske liste, og hvor Tænk siger kortere, bruger appen den. Tiderne i fryseren handler om kvalitet. De danske navne er vores egne, og nogle er endnu ikke gennemset.',
-      sourceLink: 'FoodKeeper-data (data.gov)',
-      taenkLink: 'Forbrugerrådet Tænk om holdbarhed og opbevaring',
-      danishLink: 'Fødevarestyrelsen (foedevarestyrelsen.dk)',
-      typesCount: (n) => `Appen kender ${n} slags mad.`,
     },
     household: {
       title: 'Del',
@@ -519,8 +415,8 @@ export const strings: Record<Lang, Strings> = {
       shareNoHint: 'Du kan gøre det senere under Indstillinger → Del.',
       doneTitle: 'Du er klar',
       donePoints: [
-        'Tryk på Scan eller Tilføj, vælg et sted, og læg tingene ind en efter en.',
-        'Appen viser, hvornår tingene bør bruges, og samler det, der snart skal bruges, øverst.',
+        'Tryk på Scan eller Tilføj, og læg tingene ind en efter en.',
+        'Giv tingene en dato, så samler appen det, der snart skal bruges, øverst.',
         'Dine ting ligger på telefonen og virker uden internet.',
       ],
       doneShare: 'Bagefter kommer du til Del, hvor du kan logge ind og invitere.',
@@ -550,12 +446,11 @@ export const strings: Record<Lang, Strings> = {
     placeKindHints: { freezer: 'E.g. a freezer or a freezer cabinet.', fridge: 'E.g. a fridge.', pantry: 'E.g. a cupboard, a cellar or a larder.' },
     placePresets: { freezer: 'Freezer', pantry: 'Cupboards', larder: 'Larder', fridge: 'Fridge' },
     placeGone: 'Deleted place',
-    pickPlace: { title: 'Where are the things going?', hint: 'Then you can add several things one after another.', other: 'Another place' },
     placesScreen: {
       title: 'Places',
       settingsRow: 'Places',
       settingsHint: 'Freezers, cupboards and other places you keep things',
-      intro: 'Make a place for each freezer, cupboard or room you want to keep track of. Its kind decides how long things keep.',
+      intro: 'Make a place for each freezer, cupboard or room you want to keep track of. In the fridge, dates are a day; elsewhere, a month.',
       add: 'Add place',
       addTitle: 'New place',
       editTitle: 'Edit place',
@@ -565,16 +460,15 @@ export const strings: Record<Lang, Strings> = {
       save: 'Save',
       added: (name) => `${name} added`,
       saved: (name) => `${name} saved`,
-      remove: 'Delete place',
+      remove: 'Delete',
       removeConfirm: (name) => `Delete ${name}?`,
       hasThings: (n) => (n === 1 ? 'There is 1 thing in it. Where should it go?' : `There are ${n} things in it. Where should they go?`),
       moveTo: 'Move to',
       moveAndRemove: 'Move and delete',
       removed: (name) => `${name} deleted`,
       lastPlace: 'You need at least one place.',
-      order: 'Order',
-      orderOptions: { alphabetical: 'Alphabetical', own: 'Your own' },
-      orderHelp: 'Hold the handle and drag the place up or down.',
+      orderHelp: 'Hold the handle and drag a place up or down.',
+      sortAlphabetical: 'Sort alphabetically',
       dragHandle: (name) => `Move ${name}`,
       moveUp: 'Move up',
       moveDown: 'Move down',
@@ -590,33 +484,32 @@ export const strings: Record<Lang, Strings> = {
     emptyPlace: 'Nothing here yet.',
     emptyHome: 'Scan a product, or add it by name. Then you can always see what you have.',
     categories: {
-      meat: 'Meat',
-      poultry: 'Poultry',
+      meat: 'Meat and poultry',
       fish: 'Fish',
       dairy: 'Dairy and eggs',
       produce: 'Fruit and vegetables',
-      bread: 'Bread',
-      dry: 'Dry goods',
+      bread: 'Bread and cakes',
+      dry: 'Pasta, rice and flour',
       canned: 'Tins and jars',
+      spices: 'Spices and sauces',
+      snacks: 'Snacks and sweets',
       drinks: 'Drinks',
-      leftovers: 'Leftovers',
-      frozen: 'Frozen',
+      leftovers: 'Leftovers and ready meals',
       other: 'Other',
     },
     scan: 'Scan',
     add: 'Add',
     addTitle: 'Add',
-    addHere: (place) => `Add to ${place.toLowerCase()}`,
     name: 'What is it?',
     namePlaceholder: 'E.g. milk',
     nameMissing: 'Enter what it is.',
-    brand: 'Brand',
-    category: 'Category',
     change: 'Change',
-    place: 'Where?',
+    place: 'Place',
     count: 'Number',
     size: 'Size',
-    sizePlaceholder: 'E.g. 1 l or 500 g',
+    sizePlaceholder: 'E.g. 500',
+    unit: 'Unit',
+    units: { stk: 'pcs', pk: 'pack', dåse: 'can', g: 'g', kg: 'kg', ml: 'ml', cl: 'cl', dl: 'dl', l: 'l' },
     optional: 'optional',
     added: (name, place) => `${name} added to ${place.toLowerCase()}`,
     addedCount: (n) => `${n} added`,
@@ -650,87 +543,21 @@ export const strings: Record<Lang, Strings> = {
       title: 'Settings',
       language: 'Language',
       languages: { system: 'Follow the phone', da: 'Dansk', en: 'English' },
-      theme: 'Appearance',
-      themes: { system: 'Follow the phone', light: 'Light', dark: 'Dark' },
       version: (date, commit) => `Version from ${date} (${commit})`,
     },
     keep: {
-      estimate: (date) => `Use by about ${date}`,
-      useBy: (date) => `Use by ${date}`,
-      bestBefore: (date) => `Best before ${date}`,
-      range: (from, to) => `For guidance: ${from}–${to}`,
-      pastEstimate: 'Past the guidance time.',
-      pastUseBy: 'The use-by date has passed. Do not eat it.',
-      pastBestBefore: 'The best-before date has passed. Look, smell and taste before you use it.',
+      date: (date) => `Date: ${date}`,
+      past: 'The date has passed. Look, smell and taste before you use it. Meat, fish and leftovers: throw them out.',
       today: 'today',
       inDays: (n) => (n === 1 ? 'tomorrow' : `in ${n} days`),
       daysAgo: (n) => (n === 1 ? 'yesterday' : `${n} days ago`),
-      noType: 'Choose what it is to get a date for guidance.',
-      noTime: (place) => `There is no guidance time for it in the ${place.toLowerCase()}.`,
-      notRecommended: (place) => `Keeping it in the ${place.toLowerCase()} is not advised.`,
-      indefinitely: 'Keeps for a very long time.',
-      whenRipe: 'Keeps until ripe.',
-      fridgeAfterOpening: 'Should go in the fridge once opened.',
-      packageOnly: 'Go by the date on the package. Enter it, and the app keeps track of it.',
-      roomHours: (n) => `Should not stay out of the fridge for more than ${n} hours.`,
-      inDoubt: 'If in doubt, throw it out.',
-      howWeCount: 'How the app counts',
       useSoon: 'Use soon',
       whatIsIt: 'Kind',
-      noTypeOption: (category) => `${category}, other`,
-      opened: 'Opened',
-      openedOn: (date) => `Opened ${date}`,
-      openedToday: 'Opened today',
-      notOpened: 'Not opened',
-      packageDate: 'Date on the package',
-      packageKind: 'Which date?',
-      packageKinds: { useBy: 'Use by', bestBefore: 'Best before' },
-      packageHelp: 'Danish packages: "sidste anvendelsesdato" is use by; "bedst før" and "mindst holdbar til" are best before.',
+      dateLabel: 'Date',
+      month: 'Month',
+      year: 'Year',
+      noDate: 'No date',
       removeDate: 'Remove date',
-      unchecked: 'The name has not been checked yet.',
-    },
-    rules: {
-      title: 'How the app counts',
-      intro: 'The dates in the app are for guidance. They come from fixed rules, not from anyone who has seen your food. Always use your senses too.',
-      sections: [
-        {
-          title: 'The date on the package comes first',
-          points: [
-            'If you entered the date from the package, the app shows it.',
-            'Use by: the app never gives a later date. Once it is opened or thawed, the earlier of the date and the app\u2019s estimate applies.',
-            'Best before: shown until it is opened. Then the app uses its estimate. After the date, food can often still be used if it looks, smells and tastes as it should.',
-          ],
-        },
-        {
-          title: 'Without a date: an estimate',
-          points: [
-            'The app works out from the name what it is, for example minced beef. You can always choose something else.',
-            'For each kind of food, the app has times for frozen, chilled and dry goods, and for after opening or thawing. Each of your places is one of the three kinds.',
-            'The app counts from the day it came into its place, was opened or thawed, and uses the shortest time. Minced beef keeps 1–2 days in the fridge, so the app says 1 day.',
-          ],
-        },
-        {
-          title: 'When you move it',
-          points: [
-            'In the freezer the time starts again: the freezer time from the day it went in. If the package has a best-before date, as on frozen peas, that applies instead.',
-            'From the freezer to the fridge: the time after thawing, or the fridge time, from the day it came out.',
-            'Where a place is advised against, or there is no time for it, the app shows no date, only a note.',
-          ],
-        },
-        {
-          title: 'If in doubt, throw it out',
-          points: [
-            'For raw meat, fish, leftovers and anything with a use-by date, the app says "If in doubt, throw it out".',
-            'The app cannot see how the food has been handled. If it has been warm for too long, or looks, smells or tastes wrong, throw it out.',
-            'Keep the fridge at 5 °C or colder.',
-          ],
-        },
-      ],
-      source: 'The times come from USDA FoodKeeper, version 128 (September 2018), published by the US Department of Agriculture\u2019s Food Safety and Inspection Service (FSIS) as CC0. They are US times and assume a fridge at 4 °C. Freezer times are checked against Forbrugerrådet Tænk’s Danish list, and where Tænk says shorter, the app uses that. Freezer times are about quality. The Danish names are our own, and some have not been checked yet.',
-      sourceLink: 'FoodKeeper data (data.gov)',
-      taenkLink: 'Forbrugerrådet Tænk on keeping food (in Danish)',
-      danishLink: 'The Danish Veterinary and Food Administration (foedevarestyrelsen.dk, in Danish)',
-      typesCount: (n) => `The app knows ${n} kinds of food.`,
     },
     household: {
       title: 'Share',
@@ -810,8 +637,8 @@ export const strings: Record<Lang, Strings> = {
       shareNoHint: 'You can do it later under Settings → Share.',
       doneTitle: 'You are ready',
       donePoints: [
-        'Tap Scan or Add, choose a place, and add things one after another.',
-        'The app shows when things should be used, and gathers what to use soon at the top.',
+        'Tap Scan or Add, and add things one after another.',
+        'Give things a date, and the app gathers what to use soon at the top.',
         'Your things stay on your phone and work without internet.',
       ],
       doneShare: 'Next you go to Share, where you can sign in and invite.',

@@ -5,11 +5,12 @@
 import { openDB, type IDBPDatabase } from 'idb';
 import { useSyncExternalStore } from 'react';
 import { today } from '../i18n/format';
-import type { PackageKind } from '../keeping/rules';
+import type { DatePrecision } from '../keeping/rules';
 import { startingPlaces, type PlaceKind } from '../places';
 import { readPreferences } from '../settings/preferences';
 import type { Category } from './categories';
 import * as m from './model';
+import type { Size } from './size';
 
 const DB_NAME = 'spisekammer';
 const DB_VERSION = 2; // 2: places (S-013)
@@ -84,10 +85,11 @@ async function write(change: m.Change) {
 
 export const inventory = {
   get: () => state,
-  add: (item: m.NewItem) => {
-    const id = crypto.randomUUID();
-    apply(m.addItem(state, item, id, today(), Date.now()));
-    return id;
+  // A new thing, or more of the same one in the same place (S-022): then `merged` and the new count.
+  add: (item: m.NewItem): { id: string; merged: boolean; count: number } => {
+    const change = m.addItem(state, item, crypto.randomUUID(), today(), Date.now());
+    apply(change);
+    return { id: change.id, merged: change.merged, count: change.state.items.find((i) => i.id === change.id)?.count ?? item.count };
   },
   setCount: (id: string, count: number) => apply(m.setCount(state, id, count, Date.now())),
   move: (id: string, placeId: string) => apply(m.moveItem(state, id, placeId, today(), Date.now())),
@@ -99,9 +101,9 @@ export const inventory = {
   updatePlace: (id: string, change: { name?: string; kind?: PlaceKind }) => apply(m.updatePlace(state, id, change, Date.now())),
   reorderPlaces: (orderedIds: string[]) => apply(m.reorderPlaces(state, orderedIds, Date.now())),
   removePlace: (id: string, moveTo: string | null) => apply(m.removePlace(state, id, moveTo, today(), Date.now())),
-  setOpened: (id: string, opened: boolean) => apply(m.setOpened(state, id, opened ? today() : null, Date.now())),
-  setPackageDate: (id: string, date: { day: string; kind: PackageKind } | null) => apply(m.setPackageDate(state, id, date, Date.now())),
-  setType: (id: string, typeId: string | null, category: Category) => apply(m.setType(state, id, typeId, category, Date.now())),
+  setDate: (id: string, date: { date: string; precision: DatePrecision } | null) => apply(m.setDate(state, id, date, Date.now())),
+  setCategory: (id: string, category: Category) => apply(m.setCategory(state, id, category, Date.now())),
+  setSize: (id: string, size: Size | null) => apply(m.setSize(state, id, size, Date.now())),
   remove: (id: string) => apply(m.removeItem(state, id)),
   rememberProduct: (product: m.Product) => apply(m.rememberProduct(state, product)),
 };

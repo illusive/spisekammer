@@ -10,7 +10,6 @@ const SCREENS: [string, string, RegExp][] = [
   ['a place', '#/place/pantry', /Skabe/],
   ['Steder', '#/places', /Steder/],
   ['Indstillinger', '#/settings', /Indstillinger/],
-  ['Sådan regner appen', '#/rules', /Sådan regner appen/],
   ['Del', '#/household', /Del/],
 ];
 
@@ -27,10 +26,10 @@ for (const [label, hash, heading] of SCREENS) {
 
 test('the add form and a thing\'s sheet: fields one height, targets big enough', async ({ page }) => {
   await openApp(page);
-  await seed(page, { items: [{ name: 'Letmælk', placeId: 'pantry', category: 'dairy', typeId: 'fk-27' }] });
+  await seed(page, { items: [{ name: 'Letmælk', placeId: 'pantry', category: 'dairy', date: '2030-05-31', datePrecision: 'month' }] });
 
   await page.getByRole('button', { name: 'Tilføj', exact: true }).click();
-  await topSheet(page).getByRole('button', { name: /^Skabe/ }).click();
+  await topSheet(page).locator('label', { hasText: 'Skabe' }).click();
   await page.locator('#add-name').fill('Pasta');
   await topSheet(page).getByRole('button', { name: 'Skift' }).click();
   await expectEqualFields(topSheet(page));

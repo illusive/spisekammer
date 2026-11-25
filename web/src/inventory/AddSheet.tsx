@@ -1,33 +1,38 @@
-// "Tilføj" (S-006): type one thing after another; each is added at once, a toast says where, and the
-// form empties for the next (the place stays). The X closes it.
+// "Tilføj" (S-006, S-022): type one thing after another; each is added at once, a toast says where,
+// and the form empties for the next. The place is a field at the top of the form, starting on the
+// place you are on, else the last one used. The X closes it.
 
 import { useState } from 'react';
 import { Sheet, SheetHeader, Toast, type ToastMessage } from '../components/ui';
 import type { Lang, Strings } from '../i18n/strings';
 import { placeName } from '../places';
 import { ItemForm } from './ItemForm';
-import { inventory, useInventory } from './store';
+import { rememberPlace, useStartPlace } from './orderedPlaces';
+import { inventory } from './store';
 
 const TITLE_ID = 'add-sheet-title';
 
-// Adding to one place, chosen before (S-015): the sheet stays open for the next thing.
-export function AddSheet({ open, placeId, onClose, lang, s }: { open: boolean; placeId: string; onClose: () => void; lang: Lang; s: Strings }) {
+export function AddSheet({ open, placeId: given, onClose, lang, s }: { open: boolean; placeId: string | null; onClose: () => void; lang: Lang; s: Strings }) {
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  const { places } = useInventory();
+  const [placeId, setPlaceId] = useStartPlace(s, given);
   return (
     <Sheet open={open} onClose={onClose} labelledBy={TITLE_ID} dismissOnBackdrop={false}>
-      <SheetHeader id={TITLE_ID} title={s.addHere(placeName(places, placeId, s))} closeLabel={s.close} onClose={onClose} />
-      <div className="mt-4 rounded-card bg-surface px-[20px] py-5">
+      <SheetHeader id={TITLE_ID} title={s.addTitle} closeLabel={s.close} onClose={onClose} />
+      <div className="pt-4">
         <ItemForm
-          start={{ placeId }}
+          start={{}}
+          placeId={placeId}
+          onPlace={setPlaceId}
           idPrefix="add"
           lang={lang}
           s={s}
           autofocusName
           submitLabel={s.add}
           onSubmit={(item) => {
-            inventory.add(item);
-            setToast({ id: Date.now(), text: s.added(item.name, placeName(places, item.placeId, s)) });
+            const result = inventory.add(item);
+            rememberPlace(item.placeId);
+            const where = placeName(inventory.get().places, item.placeId, s);
+            setToast({ id: Date.now(), text: result.merged ? s.stocked(item.name, result.count) : s.added(item.name, where) });
           }}
         />
       </div>

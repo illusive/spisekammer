@@ -13,30 +13,24 @@ Danish households. Danish first, with an English interface too.
 ## Core flows
 
 - **Add:** scan a barcode, or type with suggestions.
-- **Use and keep:** tap a thing to take some out, add more, move it (into the freezer, say), mark it opened, or delete it.
+- **Use and keep:** tap a thing to take some out, add more, move it (into the freezer, say), change its size, kind or date, or delete it.
 - **Find:**
-  - Search across everything: names, brands, food types and places.
+  - Search across everything: names, kinds of food and places.
   - Scan to check whether you already have something.
 - **Overview:**
   - **"Brug snart"**: what to use soon, across all places, on top.
   - The places, each grouped by category. The household makes its own (more freezers, cupboards, a cellar), each of the kind Frost, Køl or Tørvarer (S-013). New households start with Fryser, Skabe and Viktualiekammer. A fridge is optional: what is in it changes every day, so a list of it soon goes wrong.
 - **Household:** everyone in the home sees and changes the same inventory.
 
-## How long things keep
+## Dates
 
-Estimates come from ground rules, written up in `docs/ARCHITECTURE.md` §3:
-- the food type (from USDA FoodKeeper, CC0, given Danish names)
-- the place
-- the day the thing was added, opened, frozen or thawed
-- the package's own date, which comes first; a "sidste anvendelsesdato" is never extended
-
-They are always shown as guidance, never as "safe".
+The app does not estimate how long things keep (S-021). A thing has a date only if the user gives one: a day in the fridge, a month and a year elsewhere. "Brug snart" gathers what is near or past its date. Once a date has passed, the thing's sheet says so, and to look, smell and taste, and to throw out meat, fish and leftovers. Never "safe".
 
 ## Principles
 
 - **Local first:** everything works on the phone without a connection, because reception in shops is poor. It syncs when there is a connection.
 - **Quick:** few fields, sensible defaults, and the package date only if you want it.
-- **Friendly:** warm, calm and clear, with large touch targets and text that follows the phone's text size, plus dark mode.
+- **Friendly:** calm and clear, in the look of the owner's Shelfwise (light only, S-023), with large touch targets and text that follows the phone's text size.
 - **Private:** data stays in the EU (Supabase), with no tracking or ads. You can export your data and delete your account.
 
 ## Not in v1

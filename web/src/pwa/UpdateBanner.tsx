@@ -23,15 +23,15 @@ export function UpdateBanner({ s, ready }: { s: Strings; ready: boolean }) {
     <>
       {/* Spacer so the end of the page can scroll clear of the fixed banner. */}
       <div aria-hidden="true" className="h-24" />
-      <div className="fixed inset-x-0 bottom-[calc(4.75rem+max(0.75rem,env(safe-area-inset-bottom)))] z-10 px-4" role="status">
-        <div className="mx-auto flex max-w-md items-center gap-3 rounded-card bg-surface p-3 shadow-lg">
+      <div className="fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-10 px-[18px]" role="status">
+        <div className="mx-auto flex max-w-md items-center gap-3 rounded-card border border-line-soft bg-surface p-3 shadow-[0_8px_24px_rgb(16_43_36/0.16)]">
           <p className="flex-1">{needRefresh ? s.updateReady : s.offlineReady}</p>
           {needRefresh ? (
-            <button type="button" onClick={applyUpdate} className="min-h-11 rounded-full bg-accent px-4 font-semibold text-on-accent">
+            <button type="button" onClick={applyUpdate} className="min-h-11 rounded-[10px] bg-primary px-4 font-semibold text-on-primary">
               {s.updateAction}
             </button>
           ) : null}
-          <button type="button" onClick={dismiss} className="min-h-11 px-2 font-medium">
+          <button type="button" onClick={dismiss} className="min-h-11 px-2 font-semibold">
             {s.dismiss}
           </button>
         </div>

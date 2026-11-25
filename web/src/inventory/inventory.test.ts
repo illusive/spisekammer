@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { categoryFromTags, guessCategory } from './categories';
-import { addItem, EMPTY, moveItem, parseItem, parseProduct, rememberProduct, removeItem, setCount, setOpened, setPackageDate, setType, withBarcode, type Inventory, type NewItem } from './model';
+import { addItem, EMPTY, moveItem, parseItem, parseProduct, rememberProduct, removeItem, setCategory, setCount, setDate, setSize, withBarcode, type Inventory, type Item, type NewItem } from './model';
 import type { Place } from '../places';
+import { searchItems } from './search';
+import { parseProduct as parseOff } from '../scan/barcode';
 
 // A freezer, a fridge and a cupboard, so moves between them can be tested.
 const PLACES: Place[] = [
@@ -9,10 +10,8 @@ const PLACES: Place[] = [
   { id: 'fridge', kind: 'fridge', sort: 1, updatedAt: 0 },
   { id: 'pantry', kind: 'pantry', sort: 2, updatedAt: 0 },
 ];
-import { searchItems } from './search';
-import { parseProduct as parseOff } from '../scan/barcode';
 
-const milk: NewItem = { name: 'Letmælk', brand: 'Arla', category: 'dairy', placeId: 'fridge', count: 2, barcode: '5701234567890' };
+const milk: NewItem = { name: 'Letmælk', category: 'dairy', placeId: 'fridge', count: 2, barcode: '5701234567890' };
 
 describe('Inventory changes', () => {
   it('adds, takes out, moves and removes, and says what to write', () => {
@@ -20,19 +19,16 @@ describe('Inventory changes', () => {
     const added = addItem(s, milk, 'a', '2026-11-07', 1);
     s = added.state;
     expect(added.put?.[0]).toMatchObject({ id: 'a', count: 2, addedOn: '2026-11-07', placedOn: '2026-11-07', updatedAt: 1 });
+    expect(added.merged).toBe(false);
 
     const taken = setCount(s, 'a', 1, 2);
     expect(taken.state.items[0]?.count).toBe(1);
     expect(taken.put?.[0]?.updatedAt).toBe(2);
 
-    const moved = moveItem(taken.state, 'a', 'freezer', '2026-11-08', 3);
-    expect(moved.state.items[0]).toMatchObject({ placeId: 'freezer', placedOn: '2026-11-08' });
-    expect(moved.state.items[0]?.thawedOn).toBeUndefined();
+    const dated = setDate(taken.state, 'a', { date: '2026-11-12', precision: 'day' }, 3).state;
+    const moved = moveItem(dated, 'a', 'freezer', '2026-11-08', 3);
+    expect(moved.state.items[0]).toMatchObject({ placeId: 'freezer', placedOn: '2026-11-08', date: '2026-11-12', datePrecision: 'day' }); // the date stays
     expect(moveItem(moved.state, 'a', 'freezer', '2026-11-09', 4).put).toBeUndefined(); // already there
-
-    const thawed = moveItem(moved.state, 'a', 'fridge', '2026-12-01', 4);
-    expect(thawed.state.items[0]).toMatchObject({ placeId: 'fridge', placedOn: '2026-12-01', thawedOn: '2026-12-01' });
-    expect(moveItem(thawed.state, 'a', 'pantry', '2026-12-02', 4).state.items[0]?.thawedOn).toBeUndefined(); // only while in the fridge
 
     const last = setCount(moved.state, 'a', 0, 5); // taking the last one out removes it
     expect(last.state.items).toEqual([]);
@@ -48,73 +44,90 @@ describe('Inventory changes', () => {
     expect(rememberProduct(s, { barcode: '5701234567890', name: 'Letmælk' }).state.products['5701234567890']?.name).toBe('Letmælk');
   });
 
+  it('gives a typed name a capital first letter', () => {
+    expect(addItem(EMPTY, { ...milk, name: 'butter beans' }, 'a', '2026-11-07', 1).state.items[0]?.name).toBe('Butter beans');
+  });
+});
+
+describe('The same thing, one line (S-022)', () => {
+  const beans: NewItem = { name: 'Baked beans', category: 'canned', placeId: 'pantry', count: 4, amount: 415, unit: 'g' };
+  const start = addItem({ ...EMPTY, places: PLACES }, beans, 'a', '2026-11-07', 1).state;
+
+  it('adds to the count of the same name and size in the same place', () => {
+    const more = addItem(start, { ...beans, name: 'baked BEANS', count: 4 }, 'b', '2026-11-08', 2);
+    expect(more.merged).toBe(true);
+    expect(more.id).toBe('a');
+    expect(more.state.items).toHaveLength(1);
+    expect(more.state.items[0]).toMatchObject({ id: 'a', count: 8, updatedAt: 2 });
+  });
+  it('keeps the earlier date', () => {
+    const dated = setDate(start, 'a', { date: '2027-03-31', precision: 'month' }, 2).state;
+    expect(addItem(dated, { ...beans, date: '2027-01-31', datePrecision: 'month' }, 'b', '2026-11-08', 3).state.items[0]).toMatchObject({ date: '2027-01-31', datePrecision: 'month' });
+    expect(addItem(dated, { ...beans, date: '2028-01-31', datePrecision: 'month' }, 'b', '2026-11-08', 3).state.items[0]).toMatchObject({ date: '2027-03-31' });
+    expect(addItem(start, { ...beans, date: '2027-01-31', datePrecision: 'month' }, 'b', '2026-11-08', 3).state.items[0]).toMatchObject({ date: '2027-01-31' });
+  });
+  it('keeps separate lines for another place or another size', () => {
+    expect(addItem(start, { ...beans, placeId: 'fridge' }, 'b', '2026-11-08', 2).state.items).toHaveLength(2);
+    expect(addItem(start, { ...beans, amount: 200 }, 'b', '2026-11-08', 2).state.items).toHaveLength(2);
+    expect(addItem(start, { ...beans, name: 'Kidneybønner' }, 'b', '2026-11-08', 2).state.items).toHaveLength(2);
+  });
+});
+
+describe('Date, group and size (S-021, S-022)', () => {
+  const s = addItem(EMPTY, milk, 'a', '2026-11-07', 1).state;
+  it('sets and clears the date, a day or a month', () => {
+    const dated = setDate(s, 'a', { date: '2027-03-31', precision: 'month' }, 2);
+    expect(dated.state.items[0]).toMatchObject({ date: '2027-03-31', datePrecision: 'month', updatedAt: 2 });
+    const cleared = setDate(dated.state, 'a', null, 3).state.items[0];
+    expect(cleared?.date).toBeUndefined();
+    expect(cleared?.datePrecision).toBeUndefined();
+  });
+  it('sets the group', () => {
+    expect(setCategory(s, 'a', 'drinks', 2).state.items[0]).toMatchObject({ category: 'drinks', updatedAt: 2 });
+  });
+  it('sets and clears the size', () => {
+    const sized = setSize(s, 'a', { amount: 1, unit: 'l' }, 2).state.items[0];
+    expect(sized).toMatchObject({ amount: 1, unit: 'l' });
+    const cleared = setSize(s, 'a', null, 3).state.items[0];
+    expect(cleared?.amount).toBeUndefined();
+    expect(cleared?.unit).toBeUndefined();
+  });
+});
+
+describe('Reading records back', () => {
+  const base = { id: 'a', name: 'Mælk', placeId: 'fridge', category: 'dairy', count: 1, addedOn: '2026-11-07', updatedAt: 9 };
   it('reads back only sound records', () => {
     expect(parseItem({ id: 'a', name: ' Ost ', placeId: 'fridge', category: 'dairy', count: 2.4, amount: 400, unit: 'g', addedOn: '2026-11-07', updatedAt: 9 })).toMatchObject({ name: 'Ost', count: 2, amount: 400, unit: 'g' });
     expect(parseItem({ id: 'a', name: 'Ting', placeId: 'x', category: 'nope', count: -3 })).toMatchObject({ category: 'other', count: 1 });
     expect(parseItem({ name: 'No id' })).toBeNull();
     expect(parseItem('bad')).toBeNull();
     expect(parseProduct({ barcode: '123', name: 'X' })).toBeNull();
-    expect(parseProduct({ barcode: '5701234567890', name: 'X', category: 'dairy' })).toEqual({ barcode: '5701234567890', name: 'X', category: 'dairy' });
+    expect(parseProduct({ barcode: '5701234567890', name: 'x', category: 'dairy', brand: 'Arla' })).toEqual({ barcode: '5701234567890', name: 'X', category: 'dairy' });
   });
-});
-
-describe('Dates and food type (S-010)', () => {
-  const s = addItem(EMPTY, milk, 'a', '2026-11-07', 1).state;
-  it('marks opened and undoes it', () => {
-    const opened = setOpened(s, 'a', '2026-11-08', 2);
-    expect(opened.put?.[0]).toMatchObject({ openedOn: '2026-11-08', updatedAt: 2 });
-    expect(setOpened(opened.state, 'a', null, 3).state.items[0]?.openedOn).toBeUndefined();
-  });
-  it('sets and clears the package date', () => {
-    const dated = setPackageDate(s, 'a', { day: '2026-11-12', kind: 'useBy' }, 2);
-    expect(dated.state.items[0]).toMatchObject({ packageDate: '2026-11-12', packageKind: 'useBy' });
-    const cleared = setPackageDate(dated.state, 'a', null, 3).state.items[0];
-    expect(cleared?.packageDate).toBeUndefined();
-    expect(cleared?.packageKind).toBeUndefined();
-  });
-  it('sets the food type with its category, or only a category', () => {
-    expect(setType(s, 'a', 'fk-27', 'dairy', 2).state.items[0]).toMatchObject({ typeId: 'fk-27', category: 'dairy' });
-    expect(setType(s, 'a', null, 'other', 2).state.items[0]?.typeId).toBeUndefined();
-  });
-  it('reads the dates back, and starts the clock on the day added for older records', () => {
-    const base = { id: 'a', name: 'Mælk', placeId: 'fridge', category: 'dairy', count: 1, addedOn: '2026-11-07', updatedAt: 9 };
+  it('starts on the day added for older records, and reads the date and its precision', () => {
     expect(parseItem(base)).toMatchObject({ placedOn: '2026-11-07' });
-    expect(parseItem({ ...base, placedOn: '2026-11-09', openedOn: '2026-11-10', typeId: 'fk-27', packageDate: '2026-11-12', packageKind: 'useBy' })).toMatchObject({ placedOn: '2026-11-09', openedOn: '2026-11-10', typeId: 'fk-27', packageDate: '2026-11-12', packageKind: 'useBy' });
-    expect(parseItem({ ...base, packageDate: '2026-11-12', packageKind: 'soon', typeId: 'x' })).not.toHaveProperty('packageDate');
+    expect(parseItem({ ...base, date: '2027-03-31', datePrecision: 'month' })).toMatchObject({ date: '2027-03-31', datePrecision: 'month' });
+    expect(parseItem({ ...base, date: '2027-03-31', datePrecision: 'weird' })).toMatchObject({ date: '2027-03-31', datePrecision: 'day' });
   });
-});
-
-describe('Categories', () => {
-  it('guesses from the name', () => {
-    expect(guessCategory('Kyllingebryst')).toBe('poultry');
-    expect(guessCategory('Hakket oksekød 8-12%')).toBe('meat');
-    expect(guessCategory('Letmælk')).toBe('dairy');
-    expect(guessCategory('Hakkede tomater')).toBe('canned');
-    expect(guessCategory('Havregryn')).toBe('dry');
-    expect(guessCategory('Kartofler')).toBe('produce');
-    expect(guessCategory('Frosne ærter')).toBe('frozen');
-    expect(guessCategory('Frosne kyllingebryst')).toBe('poultry');
-    expect(guessCategory('Opvaskemiddel')).toBeNull();
-  });
-
-  it('guesses from Open Food Facts tags', () => {
-    expect(categoryFromTags(['en:dairies', 'en:milks'])).toBe('dairy');
-    expect(categoryFromTags(['en:frozen-foods', 'en:meats'])).toBe('frozen');
-    expect(categoryFromTags(['en:snacks'])).toBeNull();
+  it('reads records from before S-021: the package date kept, the rest dropped', () => {
+    const old = parseItem({ ...base, name: 'kyllingebryst', category: 'poultry', brand: 'Danpo', typeId: 'fk-117', openedOn: '2026-11-10', thawedOn: '2026-11-11', packageDate: '2026-11-12', packageKind: 'useBy' }) as Item;
+    expect(old).toMatchObject({ name: 'Kyllingebryst', category: 'meat', date: '2026-11-12', datePrecision: 'day' });
+    for (const gone of ['brand', 'typeId', 'openedOn', 'thawedOn', 'packageDate', 'packageKind']) expect(old).not.toHaveProperty(gone);
+    expect(parseItem({ ...base, name: 'Frosne ærter', category: 'frozen' })).toMatchObject({ category: 'produce' });
+    expect(parseItem({ ...base, name: 'Noget', category: 'frozen' })).toMatchObject({ category: 'other' });
   });
 });
 
 describe('Search across everything', () => {
-  const items = [
+  const items: Item[] = [
     { ...milk, id: 'a', addedOn: '2026-11-07', placedOn: '2026-11-07', updatedAt: 1 },
-    { name: 'Kyllingebryst', category: 'poultry' as const, placeId: 'freezer', count: 1, id: 'b', addedOn: '2026-11-07', placedOn: '2026-11-07', updatedAt: 1 },
-    { name: 'Mælkechokolade', category: 'other' as const, placeId: 'pantry', count: 1, id: 'c', addedOn: '2026-11-07', placedOn: '2026-11-07', updatedAt: 1 },
+    { name: 'Kyllingebryst', category: 'meat', placeId: 'freezer', count: 1, id: 'b', addedOn: '2026-11-07', placedOn: '2026-11-07', updatedAt: 1 },
+    { name: 'Mælkechokolade', category: 'snacks', placeId: 'pantry', count: 1, id: 'c', addedOn: '2026-11-07', placedOn: '2026-11-07', updatedAt: 1 },
   ];
-  const labels = (i: (typeof items)[number]) => [i.placeId === 'freezer' ? 'Fryser' : i.placeId === 'fridge' ? 'Køleskab' : 'Skab'];
+  const labels = (i: Item) => [i.placeId === 'freezer' ? 'Fryser' : i.placeId === 'fridge' ? 'Køleskab' : 'Skab'];
 
-  it('finds words anywhere in the name, brand or place; name matches first', () => {
+  it('finds words anywhere in the name or place; name matches first', () => {
     expect(searchItems(items, 'mælk', labels).map((i) => i.id)).toEqual(['a', 'c']); // Letmælk, Mælkechokolade
-    expect(searchItems(items, 'arla', labels).map((i) => i.id)).toEqual(['a']);
     expect(searchItems(items, 'fryser', labels).map((i) => i.id)).toEqual(['b']);
     expect(searchItems(items, 'kyl fry', labels).map((i) => i.id)).toEqual(['b']);
     expect(searchItems(items, 'bryst', labels).map((i) => i.id)).toEqual(['b']); // inside a joined word
@@ -123,14 +136,22 @@ describe('Search across everything', () => {
   });
 });
 
-describe('Open Food Facts answer', () => {
-  it('reads the name, brand, size and category tags', () => {
-    expect(parseOff({ status: 1, product: { product_name_da: 'Letmælk', brands: 'Arla, Other', quantity: '1 l', categories_tags: ['en:dairies', 'en:milks', 7] } })).toEqual({
+describe('Open Food Facts answer (S-022)', () => {
+  it('reads the name, size and category tags, without the brand', () => {
+    expect(parseOff({ status: 1, product: { product_name_da: 'Arla Letmælk', brands: 'Arla, Arla Foods', quantity: '1 l', categories_tags: ['en:dairies', 'en:milks', 7] } })).toEqual({
       name: 'Letmælk',
-      brand: 'Arla',
       quantity: '1 l',
       tags: ['en:dairies', 'en:milks'],
     });
     expect(parseOff({ status: 0 })).toBeNull();
+  });
+  it('capitalises, and uses the generic name when only the brand is left', () => {
+    expect(parseOff({ status: 1, product: { product_name: 'butter beans', brands: 'Heinz' } })?.name).toBe('Butter beans');
+    expect(parseOff({ status: 1, product: { product_name: 'Heinz Baked Beanz', brands: 'Heinz' } })?.name).toBe('Baked Beanz');
+    expect(parseOff({ status: 1, product: { product_name: 'Nutella', generic_name: 'hazelnut spread', brands: 'Nutella, Ferrero' } })?.name).toBe('Hazelnut spread');
+    expect(parseOff({ status: 1, product: { product_name: 'Nutella', brands: 'Nutella' } })?.name).toBe('Nutella');
+  });
+  it('drinks keep their brand', () => {
+    expect(parseOff({ status: 1, product: { product_name: 'Coca-Cola Zero', brands: 'Coca-Cola', categories_tags: ['en:beverages', 'en:sodas'] } })?.name).toBe('Coca-Cola Zero');
   });
 });

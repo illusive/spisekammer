@@ -1,19 +1,20 @@
 // The household's inventory (S-006): the things, where they are, and barcodes remembered on this
 // phone. Pure: the changes are functions from one state to the next, so they are tested without a
-// browser; inventory/store.ts keeps the state and writes it to IndexedDB. The dates and the food
-// type feed the keeping rules (keeping/rules.ts, S-010).
+// browser; inventory/store.ts keeps the state and writes it to IndexedDB. A thing has a date only
+// when the user gives one (S-021).
 
-import type { PackageKind } from '../keeping/rules';
+import type { DatePrecision } from '../keeping/rules';
+import { fold } from '../lib/fold';
+import { tidyName } from '../lib/name';
 import { PLACE_KINDS, type Place, type PlaceKind } from '../places';
-import { CATEGORIES, type Category } from './categories';
-import { SIZE_UNITS, type SizeUnit } from './size';
+import { CATEGORIES, readCategory, type Category } from './categories';
+import { SIZE_UNITS, type Size, type SizeUnit } from './size';
 
 export const MAX_COUNT = 999;
 
 export interface Item {
   id: string;
   name: string;
-  brand?: string;
   category: Category;
   placeId: string;
   count: number;
@@ -21,13 +22,10 @@ export interface Item {
   unit?: SizeUnit;
   sizeText?: string; // a size that is not a number and a unit
   barcode?: string;
-  typeId?: string; // a food type (keeping/foodTypes.ts), e.g. fk-43
   addedOn: string; // yyyy-mm-dd
-  placedOn: string; // the day it came into its place: the keeping clock starts here
-  openedOn?: string;
-  thawedOn?: string; // the day it came out of the freezer into the fridge
-  packageDate?: string; // the date printed on the package
-  packageKind?: PackageKind; // "sidste anvendelsesdato" (useBy) or "bedst før" (bestBefore)
+  placedOn: string; // the day it came into its place
+  date?: string; // the user's date, yyyy-mm-dd; a month is stored as its last day (S-021)
+  datePrecision?: DatePrecision; // with a date: given as a day, or as a month
   updatedAt: number; // ms; the last change (sync in slice 5 compares it)
 }
 
@@ -35,7 +33,6 @@ export interface Item {
 export interface Product {
   barcode: string;
   name: string;
-  brand?: string;
   quantity?: string;
   category?: Category;
 }
@@ -56,22 +53,20 @@ export function parseItem(x: unknown): Item | null {
   if (typeof x !== 'object' || x === null) return null;
   const r = x as Record<string, unknown>;
   const id = str(r.id, 64);
-  const name = str(r.name);
+  const raw = str(r.name);
   const placeId = str(r.placeId, 64);
-  if (!id || !name || !placeId) return null;
-  const category = CATEGORIES.find((c) => c === r.category) ?? 'other';
+  if (!id || !raw || !placeId) return null;
+  const name = tidyName(raw);
+  const category = readCategory(r.category, name);
   const count = typeof r.count === 'number' && Number.isFinite(r.count) ? Math.min(MAX_COUNT, Math.max(1, Math.round(r.count))) : 1;
   const addedOn = isDay(r.addedOn) ? r.addedOn : '1970-01-01';
   const item: Item = { id, name, category, placeId, count, addedOn, placedOn: isDay(r.placedOn) ? r.placedOn : addedOn, updatedAt: typeof r.updatedAt === 'number' ? r.updatedAt : 0 };
-  if (typeof r.typeId === 'string' && /^fk-\d{1,4}$/.test(r.typeId)) item.typeId = r.typeId;
-  if (isDay(r.openedOn)) item.openedOn = r.openedOn;
-  if (isDay(r.thawedOn)) item.thawedOn = r.thawedOn;
-  if (isDay(r.packageDate) && (r.packageKind === 'useBy' || r.packageKind === 'bestBefore')) {
-    item.packageDate = r.packageDate;
-    item.packageKind = r.packageKind;
+  // Before S-021 the date was the package's, with a kind (best before / use by) that no longer counts.
+  const date = isDay(r.date) ? r.date : isDay(r.packageDate) ? r.packageDate : undefined;
+  if (date) {
+    item.date = date;
+    item.datePrecision = r.datePrecision === 'month' ? 'month' : 'day';
   }
-  const brand = str(r.brand);
-  if (brand) item.brand = brand;
   const unit = SIZE_UNITS.find((u) => u === r.unit);
   if (typeof r.amount === 'number' && r.amount > 0 && unit) {
     item.amount = r.amount;
@@ -103,12 +98,10 @@ export function parseProduct(x: unknown): Product | null {
   const barcode = str(r.barcode, 14);
   const name = str(r.name);
   if (!barcode || !/^\d{8,14}$/.test(barcode) || !name) return null;
-  const product: Product = { barcode, name };
-  const brand = str(r.brand);
-  if (brand) product.brand = brand;
+  const product: Product = { barcode, name: tidyName(name) };
   const quantity = str(r.quantity, 40);
   if (quantity) product.quantity = quantity;
-  const category = CATEGORIES.find((c) => c === r.category);
+  const category = CATEGORIES.find((c) => c === r.category) ?? (r.category === 'poultry' ? 'meat' : undefined);
   if (category) product.category = category;
   return product;
 }
@@ -118,9 +111,26 @@ export type NewItem = Omit<Item, 'id' | 'addedOn' | 'placedOn' | 'updatedAt'>;
 // The changes. Each returns the new state and the records to write (put) or delete.
 export type Change = { state: Inventory; put?: Item[]; remove?: string[]; putProducts?: Product[]; putPlaces?: Place[]; removePlaces?: string[] };
 
-export function addItem(state: Inventory, item: NewItem, id: string, today: string, now: number): Change {
-  const saved: Item = { ...item, count: clampCount(item.count), id, addedOn: today, placedOn: today, updatedAt: now };
-  return { state: { ...state, items: [...state.items, saved] }, put: [saved] };
+// The same thing in the same place (name, ignoring case and accents, and size): one line.
+export function sameThing(state: Inventory, item: Pick<Item, 'name' | 'placeId' | 'amount' | 'unit' | 'sizeText'>): Item | undefined {
+  const name = fold(item.name.trim());
+  return state.items.find((i) => i.placeId === item.placeId && fold(i.name) === name && i.amount === item.amount && i.unit === item.unit && i.sizeText === item.sizeText);
+}
+
+// A new thing, or more of one already there (S-022): then the count goes up, and the earlier date
+// stays, so "Brug snart" still sees the oldest.
+export function addItem(state: Inventory, item: NewItem, id: string, today: string, now: number): Change & { id: string; merged: boolean } {
+  const name = tidyName(item.name);
+  const existing = sameThing(state, { ...item, name });
+  if (existing) {
+    const earlier = item.date !== undefined && (existing.date === undefined || item.date < existing.date);
+    const { date: _d, datePrecision: _p, ...rest } = existing;
+    const date = earlier ? { date: item.date!, datePrecision: item.datePrecision ?? 'day' } : existing.date ? { date: existing.date, datePrecision: existing.datePrecision ?? 'day' } : {};
+    const next: Item = { ...rest, ...date, count: clampCount(existing.count + item.count), updatedAt: now };
+    return { ...replace(state, next), id: existing.id, merged: true };
+  }
+  const saved: Item = { ...item, name, count: clampCount(item.count), id, addedOn: today, placedOn: today, updatedAt: now };
+  return { state: { ...state, items: [...state.items, saved] }, put: [saved], id, merged: false };
 }
 
 // Count 0 removes the thing (taking out the last one).
@@ -132,18 +142,15 @@ export function setCount(state: Inventory, id: string, count: number, now: numbe
   return { state: { ...state, items: state.items.map((i) => (i.id === id ? next : i)) }, put: [next] };
 }
 
-// A move starts the place's clock again. Out of the freezer into the fridge, it is thawing (S-010).
+// A move to another place. The date stays as it was given (S-021).
 export function moveItem(state: Inventory, id: string, placeId: string, today: string, now: number): Change {
   const item = state.items.find((i) => i.id === id);
   if (!item || item.placeId === placeId) return { state };
-  return replace(state, moved(state.places, item, placeId, today, now));
+  return replace(state, moved(item, placeId, today, now));
 }
 
-function moved(places: Place[], item: Item, placeId: string, today: string, now: number): Item {
-  const kindOf = (pid: string): PlaceKind | undefined => places.find((p) => p.id === pid)?.kind;
-  const thawing = kindOf(item.placeId) === 'freezer' && kindOf(placeId) === 'fridge';
-  const { thawedOn: _, ...rest } = item;
-  return { ...rest, placeId, placedOn: today, ...(thawing ? { thawedOn: today } : {}), updatedAt: now };
+function moved(item: Item, placeId: string, today: string, now: number): Item {
+  return { ...item, placeId, placedOn: today, updatedAt: now };
 }
 
 // --- Places (S-013)
@@ -158,8 +165,7 @@ export function addPlace(state: Inventory, place: { id: string; name: string; ki
   return { state: { ...state, places: [...state.places, saved] }, putPlaces: [saved] };
 }
 
-// A new name (empty: the preset's own name again) or kind. A new kind changes the keeping times
-// of what is in it, from the day each thing came in.
+// A new name (empty: the preset's own name again) or kind.
 export function updatePlace(state: Inventory, id: string, change: { name?: string; kind?: PlaceKind }, now: number): Change {
   const place = state.places.find((p) => p.id === id);
   if (!place) return { state };
@@ -189,33 +195,32 @@ export function removePlace(state: Inventory, id: string, moveTo: string | null,
   if (!state.places.some((p) => p.id === id) || state.places.length <= 1) return { state };
   const inIt = state.items.filter((i) => i.placeId === id);
   if (inIt.length > 0 && (!moveTo || moveTo === id || !state.places.some((p) => p.id === moveTo))) return { state };
-  const movedItems = inIt.map((i) => moved(state.places, i, moveTo!, today, now));
+  const movedItems = inIt.map((i) => moved(i, moveTo!, today, now));
   const items = state.items.map((i) => movedItems.find((m) => m.id === i.id) ?? i);
   return { state: { ...state, items, places: state.places.filter((p) => p.id !== id) }, removePlaces: [id], ...(movedItems.length > 0 ? { put: movedItems } : {}) };
 }
 
-// Opened on a day, or not opened (null: undo).
-export function setOpened(state: Inventory, id: string, day: string | null, now: number): Change {
+// The user's date (a day, or a month as its last day), or none (null).
+export function setDate(state: Inventory, id: string, date: { date: string; precision: DatePrecision } | null, now: number): Change {
   const item = state.items.find((i) => i.id === id);
   if (!item) return { state };
-  const { openedOn: _, ...rest } = item;
-  return replace(state, { ...rest, ...(day ? { openedOn: day } : {}), updatedAt: now });
+  const { date: _d, datePrecision: _p, ...rest } = item;
+  return replace(state, { ...rest, ...(date ? { date: date.date, datePrecision: date.precision } : {}), updatedAt: now });
 }
 
-// The date on the package, or none (null).
-export function setPackageDate(state: Inventory, id: string, date: { day: string; kind: PackageKind } | null, now: number): Change {
+// What kind of food it is ("Slags").
+export function setCategory(state: Inventory, id: string, category: Category, now: number): Change {
   const item = state.items.find((i) => i.id === id);
   if (!item) return { state };
-  const { packageDate: _d, packageKind: _k, ...rest } = item;
-  return replace(state, { ...rest, ...(date ? { packageDate: date.day, packageKind: date.kind } : {}), updatedAt: now });
+  return replace(state, { ...item, category, updatedAt: now });
 }
 
-// What it is: a food type (which sets the category), or only a category.
-export function setType(state: Inventory, id: string, typeId: string | null, category: Category, now: number): Change {
+// Its size as a number and a unit, or none (null).
+export function setSize(state: Inventory, id: string, size: Size | null, now: number): Change {
   const item = state.items.find((i) => i.id === id);
   if (!item) return { state };
-  const { typeId: _, ...rest } = item;
-  return replace(state, { ...rest, ...(typeId ? { typeId } : {}), category, updatedAt: now });
+  const { amount: _a, unit: _u, sizeText: _t, ...rest } = item;
+  return replace(state, { ...rest, ...(size ? { amount: size.amount, unit: size.unit } : {}), updatedAt: now });
 }
 
 function replace(state: Inventory, next: Item): Change {

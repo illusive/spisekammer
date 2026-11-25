@@ -1,23 +1,22 @@
-// Language and appearance either follow the phone or are fixed by the user, kept on the device
-// (from stead's D-044). Text size always follows the phone.
+// The language follows the phone or is fixed by the user, kept on the device (from stead's D-044).
+// Text size always follows the phone. The look is light only (S-023).
 
-import { useEffect, useState } from 'react';
 import { createLocalStore } from '../lib/localStore';
 
 export type LangPref = 'system' | 'da' | 'en';
-export type ThemePref = 'system' | 'light' | 'dark';
 
 export interface Preferences {
   lang: LangPref;
-  theme: ThemePref;
   // The old fridge switch (S-007). Only read once, to keep a fridge place for phones that had it
   // on (S-013 replaced it with places of the kind Køl).
   fridge: boolean;
   onboarded: boolean; // the first-run steps are done or skipped (S-015)
-  placeOrder: 'alphabetical' | 'own'; // how places are listed (S-019); per household with sync
+  // How places are listed: alphabetical until the user first moves one (S-019, S-022).
+  placeOrder: 'alphabetical' | 'own';
+  lastPlaceId: string | null; // where the last thing was added, the add form's starting place (S-022)
 }
 
-const DEFAULTS: Preferences = { lang: 'system', theme: 'system', fridge: false, onboarded: false, placeOrder: 'alphabetical' };
+const DEFAULTS: Preferences = { lang: 'system', fridge: false, onboarded: false, placeOrder: 'alphabetical', lastPlaceId: null };
 
 const store = createLocalStore<Preferences>({
   key: 'spisekammer.preferences.v1',
@@ -25,10 +24,10 @@ const store = createLocalStore<Preferences>({
     const p = (stored ?? {}) as Partial<Record<keyof Preferences, unknown>>;
     return {
       lang: p.lang === 'da' || p.lang === 'en' ? p.lang : DEFAULTS.lang,
-      theme: p.theme === 'light' || p.theme === 'dark' ? p.theme : DEFAULTS.theme,
       fridge: p.fridge === true,
       onboarded: p.onboarded === true,
       placeOrder: p.placeOrder === 'own' ? 'own' : 'alphabetical',
+      lastPlaceId: typeof p.lastPlaceId === 'string' && p.lastPlaceId.length <= 64 ? p.lastPlaceId : null,
     };
   },
 });
@@ -38,37 +37,6 @@ export const readPreferences = store.get;
 
 export function setPreference<K extends keyof Preferences>(key: K, value: Preferences[K]) {
   store.update((current) => ({ ...current, [key]: value }));
-}
-
-const DARK_QUERY = '(prefers-color-scheme: dark)';
-
-function useSystemDark(): boolean {
-  const [dark, setDark] = useState(() => matchMedia(DARK_QUERY).matches);
-  useEffect(() => {
-    const list = matchMedia(DARK_QUERY);
-    const update = () => setDark(list.matches);
-    list.addEventListener('change', update);
-    return () => list.removeEventListener('change', update);
-  }, []);
-  return dark;
-}
-
-export function useDarkMode(): boolean {
-  const { theme } = usePreferences();
-  const systemDark = useSystemDark();
-  return theme === 'system' ? systemDark : theme === 'dark';
-}
-
-// The tokens in index.css switch on data-theme; the status bar colour follows. index.html sets the
-// same before the first paint, so there is no flash.
-export function useApplyTheme() {
-  const dark = useDarkMode();
-  useEffect(() => {
-    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-    for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
-      meta.content = dark ? '#1a1915' : '#f6f1e7';
-    }
-  }, [dark]);
 }
 
 // The interface language: the user's choice, else the phone's (Danish unless it prefers English).
